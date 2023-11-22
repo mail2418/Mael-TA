@@ -4,13 +4,13 @@ from exp.exp_main import Exp_Anomaly_Detection
 import random
 import numpy as np
 
-parser = argparse.ArgumentParser(description='Non-stationary Transformers for Time Series Forecasting')
+parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection')
 
 # basic config
 # parser.add_argument('--is_training', type=int, required=True, default=1, help='status')
 # parser.add_argument('--model_id', type=str, required=True, default='test', help='model id')
-parser.add_argument('--model', type=str, required=True, default='MaelNet',
-                    help='model name, options: [MaelNet]')
+# parser.add_argument('--model', type=str, required=True, default='MaelNet',
+#                     help='model name, options: [MaelNet]')
 
 # data loader
 # parser.add_argument('--data', type=str, required=True, default='SMAP', help='dataset type')
@@ -28,10 +28,11 @@ parser.add_argument('--label_len', type=int, default=48, help='start token lengt
 parser.add_argument('--pred_len', type=int, default=96, help='prediction sequence length')
 
 # model define
+parser.add_argument('--kernel_size', type=int, default=3, help='kernel input size')
 parser.add_argument('--enc_in', type=int, default=25, help='encoder input size')
-parser.add_argument('--dec_in', type=int, default=7, help='decoder input size')
+parser.add_argument('--dec_in', type=int, default=25, help='decoder input size')
 parser.add_argument('--c_out', type=int, default=25, help='output size')
-parser.add_argument('--d_model', type=int, default=512, help='dimension of model')
+parser.add_argument('--d_model', type=int, default=25, help='dimension of model')
 parser.add_argument('--n_heads', type=int, default=8, help='num of heads')
 parser.add_argument('--e_layers', type=int, default=2, help='num of encoder layers')
 parser.add_argument('--d_layers', type=int, default=1, help='num of decoder layers')
@@ -97,9 +98,9 @@ if __name__ == "__main__":
     # if args.is_training:
     for ii in range(args.itr):
         # setting record of experiments
-        setting = 'test_{}_SMAP_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
+        setting = 'test_SMAP_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
             # args.model_id,
-            args.model,
+            # args.model,
             # args.data,
             args.features,
             args.seq_len,

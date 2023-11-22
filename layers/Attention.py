@@ -14,7 +14,7 @@ class DSAttention(nn.Module):
         self.dropout = nn.Dropout(attention_dropout)
 
     def forward(self, queries, keys, values, attn_mask, tau=None, delta=None):
-        B, L, H, E = queries.shape
+        B, L, H, E = queries.shape #Batch Size x Length Size x Hidden Size x Embedding Size
         _, S, _, D = values.shape
         scale = self.scale or 1. / sqrt(E)
 
@@ -31,7 +31,8 @@ class DSAttention(nn.Module):
             scores.masked_fill_(attn_mask.mask, -np.inf)
 
         A = self.dropout(torch.softmax(scale * scores, dim=-1))
-        V = torch.einsum("bhls,bshd->blhd", A, values)
+        V = torch.einsum("bhls,bshd->blhd", A, values)# (A = 32x 8 x100x100 values = 32x100x 8 x 64 )32 x 100 x 8 x 64
+                                                       #      B x H x L x S           B x S x H x D    B  x  L  x H x D
 
         if self.output_attention:
             return (V.contiguous(), A)

@@ -23,7 +23,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
         super(Exp_Anomaly_Detection, self).__init__(args)
 
     def _build_model(self):
-        model = self.model_dict[self.args.model].Model(self.args).float()
+        model = self.model_dict["MaelNet"].Model(self.args).float()
 
         if self.args.use_multi_gpu and self.args.use_gpu:
             model = nn.DataParallel(model, device_ids=self.args.device_ids)
@@ -84,17 +84,24 @@ class Exp_Anomaly_Detection(Exp_Basic):
 
             self.model.train()
             epoch_time = time.time()
-            for i, (batch_x, _) in enumerate(train_loader):
+            for i, (batch_x, batch_y) in enumerate(train_loader):
                 iter_count += 1
                 model_optim.zero_grad()
 
                 batch_x = batch_x.float().to(self.device)
 
-                outputs = self.model(batch_x)
+                batch_y = batch_y.float().to(self.device)
+                # decoder input
+                dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, None]).float()
+                dec_inp = torch.cat([batch_y[:, :self.args.label_len, None], dec_inp], dim=1).float().to(self.device)
+
+                outputs = self.model(batch_x, dec_inp)
 
                 f_dim = -1 if self.args.features == 'MS' else 0
-                outputs = outputs[:, :, f_dim:]
-                loss = criterion(outputs, batch_x)
+                outputs = outputs[:, -self.args.pred_len:, f_dim:]
+                batch_y = batch_y[:,:,None].repeat(1,1,outputs.shape[2])
+                batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
+                loss = criterion(outputs, batch_y)
                 train_loss.append(loss.item())
 
                 if (i + 1) % 100 == 0:

@@ -1,17 +1,17 @@
-from data_provider.data_loader import MSLSegLoader, PSMSegLoader, SMAPSegLoader, SMDSegLoader, SWATSegLoader
+from data_provider.data_loader import SMAPSegLoader
 from torch.utils.data import DataLoader
 
 data_dict = {
-    'PSM': PSMSegLoader,
-    'MSL': MSLSegLoader,
+    # 'PSM': PSMSegLoader,
+    # 'MSL': MSLSegLoader,
     'SMAP': SMAPSegLoader,
-    'SMD': SMDSegLoader,
-    'SWAT': SWATSegLoader,
+    # 'SMD': SMDSegLoader,
+    # 'SWAT': SWATSegLoader,
 }
 
 
 def data_provider(args, flag):
-    Data = data_dict[args.data]
+    Data = data_dict["SMAP"]
     timeenc = 0 if args.embed != 'timeF' else 1
 
     if flag == 'test':

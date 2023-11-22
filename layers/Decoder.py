@@ -1,8 +1,9 @@
 import torch.nn as nn
 import torch.nn.functional as F
+from utils.tools import series_decomp
 
 class DecoderLayer(nn.Module):
-    def __init__(self, self_attention, cross_attention, d_model, d_ff=None,
+    def __init__(self, self_attention, cross_attention, d_model, moving_avg = 24, d_ff=None,
                  dropout=0.1, activation="relu"):
         super(DecoderLayer, self).__init__()
         d_ff = d_ff or 4 * d_model
@@ -10,9 +11,9 @@ class DecoderLayer(nn.Module):
         self.cross_attention = cross_attention
         self.conv1 = nn.Conv1d(in_channels=d_model, out_channels=d_ff, kernel_size=1)
         self.conv2 = nn.Conv1d(in_channels=d_ff, out_channels=d_model, kernel_size=1)
-        self.norm1 = nn.LayerNorm(d_model)
-        self.norm2 = nn.LayerNorm(d_model)
-        self.norm3 = nn.LayerNorm(d_model)
+        self.decomp1 = series_decomp(moving_avg)
+        self.decomp2 = series_decomp(moving_avg)
+        self.decomp3 = series_decomp(moving_avg)
         self.dropout = nn.Dropout(dropout)
         self.activation = F.relu if activation == "relu" else F.gelu
 
@@ -26,20 +27,20 @@ class DecoderLayer(nn.Module):
             attn_mask=x_mask,
             tau=tau, delta=None
         )[0])  
-        x = self.norm1(x)
+        x, _ = self.decomp1(x)
 
         x = x + self.dropout(self.cross_attention(
             x, cross, cross,
             attn_mask=cross_mask,
             tau=tau, delta=delta
         )[0])
-
-        y = x = self.norm2(x)
+        x, _ = self.decomp2(x)
+        y = x
         y = self.dropout(self.activation(self.conv1(y.transpose(-1, 1))))
         y = self.dropout(self.conv2(y).transpose(-1, 1))
 
-        return self.norm3(x + y)
-
+        x, _ = self.decomp3(x + y)
+        return x
 
 class Decoder(nn.Module):
     def __init__(self, layers, norm_layer=None, projection=None):

@@ -23,8 +23,8 @@ class Exp_Anomaly_Detection(Exp_Basic):
         super(Exp_Anomaly_Detection, self).__init__(args)
 
     def _build_model(self):
-        # model = self.model_dict[self.args.model].Model(self.args).float()
-        model = self.model_dict["MaelNet"].Model(self.args).float()
+        model = self.model_dict[self.args.model].Model(self.args).float()
+        # model = self.model_dict["NSTransformer"].Model(self.args).float()
 
         if self.args.use_multi_gpu and self.args.use_gpu:
             model = nn.DataParallel(model, device_ids=self.args.device_ids)
@@ -89,9 +89,6 @@ class Exp_Anomaly_Detection(Exp_Basic):
             iter_count = 0
             train_loss = []
 
-            # attens_energy = []
-            # outputs_fscore = []
-            # test_labels = []
             self.model.train()
             epoch_time = time.time()
             for i, (batch_x, batch_y) in enumerate(train_loader):
@@ -156,13 +153,13 @@ class Exp_Anomaly_Detection(Exp_Basic):
         # (1) stastic on the TRAIN SET
         with torch.no_grad():
             # for i, (batch_x, batch_y) in enumerate(train_loader):
-            for i, (batch_x, batch_y) in enumerate(test_loader):
+            for i, (batch_x, batch_y) in enumerate(train_loader):
                 batch_x = batch_x.float().to(self.device)
                 # reconstruction
                 if self.model.name not in ["KBJNet"]:
                     outputs, attns = self.model(batch_x, batch_y)
                 else:
-                    outputs = self.model(batch_x, batch_y) 
+                    outputs = self.model(batch_x.permute(0,2,1), batch_y) 
                 # criterion
                 loss = self.anomaly_criterion(batch_x, outputs)
                 score = torch.mean(loss, dim=-1)
@@ -181,7 +178,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
             if self.model.name not in ["KBJNet"]:
                 outputs, attns = self.model(batch_x, batch_y)
             else:
-                outputs = self.model(batch_x, batch_y) 
+                outputs = self.model(batch_x.permute(0,2,1), batch_y) 
             # criterion
             loss = self.anomaly_criterion(batch_x, outputs)
             score = torch.mean(loss, dim=-1)
@@ -193,10 +190,10 @@ class Exp_Anomaly_Detection(Exp_Basic):
         test_energy = np.array(attens_energy)
         combined_energy = np.concatenate([train_energy, test_energy], axis=0)
 
-        test0 = next(iter(test_loader))
-        if self.args.model == "KBJNet": testO = torch.roll(test0, 1, 0)
+        # test0 = next(iter(test_loader))
+        # if self.args.model == "KBJNet": testO = torch.roll(test0, 1, 0)
         
-        plotter(setting, testO, outputs, loss, test_labels)
+        # plotter(setting, testO, outputs, loss, test_labels)
         threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio)
 
         print("Threshold :", threshold)

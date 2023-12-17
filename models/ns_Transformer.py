@@ -42,6 +42,7 @@ class Model(nn.Module):
         super(Model, self).__init__()
         self.name = "ns_Transformer"
         self.output_attention = configs.output_attention
+        self.config = configs
 
         # Embedding
         self.enc_embedding = DataEmbedding(self.name, configs.enc_in, configs.d_model, configs.embed, configs.freq,
@@ -106,12 +107,14 @@ class Model(nn.Module):
         # embedding
         enc_out = self.enc_embedding(x_enc, None)
         enc_out, attns = self.encoder(enc_out, attn_mask=None, tau=tau, delta=delta)
-
-        dec_out = self.dec_embedding(x_dec.unsqueeze(2).repeat(1,1,x_enc.shape[2]), None)
+        if self.config.use_gpu:
+            dec_out = self.dec_embedding(x_dec.cuda().unsqueeze(2).repeat(1,1,x_enc.shape[2]), None)
+        else:
+            dec_out = self.dec_embedding(x_dec.unsqueeze(2).repeat(1,1,x_enc.shape[2]), None)
         dec_out = self.decoder(x=dec_out, cross=enc_out, tau=tau, delta=delta)
 
         # Denormalization
-        dec_out = dec_out * std_enc 
+        dec_out = dec_out[0] * std_enc 
         dec_out += mean_enc
 
         if self.output_attention:

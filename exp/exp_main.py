@@ -1,6 +1,6 @@
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
-from utils.tools import EarlyStopping, adjust_learning_rate, adjustment
+from utils.tools import EarlyStopping, adjust_learning_rate, adjustment,plotter
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import accuracy_score
 import torch.multiprocessing
@@ -23,6 +23,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
         super(Exp_Anomaly_Detection, self).__init__(args)
 
     def _build_model(self):
+        # model = self.model_dict[self.args.model].Model(self.args).float()
         model = self.model_dict["MaelNet"].Model(self.args).float()
 
         if self.args.use_multi_gpu and self.args.use_gpu:
@@ -34,7 +35,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
         return data_set, data_loader
 
     def _select_optimizer(self):
-        model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
+        model_optim = optim.AdamW(self.model.parameters(), lr=self.args.learning_rate, weight_decay=1e-5)
         return model_optim
 
     def _select_criterion(self):
@@ -45,18 +46,24 @@ class Exp_Anomaly_Detection(Exp_Basic):
         total_loss = []
         self.model.eval()
         with torch.no_grad():
-            for i, (batch_x, _) in enumerate(vali_loader):
+            for i, (batch_x, batch_y) in enumerate(vali_loader):
                 batch_x = batch_x.float().to(self.device)
+                batch_y = batch_y.float().to(self.device)
 
-                outputs = self.model(batch_x, None, None, None)
+                if self.model.name not in ["KBJNet"]:
+                    outputs, attns = self.model(batch_x, batch_y)
+                else:
+                    outputs = self.model(batch_x.permute(0,2,1), batch_y) 
 
                 f_dim = -1 if self.args.features == 'MS' else 0
                 outputs = outputs[:, :, f_dim:]
+
                 pred = outputs.detach().cpu()
                 true = batch_x.detach().cpu()
 
                 loss = criterion(pred, true)
                 total_loss.append(loss)
+                
         total_loss = np.average(total_loss)
         self.model.train()
         return total_loss
@@ -82,6 +89,9 @@ class Exp_Anomaly_Detection(Exp_Basic):
             iter_count = 0
             train_loss = []
 
+            # attens_energy = []
+            # outputs_fscore = []
+            # test_labels = []
             self.model.train()
             epoch_time = time.time()
             for i, (batch_x, batch_y) in enumerate(train_loader):
@@ -89,21 +99,16 @@ class Exp_Anomaly_Detection(Exp_Basic):
                 model_optim.zero_grad()
 
                 batch_x = batch_x.float().to(self.device)
-
-                batch_y = batch_y.float().to(self.device)
-                # decoder input
-                dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, None]).float()
-                dec_inp = torch.cat([batch_y[:, :self.args.label_len, None], dec_inp], dim=1).float().to(self.device)
-
-                outputs = self.model(batch_x, dec_inp)
-
+                if self.model.name not in ["KBJNet"]:
+                    outputs, attns = self.model(batch_x, batch_y)
+                else:
+                    outputs = self.model(batch_x.permute(0,2,1), batch_y) 
+                 
                 f_dim = -1 if self.args.features == 'MS' else 0
-                outputs = outputs[:, -self.args.pred_len:, f_dim:]
-                batch_y = batch_y[:,:,None].repeat(1,1,outputs.shape[2])
-                batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
-                loss = criterion(outputs, batch_y)
-                train_loss.append(loss.item())
+                outputs = outputs[:, :, f_dim:]
 
+                loss = criterion(outputs, batch_x)
+                
                 if (i + 1) % 100 == 0:
                     print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
                     speed = (time.time() - time_now) / iter_count
@@ -114,7 +119,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
 
                 loss.backward()
                 model_optim.step()
-
+            
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)
             vali_loss = self.vali(vali_data, vali_loader, criterion)
@@ -122,6 +127,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
 
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
+            # Saving Model
             early_stopping(vali_loss, self.model, path)
             if early_stopping.early_stop:
                 print("Early stopping")
@@ -129,7 +135,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
             adjust_learning_rate(model_optim, epoch + 1, self.args)
 
         best_model_path = path + '/' + 'checkpoint.pth'
-        self.model.load_state_dict(torch.load(best_model_path))
+        self.model.load_state_dict(torch.load(best_model_path)) # load_state_dict
 
         return self.model
 
@@ -147,30 +153,38 @@ class Exp_Anomaly_Detection(Exp_Basic):
 
         self.model.eval()
         self.anomaly_criterion = nn.MSELoss(reduce=False)
-
-        # (1) stastic on the train set
+        # (1) stastic on the TRAIN SET
         with torch.no_grad():
-            for i, (batch_x, batch_y) in enumerate(train_loader):
+            # for i, (batch_x, batch_y) in enumerate(train_loader):
+            for i, (batch_x, batch_y) in enumerate(test_loader):
                 batch_x = batch_x.float().to(self.device)
                 # reconstruction
-                outputs = self.model(batch_x, None, None, None)
+                if self.model.name not in ["KBJNet"]:
+                    outputs, attns = self.model(batch_x, batch_y)
+                else:
+                    outputs = self.model(batch_x, batch_y) 
                 # criterion
-                score = torch.mean(self.anomaly_criterion(batch_x, outputs), dim=-1)
+                loss = self.anomaly_criterion(batch_x, outputs)
+                score = torch.mean(loss, dim=-1)
                 score = score.detach().cpu().numpy()
                 attens_energy.append(score)
 
         attens_energy = np.concatenate(attens_energy, axis=0).reshape(-1)
         train_energy = np.array(attens_energy)
 
-        # (2) find the threshold
+        # (2) find the threshold TEST SET
         attens_energy = []
         test_labels = []
         for i, (batch_x, batch_y) in enumerate(test_loader):
             batch_x = batch_x.float().to(self.device)
             # reconstruction
-            outputs = self.model(batch_x, None, None, None)
+            if self.model.name not in ["KBJNet"]:
+                outputs, attns = self.model(batch_x, batch_y)
+            else:
+                outputs = self.model(batch_x, batch_y) 
             # criterion
-            score = torch.mean(self.anomaly_criterion(batch_x, outputs), dim=-1)
+            loss = self.anomaly_criterion(batch_x, outputs)
+            score = torch.mean(loss, dim=-1)
             score = score.detach().cpu().numpy()
             attens_energy.append(score)
             test_labels.append(batch_y)
@@ -178,15 +192,21 @@ class Exp_Anomaly_Detection(Exp_Basic):
         attens_energy = np.concatenate(attens_energy, axis=0).reshape(-1)
         test_energy = np.array(attens_energy)
         combined_energy = np.concatenate([train_energy, test_energy], axis=0)
+
+        test0 = next(iter(test_loader))
+        if self.args.model == "KBJNet": testO = torch.roll(test0, 1, 0)
+        
+        plotter(setting, testO, outputs, loss, test_labels)
         threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio)
+
         print("Threshold :", threshold)
 
         # (3) evaluation on the test set
         pred = (test_energy > threshold).astype(int)
         test_labels = np.concatenate(test_labels, axis=0).reshape(-1)
         test_labels = np.array(test_labels)
-        gt = test_labels.astype(int)
 
+        gt = test_labels.astype(int)
         print("pred:   ", pred.shape)
         print("gt:     ", gt.shape)
 
@@ -204,6 +224,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
             accuracy, precision,
             recall, f_score))
 
+        # result_anomaly_detection.txt
         f = open("result_anomaly_detection.txt", 'a')
         f.write(setting + "  \n")
         f.write("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(

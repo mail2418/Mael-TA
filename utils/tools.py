@@ -1,9 +1,8 @@
 import numpy as np
-import torch
+import torch, math, os
 import matplotlib.pyplot as plt
 import torch.nn as nn
-import math
-
+from matplotlib.backends.backend_pdf import PdfPages
 plt.switch_backend('agg')
 
 class moving_avg(nn.Module):
@@ -39,13 +38,19 @@ class series_decomp(nn.Module):
         return res, moving_mean
 
 def adjust_learning_rate(optimizer, epoch, args):
-    # lr = args.learning_rate * (0.2 ** (epoch // 2))
     if args.lradj == 'type1':
-        lr_adjust = {epoch: args.learning_rate * (0.5 ** ((epoch - 1) // 1))}
+        lr_adjust = {
+            epoch: args.learning_rate * (0.5 ** ((epoch - 1) // 1))
+            }
     elif args.lradj == 'type2':
         lr_adjust = {
-            2: 5e-5, 4: 1e-5, 6: 5e-6, 8: 1e-6,
-            10: 5e-7, 15: 1e-7, 20: 5e-8
+            2: 5e-5, 
+            4: 1e-5, 
+            6: 5e-6, 
+            8: 1e-6,
+            10: 5e-7, 
+            15: 1e-7, 
+            20: 5e-8
         }
     if epoch in lr_adjust.keys():
         lr = lr_adjust[epoch]
@@ -85,26 +90,6 @@ class EarlyStopping:
         torch.save(model.state_dict(), path + '/' + 'checkpoint.pth')
         self.val_loss_min = val_loss
 
-
-class dotdict(dict):
-    """dot.notation access to dictionary attributes"""
-    __getattr__ = dict.get
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
-
-
-class StandardScaler():
-    def __init__(self, mean, std):
-        self.mean = mean
-        self.std = std
-
-    def transform(self, data):
-        return (data - self.mean) / self.std
-
-    def inverse_transform(self, data):
-        return (data * self.std) + self.mean
-
-
 def visual(true, preds=None, name='./pic/test.pdf'):
     """
     Results visualization
@@ -116,7 +101,44 @@ def visual(true, preds=None, name='./pic/test.pdf'):
     plt.legend()
     plt.savefig(name, bbox_inches='tight')
 
+def smooth(y, box_pts=1):
+    box = np.ones(box_pts) / box_pts
+    y_smooth = np.convolve(y, box, mode='same')
+    return y_smooth
 
+def plotter(setting, y_true, y_pred, ascore, labels):
+    if setting == "KBJNet": y_true = torch.roll(y_true, 1, 0)
+    os.makedirs(os.path.join('plots', setting), exist_ok=True)
+    pdf = PdfPages(f'plots/{setting}/output.pdf')
+    for dim in range(y_true.shape[1]):
+        y_t, y_p, l, a_s = y_true[:, dim], y_pred[:, dim], labels[:, dim], ascore[:, dim]
+        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+        ax1.set_ylabel('Value')
+        ax1.set_title(f'Dimension = {dim}')
+        # if dim == 0: np.save(f'true{dim}.npy', y_t); np.save(f'pred{dim}.npy', y_p); np.save(f'ascore{dim}.npy', a_s)
+        ax1.plot(smooth(y_t), linewidth=0.2, label='True')
+        ax1.plot(smooth(y_p), '-', alpha=0.6, linewidth=0.3, label='Predicted')
+        ax3 = ax1.twinx()
+        # ax3.plot(l, '--', linewidth=0.3, alpha=0.5)
+        ax3.fill_between(np.arange(l.shape[0]), l, color='blue', alpha=0.3, label='True Anomaly')
+        # ax3.fill_between(np.nonzero(l)[0], 0, l[np.nonzero(l)], color='blue', alpha=0.3, label='Anomaly')
+        if dim == 0: ax1.legend(ncol=2, bbox_to_anchor=(0.6, 1.02))
+        # ax[0, 0].legend(ncol=2, bbox_to_anchor=(0.6, 1.02))
+        ax2.plot(smooth(a_s), linewidth=0.2, color='g', label='Score')
+        ax4 = ax2.twinx()
+        # ax4.plot(l, '--', linewidth=0.3, alpha=0.5)
+        # ax4.fill_between(np.nonzero(l)[0], 0, l[np.nonzero(l)], color='red', alpha=0.3, label='Predicted Anomaly')
+        ax4.fill_between(np.arange(l.shape[0]), l, color='red', alpha=0.3, label='Predicted Anomaly')
+        if dim == 0: ax4.legend(bbox_to_anchor=(1, 1.02))
+        # ax22.legend(bbox_to_anchor=(1, 1.02))
+        ax2.set_xlabel('Timestamp')
+        ax2.set_ylabel('Anomaly Score')
+        ax1.set_yticks([])
+        ax2.set_yticks([])
+        pdf.savefig(fig)
+        plt.close()
+        # plt.savefig(f'plots/{name}/output.svg')
+    pdf.close()
 def adjustment(gt, pred):
     anomaly_state = False
     for i in range(len(gt)):
@@ -139,3 +161,7 @@ def adjustment(gt, pred):
         if anomaly_state:
             pred[i] = 1
     return gt, pred
+
+def my_kl_loss(p, q):
+    res = p * (torch.log(p + 0.0001) - torch.log(q + 0.0001))
+    return torch.mean(torch.sum(res, dim=-1), dim=1)

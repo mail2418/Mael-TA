@@ -1,32 +1,24 @@
-from data_provider.data_loader import SMAPSegLoader
+from data_provider.data_loader import SMAPSegLoader, SMDSegLoader, MSLSegLoader, PSMSegLoader, SWATSegLoader
 from torch.utils.data import DataLoader
 
 data_dict = {
-    # 'PSM': PSMSegLoader,
-    # 'MSL': MSLSegLoader,
+    'PSM': PSMSegLoader,
+    'MSL': MSLSegLoader,
     'SMAP': SMAPSegLoader,
-    # 'SMD': SMDSegLoader,
-    # 'SWAT': SWATSegLoader,
+    'SMD': SMDSegLoader,
+    'SWaT': SWATSegLoader,
 }
 
 
 def data_provider(args, flag):
+    # Data = data_dict[args.data]
     Data = data_dict["SMAP"]
-    timeenc = 0 if args.embed != 'timeF' else 1
-
-    if flag == 'test':
-        shuffle_flag = False
-        drop_last = True
-        batch_size = args.batch_size
-    else:
-        shuffle_flag = True
-        drop_last = True
-        batch_size = args.batch_size
-
+    shuffle_flag = True if flag != "test" else False
+    batch_size = args.batch_size
     drop_last = False
     data_set = Data(
         root_path=args.root_path,
-        win_size=args.seq_len,
+        win_size=args.win_size,
         flag=flag,
     )
     print(flag, len(data_set))

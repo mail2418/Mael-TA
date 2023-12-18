@@ -55,7 +55,7 @@ class Decoder(nn.Module):
         self.norm = norm_layer
         self.projection = projection
 
-    def forward(self, x, cross, x_mask=None, cross_mask=None, tau=None, delta=None,trend=None):
+    def forward(self, x, cross, x_mask=None, cross_mask=None, tau=None, delta=None,trend=0):
         for layer in self.layers:
             x, residual_trend = layer(x, cross, x_mask=x_mask, cross_mask=cross_mask, tau=tau, delta=delta)
             residual_trend = trend + residual_trend

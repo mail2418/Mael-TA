@@ -24,7 +24,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
 
     def _build_model(self):
         # model = self.model_dict[self.args.model].Model(self.args).float()
-        model = self.model_dict["MaelNet"].Model(self.args).float()
+        model = self.model_dict["NSTransformer"].Model(self.args).float()
 
         if self.args.use_multi_gpu and self.args.use_gpu:
             model = nn.DataParallel(model, device_ids=self.args.device_ids)
@@ -193,10 +193,9 @@ class Exp_Anomaly_Detection(Exp_Basic):
         test_energy = np.array(attens_energy)
         combined_energy = np.concatenate([train_energy, test_energy], axis=0)
 
-        test0 = next(iter(test_loader))
-        if self.args.model == "KBJNet": testO = torch.roll(test0, 1, 0)
+        # if self.args.model == "KBJNet": testO = torch.roll(test0, 1, 0)
         
-        plotter(setting, testO, outputs, loss, test_labels)
+        # plotter(setting, testO, outputs, loss, test_labels)
         threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio)
 
         print("Threshold :", threshold)

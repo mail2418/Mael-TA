@@ -111,7 +111,7 @@ class Model(nn.Module):
         dec_out = self.decoder(x=dec_out, cross=enc_out, tau=tau, delta=delta)
 
         # Denormalization
-        dec_out = dec_out * std_enc 
+        dec_out = dec_out[0] * std_enc 
         dec_out += mean_enc
 
         if self.output_attention:

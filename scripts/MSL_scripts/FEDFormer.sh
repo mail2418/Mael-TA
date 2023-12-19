@@ -1,9 +1,14 @@
 python -u run.py \
   --is_training 1 \
   --root_path ./dataset/MSL/ \
-  --model_id MaelNet_MSL \
-  --model MaelNet \
+  --model_id FEDFormer_MSL \
+  --model FEDFormer \
   --data MSL \
+  --seq_len 96 \
+  --label_len 48 \
+  --pred_len 96 \
+  --cross_activation tanh \
+  --version Wavelets \
   --e_layers 2 \
   --d_layers 1 \
   --anomaly_ratio 0.85 \
@@ -11,6 +16,7 @@ python -u run.py \
   --enc_in 55 \
   --dec_in 55 \
   --c_out 55 \
+  --d_model 512 \
   --moving_avg 100 \
   --gpu 0 \
   --des 'Exp_h256_l2' \

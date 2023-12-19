@@ -1,17 +1,18 @@
 python -u run.py \
   --is_training 1 \
-  --root_path ./dataset/MSL/ \
-  --model_id MaelNet_MSL \
-  --model MaelNet \
-  --data MSL \
+  --root_path ./dataset/SMD/ \
+  --model_id TimesNet_SMD \
+  --model TimesNet \
+  --data SMD \
   --e_layers 2 \
   --d_layers 1 \
   --anomaly_ratio 0.85 \
   --factor 5 \
-  --enc_in 55 \
-  --dec_in 55 \
-  --c_out 55 \
-  --moving_avg 100 \
+  --enc_in 38 \
+  --dec_in 38 \
+  --c_out 38 \
+  --d_model 512 \
+  --top_k 5 \
   --gpu 0 \
   --des 'Exp_h256_l2' \
   --p_hidden_dims 128 128 \

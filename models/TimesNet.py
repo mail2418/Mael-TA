@@ -65,10 +65,10 @@ class TimesBlock(nn.Module):
       # parameter-efficient design
       self.conv = nn.Sequential(
           Inception_Block_V1(configs.d_model, self.d_ff,
-                            num_kernels=configs.num_kernels),
+                            num_kernels=configs.kernel_size),
           nn.GELU(),
           Inception_Block_V1(self.d_ff, configs.d_model,
-                            num_kernels=configs.num_kernels)
+                            num_kernels=configs.kernel_size)
       )
 
     def forward(self, x):
@@ -130,6 +130,7 @@ class Model(nn.Module):
     def __init__(self, configs):
         super(Model, self).__init__()
         #params init
+        self.name = "TimesNet"
         self.configs = configs
         self.layer = configs.e_layers # num of encoder layers
 
@@ -139,21 +140,17 @@ class Model(nn.Module):
         #embedding & normalization
         # enc_in is the encoder input size, the number of features for a piece of data
         # d_model is the dimension of embedding
-        self.enc_embedding = DataEmbedding(configs.enc_in, configs.d_model, configs.embed, configs.freq,
+        self.enc_embedding = DataEmbedding(self.name, configs.enc_in, configs.d_model, configs.embed, configs.freq,
                                         configs.dropout)
         self.layer_norm = nn.LayerNorm(configs.d_model)
         self.projection = nn.Linear(configs.d_model, configs.c_out, bias=True)
             
-    def forward(self, x_enc):
+    def forward(self, x_enc, x_dec):
         # Normalization from Non-stationary Transformer
         means = x_enc.mean(1, keepdim=True).detach()
         x_enc = x_enc - means
         stdev = torch.sqrt(torch.var(x_enc, dim=1, keepdim=True, unbiased=False) + 1e-5)
         x_enc /= stdev
-        # B x S x E, B x 1 x E -> B x 1, positive scalar
-        # tau = self.tau_learner(x_raw, std_enc).exp()
-        # B x S x E, B x 1 x E -> B x S
-        # delta = self.delta_learner(x_raw, mean_enc)
         # embedding
         enc_out = self.enc_embedding(x_enc, None)  # [B,T,C]
         # enc_out, attns = self.encoder(enc_out, attn_mask=None, tau=tau, delta=delta)

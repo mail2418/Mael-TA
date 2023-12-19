@@ -26,8 +26,8 @@ class Model(nn.Module):
         self.fcn1 = nn.Sequential(nn.Linear(self.n_feats, self.n_feats), nn.LeakyReLU(), nn.Linear(self.n_feats, self.n_feats))
         self.fcn2 = nn.Sequential(nn.Linear(self.n_feats, self.n_feats), nn.LeakyReLU(), nn.Linear(self.n_feats, self.n_feats))
         #Decoding
-        self.decoder1 = nn.Sequential(nn.Linear(self.n_window, self.n_window), nn.Sigmoid())
-        self.decoder2 = nn.Sequential(nn.Linear(self.n_window, self.n_window), nn.Sigmoid())
+        self.decoder1 = nn.Sequential(nn.Linear(self.n_window, 1), nn.Sigmoid())
+        self.decoder2 = nn.Sequential(nn.Linear(self.n_window, 1), nn.Sigmoid())
 
     def callback(self, src, c):
         src2 = src + c

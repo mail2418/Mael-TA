@@ -8,25 +8,30 @@ an embedding…stores categorical data in a lower-dimensional vector than an ind
 """
 
 class PositionalEmbedding(nn.Module):
-    def __init__(self, d_model, max_len=5000):
+    def __init__(self, model_name, d_model, max_len=5000):
         super(PositionalEmbedding, self).__init__()
+        self.model_name = model_name
         # Compute the positional encodings once in log space.
         pe = torch.zeros(max_len, d_model).float()
         pe.require_grad = False
 
         position = torch.arange(0, max_len).float().unsqueeze(1)
-        div_term = (torch.arange(0, d_model).float() * -(math.log(10000.0) / d_model)).exp()
-
-        pe += torch.sin(position * div_term)
-        pe += torch.cos(position * div_term)
+        if self.model_name == "MaelNet":
+            div_term = (torch.arange(0, d_model).float() * -(math.log(10000.0) / d_model)).exp()
+            pe += torch.sin(position * div_term)
+            pe += torch.cos(position * div_term)
+        else:
+            div_term = (torch.arange(0, d_model, 2).float() * -(math.log(10000.0) / d_model)).exp()
+            pe[:, 0::2] = torch.sin(position * div_term)
+            pe[:, 1::2] = torch.cos(position * div_term)
 
         pe = pe.unsqueeze(0)
         self.register_buffer('pe', pe)
 
     def forward(self, x):
-        output = x + self.pe[:, :x.size(1)]
+        output = x + self.pe[:, :x.size(1)] if self.model_name == "MaelNet" else self.pe[:, :x.size(1)]
         return output 
-
+    
 class Chomp1d(nn.Module):
     def __init__(self, chomp_size):
         super(Chomp1d, self).__init__()
@@ -157,7 +162,7 @@ class DataEmbedding(nn.Module):
 
         self.value_embedding = TokenTCNEmbedding(c_in=c_in, d_model=d_model, kernel_size=kernel_size, n_windows=n_windows) if model_name == "MaelNet" else TokenEmbedding(
             c_in=c_in, d_model=d_model)
-        self.position_embedding = PositionalEmbedding(d_model=d_model)
+        self.position_embedding = PositionalEmbedding(model_name, d_model=d_model)
         self.temporal_embedding = TemporalEmbedding(d_model=d_model, embed_type=embed_type,
                                                     freq=freq) if embed_type != 'timeF' else TimeFeatureEmbedding(
             d_model=d_model, embed_type=embed_type, freq=freq)

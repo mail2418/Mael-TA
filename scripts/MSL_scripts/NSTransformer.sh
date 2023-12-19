@@ -11,8 +11,7 @@ python -u run.py \
   --enc_in 55 \
   --dec_in 55 \
   --c_out 55 \
-  --d_model 55 \
-  --moving_avg 55 \
+  --d_model 512 \
   --gpu 0 \
   --des 'Exp_h256_l2' \
   --p_hidden_dims 128 128 \

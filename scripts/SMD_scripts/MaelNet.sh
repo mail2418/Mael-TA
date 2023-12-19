@@ -11,7 +11,6 @@ python -u run.py \
   --enc_in 38 \
   --dec_in 38 \
   --c_out 38 \
-  --d_model 38 \
   --moving_avg 100 \
   --gpu 0 \
   --des 'Exp_h256_l2' \

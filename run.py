@@ -7,13 +7,13 @@ import numpy as np
 parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection')
 
 # basic config
-# parser.add_argument('--is_training', type=int, required=True, default=1, help='status')
-# parser.add_argument('--model_id', type=str, required=True, default='test', help='model id')
-# parser.add_argument('--model', type=str, required=True, default='MaelNet',
-#                     help='model name, options: [MaelNet]')
+parser.add_argument('--is_training', type=int, required=True, default=1, help='status')
+parser.add_argument('--model_id', type=str, required=True, default='test', help='model id')
+parser.add_argument('--model', type=str, required=True, default='MaelNet',
+                    help='model name, options: [MaelNet]')
 
-# data loader
-# parser.add_argument('--data', type=str, required=True, default='SMAP', help='dataset type')
+# # data loader
+parser.add_argument('--data', type=str, required=True, default='SMAP', help='dataset type')
 parser.add_argument('--root_path', type=str, default='./dataset/SMAP/', help='root path of the data file')
 parser.add_argument('--win_size', type=int, default=100, help='window size')
 
@@ -34,12 +34,26 @@ parser.add_argument('--n_windows', type=int, default=100, help="Sliding Windows 
 parser.add_argument('--channel', type=int, default=55, help="Channel DCDetector")
 parser.add_argument('--patch_size', type=list, default=[5,7], help="Sliding Windows KBJNet")
 
+# FEDFormer task
+parser.add_argument('--seq_len', type=int, default=96, help='input sequence length')
+parser.add_argument('--label_len', type=int, default=48, help='start token length')
+parser.add_argument('--pred_len', type=int, default=96, help='prediction sequence length')
+parser.add_argument('--cross_activation', type=str, default='tanh')
+parser.add_argument('--version', type=str, default='Wavelets',help='for FEDformer, there are two versions to choose, options: [Fourier, Wavelets]')
+parser.add_argument('--mode_select', type=str, default='random',help='for FEDformer, there are two mode selection method, options: [random, low]')
+parser.add_argument('--modes', type=int, default=32, help='modes to be selected random 32')
+parser.add_argument('--L', type=int, default=3, help='ignore level')
+parser.add_argument('--base', type=str, default='legendre', help='mwt base')
+
+#TimesNet
+parser.add_argument('--top_k', type=int, default=5)
+
 # model define
 parser.add_argument('--kernel_size', type=int, default=3, help='kernel input size')
 parser.add_argument('--enc_in', type=int, default=25, help='encoder input size')
 parser.add_argument('--dec_in', type=int, default=25, help='decoder input size')
 parser.add_argument('--c_out', type=int, default=25, help='output size')
-parser.add_argument('--d_model', type=int, default=25, help='dimension of model')
+parser.add_argument('--d_model', type=int, default=512, help='dimension of model')
 parser.add_argument('--n_heads', type=int, default=8, help='num of heads attention')
 parser.add_argument('--e_layers', type=int, default=2, help='num of encoder layers')
 parser.add_argument('--d_layers', type=int, default=1, help='num of decoder layers')
@@ -104,27 +118,13 @@ if __name__ == "__main__":
     Exp = Exp_Anomaly_Detection
     print('Args in experiment:')
     print(args)
-    # if args.is_training:
+    
     for ii in range(args.itr):
         # setting record of experiments
-        # setting = '{}_{}_{}_ft{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
-        #     args.model_id,
-        #     args.model,
-        #     args.data,
-        #     args.features,
-        #     args.d_model,
-        #     args.n_heads,
-        #     args.e_layers,
-        #     args.d_layers,
-        #     args.d_ff,
-        #     args.factor,
-        #     args.embed,
-        #     args.distil,
-        #     args.des,ii)
-        setting = 'xx_KBJNet_SMD_ft{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
-            # args.model_id,
-            # args.model,
-            # args.data,
+        setting = '{}_{}_{}_ft{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
+            args.model_id,
+            args.model,
+            args.data,
             args.features,
             args.d_model,
             args.n_heads,
@@ -134,22 +134,11 @@ if __name__ == "__main__":
             args.factor,
             args.embed,
             args.distil,
-            args.des, ii)
-        exp = Exp(args)  # set experiments
-        print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
-        exp.train(setting)
-
-        print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-        exp.test(setting)
-        torch.cuda.empty_cache()
-    # else:
-        # ii = 0
-        # exp = Exp(args)  # set experiments
-        # setting record of experiments
-        # setting = '{}_{}_{}_ft{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
-        #     args.model_id,
-        #     args.model,
-        #     args.data,
+            args.des,ii)
+        # setting = 'xx_TimesNet_SMAP_ft{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
+        #     # args.model_id,
+        #     # args.model,
+        #     # args.data,
         #     args.features,
         #     args.d_model,
         #     args.n_heads,
@@ -160,6 +149,11 @@ if __name__ == "__main__":
         #     args.embed,
         #     args.distil,
         #     args.des, ii)
-    #     print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-    #     exp.test(setting, test=1)
-    #     torch.cuda.empty_cache()
+        exp = Exp(args)  # set experiments
+        if args.is_training:
+            print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
+            exp.train(setting)
+        else:
+            print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+            exp.test(setting)
+        torch.cuda.empty_cache()

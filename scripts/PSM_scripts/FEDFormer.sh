@@ -1,9 +1,14 @@
 python -u run.py \
   --is_training 1 \
   --root_path ./dataset/PSM/ \
-  --model_id MaelNet_PSM \
-  --model MaelNet \
+  --model_id FEDFormer_PSM \
+  --model FEDFormer \
   --data PSM \
+  --seq_len 96 \
+  --label_len 48 \
+  --pred_len 96 \
+  --cross_activation tanh \
+  --version Wavelets \
   --e_layers 2 \
   --d_layers 1 \
   --anomaly_ratio 0.85 \
@@ -11,6 +16,7 @@ python -u run.py \
   --enc_in 25 \
   --dec_in 25 \
   --c_out 25 \
+  --d_model 512 \
   --moving_avg 100 \
   --gpu 0 \
   --des 'Exp_h256_l2' \

@@ -53,7 +53,7 @@ parser.add_argument('--kernel_size', type=int, default=3, help='kernel input siz
 parser.add_argument('--enc_in', type=int, default=25, help='encoder input size')
 parser.add_argument('--dec_in', type=int, default=25, help='decoder input size')
 parser.add_argument('--c_out', type=int, default=25, help='output size')
-parser.add_argument('--d_model', type=int, default=512, help='dimension of model')
+parser.add_argument('--d_model', type=int, default=25, help='dimension of model')
 parser.add_argument('--n_heads', type=int, default=8, help='num of heads attention')
 parser.add_argument('--e_layers', type=int, default=2, help='num of encoder layers')
 parser.add_argument('--d_layers', type=int, default=1, help='num of decoder layers')
@@ -134,25 +134,26 @@ if __name__ == "__main__":
         #     args.embed,
         #     args.distil,
         #     args.des,ii)
-        setting = 'xx_TimesNet_SMAP_ft{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
-            # args.model_id,
-            # args.model,
-            # args.data,
-            args.features,
-            args.d_model,
-            args.n_heads,
-            args.e_layers,
-            args.d_layers,
-            args.d_ff,
-            args.factor,
-            args.embed,
-            args.distil,
-            args.des, ii)
+        # setting = 'xx_TimesNet_SMAP_ft{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
+        #     # args.model_id,
+        #     # args.model,
+        #     # args.data,
+        #     args.features,
+        #     args.d_model,
+        #     args.n_heads,
+        #     args.e_layers,
+        #     args.d_layers,
+        #     args.d_ff,
+        #     args.factor,
+        #     args.embed,
+        #     args.distil,
+        #     args.des, ii)
         exp = Exp(args)  # set experiments
         # if args.is_training:
-        print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
-        exp.train(setting)
+        # print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
+        # exp.train(setting)
         # else:
-        #     print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-        #     exp.test(setting)
+        setting = "MaelNet_SMAP_MaelNet_SMAP_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0"
+        print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+        exp.test(setting,1)
         torch.cuda.empty_cache()

@@ -7,13 +7,13 @@ import numpy as np
 parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection')
 
 # basic config
-parser.add_argument('--is_training', type=int, required=True, default=1, help='status')
-parser.add_argument('--model_id', type=str, required=True, default='test', help='model id')
-parser.add_argument('--model', type=str, required=True, default='MaelNet',
-                    help='model name, options: [MaelNet]')
+# parser.add_argument('--is_training', type=int, required=True, default=1, help='status')
+# parser.add_argument('--model_id', type=str, required=True, default='test', help='model id')
+# parser.add_argument('--model', type=str, required=True, default='MaelNet',
+#                     help='model name, options: [MaelNet]')
 
-# # data loader
-parser.add_argument('--data', type=str, required=True, default='SMAP', help='dataset type')
+# # # data loader
+# parser.add_argument('--data', type=str, required=True, default='SMAP', help='dataset type')
 parser.add_argument('--root_path', type=str, default='./dataset/SMAP/', help='root path of the data file')
 parser.add_argument('--win_size', type=int, default=100, help='window size')
 
@@ -118,27 +118,12 @@ if __name__ == "__main__":
     Exp = Exp_Anomaly_Detection
     print('Args in experiment:')
     print(args)
-    
     for ii in range(args.itr):
         # setting record of experiments
-        setting = '{}_{}_{}_ft{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
-            args.model_id,
-            args.model,
-            args.data,
-            args.features,
-            args.d_model,
-            args.n_heads,
-            args.e_layers,
-            args.d_layers,
-            args.d_ff,
-            args.factor,
-            args.embed,
-            args.distil,
-            args.des,ii)
-        # setting = 'xx_TimesNet_SMAP_ft{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
-        #     # args.model_id,
-        #     # args.model,
-        #     # args.data,
+        # setting = '{}_{}_{}_ft{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
+        #     args.model_id,
+        #     args.model,
+        #     args.data,
         #     args.features,
         #     args.d_model,
         #     args.n_heads,
@@ -148,12 +133,26 @@ if __name__ == "__main__":
         #     args.factor,
         #     args.embed,
         #     args.distil,
-        #     args.des, ii)
+        #     args.des,ii)
+        setting = 'xx_TimesNet_SMAP_ft{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
+            # args.model_id,
+            # args.model,
+            # args.data,
+            args.features,
+            args.d_model,
+            args.n_heads,
+            args.e_layers,
+            args.d_layers,
+            args.d_ff,
+            args.factor,
+            args.embed,
+            args.distil,
+            args.des, ii)
         exp = Exp(args)  # set experiments
-        if args.is_training:
-            print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
-            exp.train(setting)
-        else:
-            print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-            exp.test(setting)
+        # if args.is_training:
+        print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
+        exp.train(setting)
+        # else:
+        #     print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+        #     exp.test(setting)
         torch.cuda.empty_cache()

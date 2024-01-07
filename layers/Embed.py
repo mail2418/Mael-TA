@@ -76,7 +76,7 @@ class TokenTCNEmbedding(nn.Module):
     def forward(self, x):
         #x.shape = 32x100x25 --> 25x512x3
         # src2 = g_atts.permute(2, 0, 1) * math.sqrt(self.n_feats)
-        x = x.permute(0, 2, 1)
+        x = x.permute(0, 2, 1) #permute, reshape, 
         x = self.network(x)
         x = x.transpose(1, 2)
         return x

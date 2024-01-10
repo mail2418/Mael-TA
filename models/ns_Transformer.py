@@ -90,7 +90,7 @@ class Model(nn.Module):
         self.tau_learner   = Projector(enc_in=configs.enc_in, win_size=configs.win_size, hidden_dims=configs.p_hidden_dims, hidden_layers=configs.p_hidden_layers, output_dim=1)
         self.delta_learner = Projector(enc_in=configs.enc_in, win_size=configs.win_size, hidden_dims=configs.p_hidden_dims, hidden_layers=configs.p_hidden_layers, output_dim=configs.win_size)
 
-    def forward(self, x_enc, x_dec):
+    def forward(self, x_enc):
 
         x_raw = x_enc.clone().detach()
 
@@ -107,10 +107,7 @@ class Model(nn.Module):
         # embedding
         enc_out = self.enc_embedding(x_enc, None)
         enc_out, attns = self.encoder(enc_out, attn_mask=None, tau=tau, delta=delta)
-        if self.config.use_gpu:
-            dec_out = self.dec_embedding(x_dec.cuda().unsqueeze(2).repeat(1,1,x_enc.shape[2]), None)
-        else:
-            dec_out = self.dec_embedding(x_dec.unsqueeze(2).repeat(1,1,x_enc.shape[2]), None)
+        dec_out = self.dec_embedding(x_enc, None)
         dec_out = self.decoder(x=dec_out, cross=enc_out, tau=tau, delta=delta)
 
         # Denormalization

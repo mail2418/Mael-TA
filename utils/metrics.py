@@ -10,6 +10,11 @@ def CORR(pred, true):
     d = np.sqrt(((true - true.mean(0)) ** 2 * (pred - pred.mean(0)) ** 2).sum(0))
     return (u / d).mean(-1)
 
+class NegativeCorr:
+    def __init__(self, corr_penalty):
+        self.corr_penalty = corr_penalty
+    def __call__(self, pred, true):
+        return np.mean((pred - true) ** 2) + (self.corr_penalty * ((true - true.mean(0)) * (pred - pred.mean(0))).sum(0))
 
 def MAE(pred, true):
     return np.mean(np.abs(pred - true))

@@ -2,8 +2,7 @@ from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from utils.tools import EarlyStopping, adjust_learning_rate, adjustment
 from utils.slowloss import ssl_loss_v2
-from utils.pot import pot_eval
-from utils.diagnosis import ndcg, hit_att
+from utils.metrics import NegativeCORR
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import accuracy_score
 import torch.multiprocessing
@@ -28,7 +27,7 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
 
     def _build_model(self):
         model = self.model_dict[self.args.model].Model(self.args).float()
-        self.slow_model = self.model_dict[self.args.slow_model].Model(self.args).float()
+        self.slow_model = self.model_dict[self.args.slow_model].Model(self.args).float().to(self.device)
         
         if self.args.use_multi_gpu and self.args.use_gpu:
             model = nn.DataParallel(model, device_ids=self.args.device_ids)
@@ -47,7 +46,10 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
         return slow_model_optim
 
     def _select_criterion(self):
-        criterion = nn.MSELoss()
+        if self.args.loss_type == "negative_corr":
+            criterion = NegativeCORR(self.args.correlation_penalty)
+        else:
+            criterion = nn.MSELoss()
         return criterion
 
     def vali(self, vali_data, vali_loader, criterion):
@@ -130,21 +132,21 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
                 randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
                 m_ones = torch.ones(s0,s1,s2)
                 slow_mark = torch.bernoulli(randuniform)
-                batch_x_slow = torch.clone(batch_x)
-                batch_x_slow = batch_x_slow * (m_ones-slow_mark).clone()
+                batch_x_slow = batch_x.clone()
+                batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
 
                 if self.slow_model.name not in ["KBJNet"]:
-                    slow_out = self.slow_model.forward(batch_x)
+                    slow_out = self.slow_model.forward(batch_x_slow)
                 else:
-                    slow_out = self.slow_model.forward(batch_x.permute(0,2,1)) 
+                    slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
 
                 f_dim = -1 if self.args.features == 'MS' else 0
                 outputs = outputs[:, :, f_dim:]
-                loss += ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2)
+                loss = loss + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
 
                 slow_model_optim.zero_grad()    
-                slow_model_optim.step()
                 loss.backward()
+                slow_model_optim.step()
                 model_optim.step()
                 
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
@@ -355,7 +357,7 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
 
         accuracy = accuracy_score(gt, pred)
         precision, recall, f_score, support = precision_recall_fscore_support(gt, pred, average='binary')
-        print("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
+        print("Accuracy : {:0.4f}, Precision    : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
             accuracy, precision,
             recall, f_score))
 

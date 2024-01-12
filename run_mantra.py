@@ -5,12 +5,12 @@ from exp.opt_urt_anomaly import Opt_URT_Anomaly
 import random
 import numpy as np
 
-parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection')
+parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection with MANTRA')
 
 # basic config
 parser.add_argument('--is_training', type=int, default=1, help='status')
-parser.add_argument('--model_id', type=str, default='Test1_NSTransformerB1_NSTransformerS1', help='model id')
-parser.add_argument('--model', type=str, default='NSTransformerB1',
+parser.add_argument('--model_id', type=str, default='Test1_MaelNetB1_MaelNetS1', help='model id')
+parser.add_argument('--model', type=str, default='MaelNetB1',
                     help='model name, options: [MaelNet]')
 
 # # # data loader
@@ -51,9 +51,13 @@ parser.add_argument('--top_k', type=int, default=5)
 
 #MANTRA
 parser.add_argument('--n_learner', type=int, default=3)
-parser.add_argument('--slow_model', type=str, default='NSTransformerS1',
+parser.add_argument('--slow_model', type=str, default='MaelNetS1',
                     help='model name, options: [MaelNet]')
 parser.add_argument('--urt_heads', type=int, default=1, help='num of heads')
+
+#Loss Selection
+parser.add_argument("--loss_type", type=str, default="mse", help="loss type")
+parser.add_argument("--correlation_penalty", type=float, default=0.5, help="loss type")
 
 # model define
 parser.add_argument('--kernel_size', type=int, default=3, help='kernel input size')

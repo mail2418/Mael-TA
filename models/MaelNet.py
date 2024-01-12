@@ -96,13 +96,13 @@ class Model(nn.Module):
 
         # Normalization dari NS_Transformer
         means = x_enc.mean(1, keepdim=True).detach()  # B x 1 x E
-        x_enc -= means
+        x_enc = x_enc - means
         std_enc = torch.sqrt(torch.var(x_enc, dim=1, keepdim=True, unbiased=False) + 1e-5).detach()  # B x 1 x E
-        x_enc /= std_enc
+        x_enc = x_enc / std_enc
 
         tau = self.tau_learner(x_raw, std_enc).exp()  # B x S x E, B x 1 x E -> B x 1, positive scalar
         delta = self.delta_learner(x_raw, means) # B x S x E, B x 1 x E -> B x S
-        
+
         seasonal_init, trend_init = self.decomp(x_enc) #input dari decoder
         
         # embedding
@@ -115,7 +115,7 @@ class Model(nn.Module):
 
         dec_out = seasonal_part + trend_part
         #Denormalization dari NS_Transformer
-        dec_out *= std_enc 
-        dec_out += means
+        dec_out = dec_out * std_enc 
+        dec_out = dec_out + means
 
         return dec_out  # [B, L, D]

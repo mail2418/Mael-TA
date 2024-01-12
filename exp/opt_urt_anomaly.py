@@ -1,7 +1,7 @@
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from utils.tools import EarlyStopping, adjustment, visual
-from utils.metrics import metric
+from utils.metrics import NegativeCORR
 from models import MaelNet, KBJNet, DCDetector, ns_Transformer, FEDFormer, TimesNet, MaelNetB1, MaelNetS1, ns_TransformerB1, ns_TransformerS1
 from models.PropPrototype import MultiHeadURT
 from sklearn.metrics import precision_recall_fscore_support
@@ -20,7 +20,7 @@ import numpy as np
 import random
 
 import copy
-import h5py
+# import h5py
 
 warnings.filterwarnings('ignore')
 
@@ -43,10 +43,7 @@ class Opt_URT_Anomaly(Exp_Basic):
             "TimesNet": TimesNet,
         }
         model = model_dict[self.args.model].Model(self.args).float()
-        if self.args.use_gpu:
-            self.URT = MultiHeadURT(key_dim=self.args.win_size , query_dim=self.args.win_size*self.args.enc_in, hid_dim=4096, temp=1, att="cosine", n_head=self.args.urt_heads).float().cuda()
-        else:
-            self.URT = MultiHeadURT(key_dim=self.args.win_size , query_dim=self.args.win_size*self.args.enc_in, hid_dim=4096, temp=1, att="cosine", n_head=self.args.urt_heads).float()
+        self.URT = MultiHeadURT(key_dim=self.args.win_size , query_dim=self.args.win_size*self.args.enc_in, hid_dim=4096, temp=1, att="cosine", n_head=self.args.urt_heads).float().to(self.device)
 
         if self.args.use_multi_gpu and self.args.use_gpu:
             model = nn.DataParallel(model, device_ids=self.args.device_ids)
@@ -57,7 +54,7 @@ class Opt_URT_Anomaly(Exp_Basic):
         return data_set, data_loader
 
     def _select_optimizer(self):
-        model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
+        model_optim = optim.AdamW(self.model.parameters(), lr=self.args.learning_rate, weight_decay=1e-5)
         # slow_model_optim = optim.Adam(self.slow_model.parameters(), lr=self.args.learning_rate)
         return model_optim
 
@@ -67,11 +64,14 @@ class Opt_URT_Anomaly(Exp_Basic):
     
 
     def _select_urt_optimizer(self):
-        urt_optim = optim.Adam(self.URT.parameters(), lr=0.0001)
+        urt_optim = optim.AdamW(self.URT.parameters(), lr=0.0001,weight_decay=1e-5)
         return urt_optim
 
     def _select_criterion(self):
-        criterion = nn.MSELoss()
+        if self.args.loss_type == "negative_corr":
+            criterion = NegativeCORR(self.args.correlation_penalty)
+        else:
+            criterion = nn.MSELoss()
         return criterion
 
 
@@ -104,15 +104,14 @@ class Opt_URT_Anomaly(Exp_Basic):
 
 
                 f_dim = -1 if self.args.features == 'MS' else 0
-                outputs = outputs[:, -self.args.pred_len:, f_dim:]
-                batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
+                outputs = outputs[:, :, f_dim:]
 
                 pred = outputs.detach().cpu()
-                true = batch_y.detach().cpu()
+                true = batch_x.detach().cpu()
 
                 loss = criterion(pred, true)
-
                 total_loss.append(loss)
+
         total_loss = np.average(total_loss)
         # self.model.train()
         self.URT.train()
@@ -135,7 +134,7 @@ class Opt_URT_Anomaly(Exp_Basic):
         time_now = time.time()
 
         train_steps = len(train_loader)
-        early_stopping = EarlyStopping(patience=self.args.patience, verbose=True)
+        early_stopping = EarlyStopping(patience=self.args.patience, verbose=True, urt=True)
 
         urt_optim = self._select_urt_optimizer()
         criterion = self._select_criterion()
@@ -157,7 +156,7 @@ class Opt_URT_Anomaly(Exp_Basic):
             epoch_time = time.time()
 
 
-            for i, (batch_x) in enumerate(train_loader):
+            for i, (batch_x, _) in enumerate(train_loader):
                 iter_count += 1
                 urt_optim.zero_grad()
                 batch_x = batch_x.float().to(self.device)
@@ -199,6 +198,7 @@ class Opt_URT_Anomaly(Exp_Basic):
                 true = batch_x.detach().cpu()
 
                 loss = criterion(pred, true)
+                loss.requires_grad = True
                 train_loss.append(loss.item())
 
                 urt_optim.zero_grad()
@@ -220,21 +220,23 @@ class Opt_URT_Anomaly(Exp_Basic):
             vali_loss = self.vali2(vali_data, vali_loader, criterion)
             test_loss = self.vali2(test_data, test_loader, criterion)
 
+            print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
+                epoch + 1, train_steps, train_loss, vali_loss, test_loss))
+            
             if (vali_loss < best_mse):
                 best_mse = vali_loss
                 # best_urt = self.URT.state_dict()
                 best_urt = copy.deepcopy(self.URT)
                 print("Update Best URT params")
 
-            print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
-                epoch + 1, train_steps, train_loss, vali_loss, test_loss))
-        
-            early_stopping(vali_loss, self.model, path)
+            early_stopping(vali_loss, self.URT, path, save=False)
+
             if early_stopping.early_stop:
                 print("Early stopping")
                 break
         # self.URT.load_state_dict(best_urt)
         self.URT=best_urt
+        torch.save(self.URT.state_dict(), path + '/' + 'checkpoint_urt.pth')
 
     def test2(self, setting, test=0):
         test_data, test_loader = self._get_data(flag='test')
@@ -243,6 +245,7 @@ class Opt_URT_Anomaly(Exp_Basic):
         if test:
             print('loading model')
             self.model.load_state_dict(torch.load(os.path.join('./checkpoints/' + setting, 'checkpoint.pth')))
+            self.URT.load_state_dict(torch.load(os.path.join('./checkpoints/' + setting, 'checkpoint_urt.pth')))
 
         attens_energy = []
         folder_path = './test_results/' + setting + '/'
@@ -298,6 +301,7 @@ class Opt_URT_Anomaly(Exp_Basic):
         attens_energy = []
         test_labels = []
         for i, (batch_x, batch_y) in enumerate(test_loader):
+            batch_x = batch_x.float().to(self.device)
             dec_out = []
             for idx in range(0,self.args.n_learner):
                 if self.args.use_multi_gpu and self.args.use_gpu:
@@ -377,11 +381,11 @@ class Opt_URT_Anomaly(Exp_Basic):
         np.save(folder_path + 'groundtruth.npy', gt)
 
 
-        fname = f"{setting}_dataset.h5"
-        hf = h5py.File(fname, 'w')
-        hf.create_dataset('preds', data=pred)
-        hf.create_dataset('groundtruths', data=gt)
-        hf.close()
+        # fname = f"{setting}_dataset.h5"
+        # hf = h5py.File(fname, 'w')
+        # hf.create_dataset('preds', data=pred)
+        # hf.create_dataset('groundtruths', data=gt)
+        # hf.close()
 
         #     np.savetxt(fname, trues[:,:,col],delimiter=",")
 

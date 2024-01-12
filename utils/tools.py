@@ -95,10 +95,11 @@ def adjust_learning_rate(optimizer, epoch, args):
         print('Updating learning rate to {}'.format(lr))
 
 class EarlyStopping:
-    def __init__(self, patience=7, verbose=False, delta=0):
+    def __init__(self, patience=7, verbose=False, delta=0, urt=None):
         self.patience = patience
         self.verbose = verbose
         self.counter = 0
+        self.urt = urt
         self.best_score = None
         self.early_stop = False
         self.val_loss_min = np.Inf
@@ -122,7 +123,7 @@ class EarlyStopping:
     def save_checkpoint(self, val_loss, model, path):
         if self.verbose:
             print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
-        torch.save(model.state_dict(), path + '/' + 'checkpoint.pth')
+        torch.save(model.state_dict(), path + '/' + 'checkpoint_urt.pth') if self.verbose else torch.save(model.state_dict(), path + '/' + 'checkpoint.pth')
         self.val_loss_min = val_loss
 
 def visual(true, preds=None, name='./pic/test.pdf'):

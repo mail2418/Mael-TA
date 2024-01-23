@@ -1,17 +1,26 @@
 import os
 import torch
 import numpy as np
-from models import MaelNet
+from models import MaelNet, KBJNet, DCDetector, ns_Transformer, FEDFormer, TimesNet, MaelNetB1, MaelNetS1, ns_TransformerB1, ns_TransformerS1
 
 class Exp_Basic(object):
     def __init__(self, args):
         self.args = args
         self.model_dict = {
-            "MaelNet": MaelNet
+            "MaelNet"    : MaelNet,
+            "MaelNetB1":MaelNetB1,
+            "MaelNetS1":MaelNetS1,
+            "KBJNet"     : KBJNet,
+            "DCDetector" : DCDetector,
+            "NSTransformer": ns_Transformer,
+            "NSTransformerB1": ns_TransformerB1,
+            "NSTransformerS1": ns_TransformerS1,
+            "FEDFormer" : FEDFormer,
+            "TimesNet": TimesNet,
         }
         self.device = self._acquire_device()
         self.model = self._build_model().to(self.device)
-
+        
     def _build_model(self):
         raise NotImplementedError
         return None

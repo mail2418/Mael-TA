@@ -1,0 +1,246 @@
+MaelNet_100_96_MaelNet_SMAP_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9366, Precision : 0.9267, Recall : 0.5475, F-score : 0.6883 
+
+KBJNet_100_96_KBJNet_SMAP_ftM_dm25_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9340, Precision : 0.9091, Recall : 0.5383, F-score : 0.6762 
+
+NSTransformer_100_96_NSTransformer_SMAP_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9344, Precision : 0.9256, Recall : 0.5296, F-score : 0.6737 
+
+KBJNet_SMAP2_KBJNet_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9335, Precision : 0.9077, Recall : 0.5349, F-score : 0.6731 
+
+NSTransformer_SMAP2_NSTransformer_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9341, Precision : 0.9215, Recall : 0.5298, F-score : 0.6728 
+
+KBJNet_SMD_KBJNet_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9796, Precision : 0.7730, Recall : 0.7194, F-score : 0.7452 
+
+MaelNet_SMD_MaelNet_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9649, Precision : 0.6398, Recall : 0.3580, F-score : 0.4591 
+
+KBJNet_PSM_KBJNet_PSM_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9403, Precision : 0.9743, Recall : 0.8061, F-score : 0.8823 
+
+MaelNet_PSM_MaelNet_PSM_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9712, Precision : 0.9896, Recall : 0.9057, F-score : 0.9458 
+
+KBJNet_PSM_KBJNet_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9646, Precision : 0.9164, Recall : 0.7310, F-score : 0.8133 
+
+MaelNet_MSL_MaelNet_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9037, Precision : 0.6774, Recall : 0.1652, F-score : 0.2656 
+
+MaelNet_SWaT_MaelNet_SWaT_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9582, Precision : 0.9993, Recall : 0.6563, F-score : 0.7923 
+
+NSTransformer_100_96_NSTransformer_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9852, Precision : 0.8498, Recall : 0.7812, F-score : 0.8141 
+
+NSTransformer_PSM_NSTransformer_PSM_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9481, Precision : 0.9891, Recall : 0.8219, F-score : 0.8978 
+
+NSTransformer_MSL_NSTransformer_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9522, Precision : 0.8842, Recall : 0.6297, F-score : 0.7355 
+
+Test1_MaelNetB1_MaelNetS1_MaelNetB1_SMAP_ftM_dm25_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9351, Precision : 0.9393, Recall : 0.5269, F-score : 0.6751 
+
+Test1_MaelNetB1_MaelNetS1_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9543, Precision : 0.9146, Recall : 0.6248, F-score : 0.7424 
+
+Test1_MaelNetB1_MaelNetS1_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9403, Precision : 0.8956, Recall : 0.4910, F-score : 0.6343 
+
+Test1_MaelNetB1_MaelNetS1_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9541, Precision : 0.9141, Recall : 0.6236, F-score : 0.7414 
+
+Test1_MaelNetB1_MaelNetS1_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9404, Precision : 0.8964, Recall : 0.4915, F-score : 0.6349 
+
+Test1_MaelNetB1_MaelNetS1_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9543, Precision : 0.9157, Recall : 0.6239, F-score : 0.7421 
+
+NSTransformerB1_NSTransformerS1_MSL_NSTransformerB1_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9640, Precision : 0.9049, Recall : 0.7358, F-score : 0.8116 
+
+NSTransformerB1_NSTransformerS1_MSL_NSTransformerB1_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9640, Precision : 0.9032, Recall : 0.7378, F-score : 0.8121 
+
+NSTransformerB1_NSTransformerS1_MSL_NSTransformerB1_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9643, Precision : 0.9078, Recall : 0.7359, F-score : 0.8129 
+
+NSTransformerB1_NSTransformerS1_MSL_NSTransformerB1_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9634, Precision : 0.9023, Recall : 0.7318, F-score : 0.8081 
+
+NSTransformerB1_NSTransformerS1_MSL_NSTransformerB1_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9642, Precision : 0.9065, Recall : 0.7361, F-score : 0.8124 
+
+Test1_MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9622, Precision : 0.8861, Recall : 0.7358, F-score : 0.8040 
+
+Test1_MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9538, Precision : 0.8703, Recall : 0.6602, F-score : 0.7509 
+
+Test1_MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9546, Precision : 0.8669, Recall : 0.6729, F-score : 0.7577 
+
+Test1_MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9541, Precision : 0.8729, Recall : 0.6609, F-score : 0.7523 
+
+Test1_MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9639, Precision : 0.8898, Recall : 0.7508, F-score : 0.8144 
+
+Test1_MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_1  
+Accuracy : 0.9633, Precision : 0.8900, Recall : 0.7439, F-score : 0.8104 
+
+Test1_MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_1  
+Accuracy : 0.9586, Precision : 0.8823, Recall : 0.7010, F-score : 0.7812 
+
+Test1_MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_1  
+Accuracy : 0.9561, Precision : 0.8846, Recall : 0.6717, F-score : 0.7636 
+
+Test1_MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_1  
+Accuracy : 0.9559, Precision : 0.8802, Recall : 0.6730, F-score : 0.7628 
+
+Test1_MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_1  
+Accuracy : 0.9621, Precision : 0.8861, Recall : 0.7353, F-score : 0.8037 
+
+Test1_MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_2  
+Accuracy : 0.9626, Precision : 0.8893, Recall : 0.7370, F-score : 0.8060 
+
+Test1_MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_2  
+Accuracy : 0.9592, Precision : 0.8821, Recall : 0.7081, F-score : 0.7855 
+
+Test1_MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_2  
+Accuracy : 0.9572, Precision : 0.8790, Recall : 0.6890, F-score : 0.7725 
+
+Test1_MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_2  
+Accuracy : 0.9560, Precision : 0.8807, Recall : 0.6742, F-score : 0.7637 
+
+Test1_MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_2  
+Accuracy : 0.9618, Precision : 0.8892, Recall : 0.7290, F-score : 0.8012 
+
+KBJNet_MSL_KBJNet_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9561, Precision : 0.8695, Recall : 0.6874, F-score : 0.7678 
+
+MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9622, Precision : 0.8861, Recall : 0.7358, F-score : 0.8040 
+
+MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9538, Precision : 0.8703, Recall : 0.6602, F-score : 0.7509 
+
+MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9546, Precision : 0.8669, Recall : 0.6729, F-score : 0.7577 
+
+MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9541, Precision : 0.8729, Recall : 0.6609, F-score : 0.7523 
+
+MaelNetB1_MaelNetS1_NegativeCorr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9639, Precision : 0.8898, Recall : 0.7508, F-score : 0.8144 
+
+MaelNetB1_MaelNetS1_SMAP_Negative_Corr_MaelNetB1_SMAP_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9332, Precision : 0.8969, Recall : 0.5403, F-score : 0.6743 
+
+MaelNetB1_MaelNetS1_SMAP_Negative_Corr_MaelNetB1_SMAP_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9328, Precision : 0.9019, Recall : 0.5329, F-score : 0.6700 
+
+MaelNetB1_MaelNetS1_SMAP_Negative_Corr_MaelNetB1_SMAP_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9329, Precision : 0.9038, Recall : 0.5322, F-score : 0.6699 
+
+MaelNetB1_MaelNetS1_SMAP_Negative_Corr_MaelNetB1_SMAP_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9332, Precision : 0.9067, Recall : 0.5325, F-score : 0.6710 
+
+MaelNetB1_MaelNetS1_SMAP_Negative_Corr_MaelNetB1_SMAP_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9335, Precision : 0.9032, Recall : 0.5374, F-score : 0.6739 
+
+MaelNetB1_MaelNetS1_MSL_Negative_Corr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9622, Precision : 0.8861, Recall : 0.7358, F-score : 0.8040 
+
+MaelNetB1_MaelNetS1_MSL_Negative_Corr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9538, Precision : 0.8703, Recall : 0.6602, F-score : 0.7509 
+
+MaelNetB1_MaelNetS1_MSL_Negative_Corr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9546, Precision : 0.8669, Recall : 0.6729, F-score : 0.7577 
+
+MaelNetB1_MaelNetS1_MSL_Negative_Corr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9541, Precision : 0.8729, Recall : 0.6609, F-score : 0.7523 
+
+MaelNetB1_MaelNetS1_MSL_Negative_Corr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9639, Precision : 0.8898, Recall : 0.7508, F-score : 0.8144 
+
+MaelNetB1_MaelNetS1_MSL_Negative_Corr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_1  
+Accuracy : 0.9633, Precision : 0.8900, Recall : 0.7439, F-score : 0.8104 
+
+MaelNetB1_MaelNetS1_MSL_Negative_Corr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_1  
+Accuracy : 0.9586, Precision : 0.8823, Recall : 0.7010, F-score : 0.7812 
+
+MaelNetB1_MaelNetS1_MSL_Negative_Corr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_1  
+Accuracy : 0.9561, Precision : 0.8846, Recall : 0.6717, F-score : 0.7636 
+
+MaelNetB1_MaelNetS1_MSL_Negative_Corr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_1  
+Accuracy : 0.9559, Precision : 0.8802, Recall : 0.6730, F-score : 0.7628 
+
+MaelNetB1_MaelNetS1_MSL_Negative_Corr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_1  
+Accuracy : 0.9621, Precision : 0.8861, Recall : 0.7353, F-score : 0.8037 
+
+MaelNetB1_MaelNetS1_MSL_Negative_Corr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_2  
+Accuracy : 0.9626, Precision : 0.8893, Recall : 0.7370, F-score : 0.8060 
+
+MaelNetB1_MaelNetS1_MSL_Negative_Corr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_2  
+Accuracy : 0.9592, Precision : 0.8821, Recall : 0.7081, F-score : 0.7855 
+
+MaelNetB1_MaelNetS1_MSL_Negative_Corr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_2  
+Accuracy : 0.9572, Precision : 0.8790, Recall : 0.6890, F-score : 0.7725 
+
+MaelNetB1_MaelNetS1_MSL_Negative_Corr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_2  
+Accuracy : 0.9560, Precision : 0.8807, Recall : 0.6742, F-score : 0.7637 
+
+MaelNetB1_MaelNetS1_MSL_Negative_Corr_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_2  
+Accuracy : 0.9618, Precision : 0.8892, Recall : 0.7290, F-score : 0.8012 
+
+MaelNetB1_MaelNetS1_PSM_Negative_Corr_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9707, Precision : 0.9907, Recall : 0.9027, F-score : 0.9447 
+
+MaelNetB1_MaelNetS1_PSM_Negative_Corr_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9541, Precision : 0.9874, Recall : 0.8452, F-score : 0.9108 
+
+MaelNetB1_MaelNetS1_PSM_Negative_Corr_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9642, Precision : 0.9881, Recall : 0.8814, F-score : 0.9317 
+
+MaelNetB1_MaelNetS1_PSM_Negative_Corr_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9568, Precision : 0.9859, Recall : 0.8564, F-score : 0.9166 
+
+MaelNetB1_MaelNetS1_PSM_Negative_Corr_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9734, Precision : 0.9914, Recall : 0.9120, F-score : 0.9500 
+
+MaelNetB1_MaelNetS1_SMD_Negative_Corr_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9862, Precision : 0.8694, Recall : 0.7874, F-score : 0.8264 
+
+MaelNetB1_MaelNetS1_SMD_Negative_Corr_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9852, Precision : 0.8668, Recall : 0.7614, F-score : 0.8107 
+
+MaelNetB1_MaelNetS1_SMD_Negative_Corr_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9851, Precision : 0.8723, Recall : 0.7525, F-score : 0.8080 
+
+MaelNetB1_MaelNetS1_SMD_Negative_Corr_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9843, Precision : 0.8667, Recall : 0.7345, F-score : 0.7951 
+
+MaelNetB1_MaelNetS1_SMD_Negative_Corr_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9865, Precision : 0.8677, Recall : 0.7956, F-score : 0.8301 
+
+MaelNetB1_MaelNetS1_SWaT_Negative_Corr_MaelNetB1_SWaT_ftM_dm51_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9645, Precision : 0.9081, Recall : 0.7875, F-score : 0.8435 
+
+MaelNetB1_MaelNetS1_SWaT_Negative_Corr_MaelNetB1_SWaT_ftM_dm51_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9643, Precision : 0.9075, Recall : 0.7866, F-score : 0.8427 
+
+MaelNetB1_MaelNetS1_SWaT_Negative_Corr_MaelNetB1_SWaT_ftM_dm51_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9648, Precision : 0.9100, Recall : 0.7879, F-score : 0.8445 
+
+MaelNetB1_MaelNetS1_SWaT_Negative_Corr_MaelNetB1_SWaT_ftM_dm51_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9647, Precision : 0.9088, Recall : 0.7887, F-score : 0.8445 
+
+MaelNetB1_MaelNetS1_SWaT_Negative_Corr_MaelNetB1_SWaT_ftM_dm51_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9645, Precision : 0.9081, Recall : 0.7873, F-score : 0.8434 
+

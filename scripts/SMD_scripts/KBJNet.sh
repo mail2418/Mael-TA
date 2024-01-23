@@ -1,0 +1,19 @@
+python -u run.py \
+  --is_training 1 \
+  --root_path ./dataset/SMD/ \
+  --model_id KBJNet_100_96 \
+  --model KBJNet \
+  --data SMD \
+  --anomaly_ratio 0.6 \
+  --e_layers 2 \
+  --d_layers 1 \
+  --factor 3 \
+  --enc_in 38 \
+  --dec_in 38 \
+  --c_out 38 \
+  --n_windows 100\
+  --gpu 0 \
+  --des 'Exp_h256_l2' \
+  --p_hidden_dims 128 128 \
+  --p_hidden_layers 2 \
+  --itr 1 &

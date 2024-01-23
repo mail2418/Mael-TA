@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.metrics import roc_auc_score
-from spot import SPOT
+from utils.spot import SPOT
 
 def calc_point2point(predict, actual):
     """
@@ -71,7 +71,7 @@ def adjust_predicts(score, label,
     else:
         return predict
 
-def pot_eval(model_name, init_score, score, label, q=1e-5, level=0.02):
+def pot_eval(model_name, dataset, init_score, score, label, q=1e-5, level=0.02):
     # Threshold parameters
     lm_d = {
         "SMD":[(0.99995, 1.04), (0.99995, 1.06)],
@@ -81,7 +81,7 @@ def pot_eval(model_name, init_score, score, label, q=1e-5, level=0.02):
         'PML': [(0.98, 1), (0.98, 1)],
 
     }
-    lm = lm_d[model_name][1 if model_name in ["KBJNet"] else 0]
+    lm = lm_d[dataset][1 if model_name in ["KBJNet"] else 0]
     """
     Run POT method on given score.
     Args:

@@ -1,15 +1,16 @@
 import argparse
 import torch
-from exp.exp_main import Exp_Anomaly_Detection
+from exp.exp_main_MANTRA import Exp_Anomaly_Detection_MANTRA
+from exp.opt_urt_anomaly import Opt_URT_Anomaly
 import random
 import numpy as np
 
-parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection')
+parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection with MANTRA')
 
 # basic config
 parser.add_argument('--is_training', type=int, default=0, help='status')
-parser.add_argument('--model_id', type=str, default='KBJNet_MSL', help='model id')
-parser.add_argument('--model', type=str, default='KBJNet',
+parser.add_argument('--model_id', type=str, default='MaelNetB1_MaelNetS1_NegativeCorr', help='model id')
+parser.add_argument('--model', type=str, default='MaelNetB1',
                     help='model name, options: [MaelNet]')
 
 # # # data loader
@@ -48,18 +49,26 @@ parser.add_argument('--base', type=str, default='legendre', help='mwt base')
 #TimesNet
 parser.add_argument('--top_k', type=int, default=5)
 
+#MANTRA
+parser.add_argument('--n_learner', type=int, default=3)
+parser.add_argument('--slow_model', type=str, default='MaelNetS1',
+                    help='model name, options: [MaelNet]')
+parser.add_argument('--urt_heads', type=int, default=1, help='num of heads')
+#lOSS TYPE
+parser.add_argument('--loss_type', type=str, default="neg_corr", help='loss type')
+parser.add_argument('--correlation_penalty', type=float, default=0.5, help='correlation penalty')
 # model define
 parser.add_argument('--kernel_size', type=int, default=3, help='kernel input size')
 parser.add_argument('--enc_in', type=int, default=55, help='encoder input size')
 parser.add_argument('--dec_in', type=int, default=55, help='decoder input size')
 parser.add_argument('--c_out', type=int, default=55, help='output size')
-parser.add_argument('--d_model', type=int, default=512, help='dimension of model')
+parser.add_argument('--d_model', type=int, default=55, help='dimension of model')
 parser.add_argument('--n_heads', type=int, default=8, help='num of heads attention')
 parser.add_argument('--e_layers', type=int, default=2, help='num of encoder layers')
 parser.add_argument('--d_layers', type=int, default=1, help='num of decoder layers')
 parser.add_argument('--d_ff', type=int, default=2048, help='dimension of fcn')
 parser.add_argument('--moving_avg', type=int, default=100, help='window size of moving average')
-parser.add_argument('--factor', type=int, default=1, help='attn factor')
+parser.add_argument('--factor', type=int, default=3, help='attn factor')
 parser.add_argument('--distil', action='store_false',
                     help='whether to use distilling in encoder, using this argument means not using distilling',
                     default=True)
@@ -115,7 +124,9 @@ if args.use_gpu:
 
 if __name__ == "__main__":
 
-    Exp = Exp_Anomaly_Detection
+    Exp = Exp_Anomaly_Detection_MANTRA
+    OptURTAnomaly = Opt_URT_Anomaly
+
     print('Args in experiment:')
     print(args)
     for ii in range(args.itr):
@@ -135,10 +146,13 @@ if __name__ == "__main__":
             args.distil,
             args.des,ii)
         exp = Exp(args)  # set experiments
+        opt = OptURTAnomaly(args)
         if args.is_training:
             print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
             exp.train(setting)
+            opt.train_urt(setting)
         else:
             print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-            exp.test(setting,1)
+            exp.test(setting)
+            opt.test2(setting)
             torch.cuda.empty_cache()

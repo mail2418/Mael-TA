@@ -27,7 +27,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
 
     def _build_model(self):
         # model = self.model_dict[self.args.model].Model(self.args).float()
-        model = self.model_dict["MaelNet"].Model(self.args).float().to(self.device)
+        model = self.model_dict["MaelNet"].Model(self.args).float()
 
         if self.args.use_multi_gpu and self.args.use_gpu:
             model = nn.DataParallel(model, device_ids=self.args.device_ids)
@@ -108,7 +108,6 @@ class Exp_Anomaly_Detection(Exp_Basic):
                 outputs = outputs[:, :, f_dim:]
 
                 loss = criterion(outputs, batch_x)
-                train_loss.append(loss.item())
                 
                 if (i + 1) % 100 == 0:
                     print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
@@ -195,42 +194,65 @@ class Exp_Anomaly_Detection(Exp_Basic):
 
         attens_energy = np.concatenate(attens_energy, axis=0).reshape(-1)
         test_energy = np.array(attens_energy)
-        combined_energy = np.concatenate([train_energy, test_energy], axis=0)
+        # combined_energy = np.concatenate([train_energy, test_energy], axis=0)
 
-        threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio)
+        # threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio)
 
-        print("Threshold :", threshold)
+        # print("Threshold :", threshold)
 
         # (3) evaluation on the test set
-        pred = (test_energy > threshold).astype(int)
-        test_labels = np.concatenate(test_labels, axis=0).reshape(-1)
-        test_labels = np.array(test_labels)
+        # pred = (test_energy > threshold).astype(int)
+        # test_labels = np.concatenate(test_labels, axis=0).reshape(-1)
+        # test_labels = np.array(test_labels)
 
-        gt = test_labels.astype(int)
-        print("pred:   ", pred.shape)
-        print("gt:     ", gt.shape)
+        # gt = test_labels.astype(int)
+        # print("pred:   ", pred.shape)
+        # print("gt:     ", gt.shape)
 
         # (4) detection adjustment
-        gt, pred = adjustment(gt, pred) #gt == label
+        # gt, pred = adjustment(gt, pred) #gt == label
 
-        pred = np.array(pred)
-        gt = np.array(gt)
-        print("pred: ", pred.shape)
-        print("gt:   ", gt.shape)
+        # pred = np.array(pred)
+        # gt = np.array(gt)
+        # print("pred: ", pred.shape)
+        # print("gt:   ", gt.shape)
 
-        accuracy = accuracy_score(gt, pred)
-        precision, recall, f_score, support = precision_recall_fscore_support(gt, pred, average='binary')
-        print("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
-            accuracy, precision,
-            recall, f_score))
+        # accuracy = accuracy_score(gt, pred)
+        # precision, recall, f_score, support = precision_recall_fscore_support(gt, pred, average='binary')
+        # print("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
+        #     accuracy, precision,
+        #     recall, f_score))
+
+        # # result_anomaly_detection.txt
+        # f = open("result_anomaly_detection.txt", 'a')
+        # f.write(setting + "  \n")
+        # f.write("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
+        #     accuracy, precision,
+        #     recall, f_score))
+        # f.write('\n')
+        # f.write('\n')
+        # f.close()
+
+        #Pot eval dari kbj net
+        test_labels = np.concatenate(test_labels, axis=0).reshape(-1)
+        test_labels = np.array(test_labels)
+        print(train_energy.shape, test_energy.shape, test_labels.shape)
+        result, _ = pot_eval(self.args.model_name, self.args.data, train_energy, test_energy, test_labels, q=1e-5, level=0.02)
+        print("Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
+            result['precision'],
+            result['recall'], result['f1']))
 
         # result_anomaly_detection.txt
         f = open("result_anomaly_detection.txt", 'a')
         f.write(setting + "  \n")
-        f.write("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
-            accuracy, precision,
-            recall, f_score))
+        f.write("Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
+            result['precision'],
+            result['recall'], result['f1']))
         f.write('\n')
         f.write('\n')
         f.close()
+
+        result.update(hit_att(lossT, test_labels))
+        result.update(ndcg(lossT, test_labels))
+        pprint(result)
         return

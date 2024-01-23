@@ -145,7 +145,7 @@ class Model(nn.Module):
         self.layer_norm = nn.LayerNorm(configs.d_model)
         self.projection = nn.Linear(configs.d_model, configs.c_out, bias=True)
             
-    def forward(self, x_enc, x_dec):
+    def forward(self, x_enc):
         # Normalization from Non-stationary Transformer
         means = x_enc.mean(1, keepdim=True).detach()
         x_enc = x_enc - means

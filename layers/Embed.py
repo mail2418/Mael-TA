@@ -16,7 +16,7 @@ class PositionalEmbedding(nn.Module):
         pe.require_grad = False
 
         position = torch.arange(0, max_len).float().unsqueeze(1)
-        if self.model_name == "MaelNet":
+        if self.model_name in ["MaelNet", "MaelNetS1", "MaelNetB1"]:
             div_term = (torch.arange(0, d_model).float() * -(math.log(10000.0) / d_model)).exp()
             pe += torch.sin(position * div_term)
             pe += torch.cos(position * div_term)
@@ -76,7 +76,7 @@ class TokenTCNEmbedding(nn.Module):
     def forward(self, x):
         #x.shape = 32x100x25 --> 25x512x3
         # src2 = g_atts.permute(2, 0, 1) * math.sqrt(self.n_feats)
-        x = x.permute(0, 2, 1)
+        x = x.permute(0, 2, 1) #permute, reshape, 
         x = self.network(x)
         x = x.transpose(1, 2)
         return x
@@ -160,7 +160,7 @@ class DataEmbedding(nn.Module):
     def __init__(self, model_name, c_in, d_model, kernel_size=3, embed_type='fixed', freq='h', dropout=0.1, n_windows=5):
         super(DataEmbedding, self).__init__()
 
-        self.value_embedding = TokenTCNEmbedding(c_in=c_in, d_model=d_model, kernel_size=kernel_size, n_windows=n_windows) if model_name == "MaelNet" else TokenEmbedding(
+        self.value_embedding = TokenTCNEmbedding(c_in=c_in, d_model=d_model, kernel_size=kernel_size, n_windows=n_windows) if model_name in ["MaelNet", "MaelNetS1", "MaelNetB1"] else TokenEmbedding(
             c_in=c_in, d_model=d_model)
         self.position_embedding = PositionalEmbedding(model_name, d_model=d_model)
         self.temporal_embedding = TemporalEmbedding(d_model=d_model, embed_type=embed_type,

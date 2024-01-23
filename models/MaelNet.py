@@ -91,22 +91,20 @@ class Model(nn.Module):
         self.tau_learner   = Projector(enc_in=configs.enc_in, win_size=configs.win_size, hidden_dims=configs.p_hidden_dims, hidden_layers=configs.p_hidden_layers, output_dim=1)
         self.delta_learner = Projector(enc_in=configs.enc_in, win_size=configs.win_size, hidden_dims=configs.p_hidden_dims, hidden_layers=configs.p_hidden_layers, output_dim=configs.win_size)
             
-    def forward(self, x_enc, x_dec):
+    def forward(self, x_enc):
         x_raw = x_enc.clone().detach()
 
         # Normalization dari NS_Transformer
         means = x_enc.mean(1, keepdim=True).detach()  # B x 1 x E
-        x_enc -= means
+        x_enc = x_enc - means
         std_enc = torch.sqrt(torch.var(x_enc, dim=1, keepdim=True, unbiased=False) + 1e-5).detach()  # B x 1 x E
-        x_enc /= std_enc
+        x_enc = x_enc / std_enc
 
-        # B x S x E, B x 1 x E -> B x 1, positive scalar
-        tau = self.tau_learner(x_raw, std_enc).exp()
-        # B x S x E, B x 1 x E -> B x S
-        delta = self.delta_learner(x_raw, means)
+        tau = self.tau_learner(x_raw, std_enc).exp()  # B x S x E, B x 1 x E -> B x 1, positive scalar
+        delta = self.delta_learner(x_raw, means) # B x S x E, B x 1 x E -> B x S
 
-        seasonal_init, trend_init = self.decomp(x_enc)
-
+        seasonal_init, trend_init = self.decomp(x_enc) #input dari decoder
+        
         # embedding
         enc_out = self.enc_embedding(x_enc, None)
         enc_out, attns = self.encoder(enc_out, tau=tau, delta=delta)
@@ -117,7 +115,7 @@ class Model(nn.Module):
 
         dec_out = seasonal_part + trend_part
         #Denormalization dari NS_Transformer
-        dec_out *= std_enc 
-        dec_out += means
+        dec_out = dec_out * std_enc 
+        dec_out = dec_out + means
 
         return dec_out  # [B, L, D]

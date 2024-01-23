@@ -37,7 +37,7 @@ class Model(nn.Module):
         memory = self.transformer_encoder2(src2)
         return memory
 
-    def forward(self, enc, dec):
+    def forward(self, enc):
         # Embedding Start
         g_atts = self.tcn(enc) #tidak mengubah dimensi # 128x25x5 32x25x100 32 38 100
         enc2 = g_atts.permute(2, 0, 1) * math.sqrt(self.n_feats) # 5x128x25 100x32x25

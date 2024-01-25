@@ -46,7 +46,7 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
         return slow_model_optim
 
     def _select_criterion(self):
-        if self.args.loss_type == "negative_corr":
+        if self.args.loss_type == "neg_corr":
             criterion = NegativeCORR(self.args.correlation_penalty)
         else:
             criterion = nn.MSELoss()

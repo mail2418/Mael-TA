@@ -56,7 +56,7 @@ parser.add_argument('--slow_model', type=str, default='MaelNetS1',
 parser.add_argument('--urt_heads', type=int, default=1, help='num of heads')
 
 #Loss Selection
-parser.add_argument("--loss_type", type=str, default="mse", help="loss type")
+parser.add_argument("--loss_type", type=str, default="neg_corr", help="loss type")
 parser.add_argument("--correlation_penalty", type=float, default=0.5, help="loss type")
 
 # model define

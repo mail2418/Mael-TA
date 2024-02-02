@@ -1,5 +1,5 @@
 import numpy as np
-
+import torch
 
 def RSE(pred, true):
     return np.sqrt(np.sum((true - pred) ** 2)) / np.sqrt(np.sum((true - true.mean()) ** 2))
@@ -14,7 +14,7 @@ class NegativeCorr:
     def __init__(self, corr_penalty):
         self.corr_penalty = corr_penalty
     def __call__(self, pred, true):
-        return np.mean((pred - true) ** 2) + (self.corr_penalty * ((true - true.mean(0)) * (pred - pred.mean(0))).sum(0))
+        return torch.mean((pred - true) ** 2) + self.corr_penalty * torch.mean(pred - true.mean(0)) * torch.sum(pred - pred.mean(0))
 
 def MAE(pred, true):
     return np.mean(np.abs(pred - true))

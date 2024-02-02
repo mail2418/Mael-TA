@@ -1,7 +1,7 @@
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from utils.tools import EarlyStopping, adjustment, visual
-from utils.metrics import NegativeCORR
+from utils.metrics import NegativeCorr
 from models import MaelNet, KBJNet, DCDetector, ns_Transformer, FEDFormer, TimesNet, MaelNetB1, MaelNetS1, ns_TransformerB1, ns_TransformerS1
 from models.PropPrototype import MultiHeadURT
 from sklearn.metrics import precision_recall_fscore_support
@@ -54,7 +54,7 @@ class Opt_URT_Anomaly(Exp_Basic):
         return data_set, data_loader
 
     def _select_optimizer(self):
-        model_optim = optim.AdamW(self.model.parameters(), lr=self.args.learning_rate, weight_decay=1e-5)
+        model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
         # slow_model_optim = optim.Adam(self.slow_model.parameters(), lr=self.args.learning_rate)
         return model_optim
 
@@ -64,12 +64,12 @@ class Opt_URT_Anomaly(Exp_Basic):
     
 
     def _select_urt_optimizer(self):
-        urt_optim = optim.AdamW(self.URT.parameters(), lr=0.0001,weight_decay=1e-5)
+        urt_optim = optim.Adam(self.URT.parameters(), lr=0.0001)
         return urt_optim
 
     def _select_criterion(self):
         if self.args.loss_type == "negative_corr":
-            criterion = NegativeCORR(self.args.correlation_penalty)
+            criterion = NegativeCorr(self.args.correlation_penalty)
         else:
             criterion = nn.MSELoss()
         return criterion
@@ -101,7 +101,6 @@ class Opt_URT_Anomaly(Exp_Basic):
                         fin_out[:,:,k] = fin_out[:,:,k] + (dec_out[l,:,:,k] * urt_out[l,k])
                 
                 outputs = fin_out
-
 
                 f_dim = -1 if self.args.features == 'MS' else 0
                 outputs = outputs[:, :, f_dim:]
@@ -146,7 +145,7 @@ class Opt_URT_Anomaly(Exp_Basic):
 
         if self.args.use_amp:
             scaler = torch.cuda.amp.GradScaler()
-
+        f = open("training_urt_anomaly_detection.txt", 'a')
         for epoch in range(self.args.train_epochs):
             iter_count = 0
             train_loss = []
@@ -214,15 +213,20 @@ class Opt_URT_Anomaly(Exp_Basic):
                 # model_optim.step()
                 urt_optim.step()
                 # slow_model_optim.step()
-
+            if epoch == 0:
+                f.write(setting + "  \n")  
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
+            f.write("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
+            f.write("\n")
             train_loss = np.average(train_loss)
             vali_loss = self.vali2(vali_data, vali_loader, criterion)
             test_loss = self.vali2(test_data, test_loader, criterion)
 
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
-            
+            f.write("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
+                epoch + 1, train_steps, train_loss, vali_loss, test_loss))
+            f.write("\n")
             if (vali_loss < best_mse):
                 best_mse = vali_loss
                 # best_urt = self.URT.state_dict()
@@ -235,6 +239,7 @@ class Opt_URT_Anomaly(Exp_Basic):
                 print("Early stopping")
                 break
         # self.URT.load_state_dict(best_urt)
+        f.close()
         self.URT=best_urt
         torch.save(self.URT.state_dict(), path + '/' + 'checkpoint_urt.pth')
 

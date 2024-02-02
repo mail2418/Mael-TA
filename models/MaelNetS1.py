@@ -39,7 +39,7 @@ class Projector(nn.Module):
 class Model(nn.Module):
     def __init__(self, configs):
         super(Model, self).__init__()
-        self.name = "MaelNet"
+        self.name = "MaelNetS1"
         self.output_attention = configs.output_attention
         self.dec_in = configs.dec_in
         self.decomp = series_decomp(configs.moving_avg)

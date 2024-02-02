@@ -112,7 +112,6 @@ class Model(nn.Module):
 
     def forward(self, x_enc):
         # decomp init
-        mean = torch.mean(x_enc, dim=1).unsqueeze(1).repeat(1, self.pred_len, 1)
         seasonal_init, trend_init = self.decomp(x_enc)
         # enc
         enc_out = self.enc_embedding(x_enc, None)

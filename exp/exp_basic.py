@@ -1,7 +1,7 @@
 import os
 import torch
 import numpy as np
-from models import MaelNet, KBJNet, DCDetector, ns_Transformer, FEDFormer, TimesNet, MaelNetB1, MaelNetS1, ns_TransformerB1, ns_TransformerS1
+from models import MaelNet, KBJNet, DCDetector, ns_Transformer, FEDFormer, TimesNet, MaelNetB1, MaelNetS1, ns_TransformerB1, ns_TransformerS1,AutoFormer
 
 class Exp_Basic(object):
     def __init__(self, args):
@@ -17,6 +17,7 @@ class Exp_Basic(object):
             "NSTransformerS1": ns_TransformerS1,
             "FEDFormer" : FEDFormer,
             "TimesNet": TimesNet,
+            "AutoFormer": AutoFormer,
         }
         self.device = self._acquire_device()
         self.model = self._build_model().to(self.device)

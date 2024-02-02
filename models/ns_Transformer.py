@@ -40,7 +40,7 @@ class Model(nn.Module):
     """
     def __init__(self, configs):
         super(Model, self).__init__()
-        self.name = "ns_Transformer"
+        self.name = "NSTransformer"
         self.output_attention = configs.output_attention
         self.config = configs
 

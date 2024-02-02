@@ -102,7 +102,6 @@ class Opt_URT_Anomaly(Exp_Basic):
                 
                 outputs = fin_out
 
-
                 f_dim = -1 if self.args.features == 'MS' else 0
                 outputs = outputs[:, :, f_dim:]
 

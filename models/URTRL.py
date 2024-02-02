@@ -63,9 +63,9 @@ class URTPropagation(nn.Module):
 
     return score
 
-class MultiHeadURT(nn.Module):
+class MultiHeadURTAnomaly(nn.Module):
   def __init__(self, key_dim, query_dim, hid_dim, temp=1, att="cosine", n_head=1):
-    super(MultiHeadURT, self).__init__()
+    super(MultiHeadURTAnomaly, self).__init__()
     layers = []
     for _ in range(n_head):
       layer = URTPropagation(key_dim, query_dim, hid_dim, temp, att)

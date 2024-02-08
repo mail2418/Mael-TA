@@ -43,6 +43,7 @@ class Opt_URT_Anomaly(Exp_Basic):
             "TimesNet": TimesNet,
         }
         model = model_dict[self.args.model].Model(self.args).float()
+        # self.slow_model = model_dict[self.args.slow_model].Model(self.args).float().to(self.device)
         self.URT = MultiHeadURT(key_dim=self.args.win_size , query_dim=self.args.win_size*self.args.enc_in, hid_dim=4096, temp=1, att="cosine", n_head=self.args.urt_heads).float().to(self.device)
 
         if self.args.use_multi_gpu and self.args.use_gpu:
@@ -62,7 +63,6 @@ class Opt_URT_Anomaly(Exp_Basic):
     #     slow_model_optim = optim.Adam(self.slow_model.parameters(), lr=self.args.learning_rate)
     #     return slow_model_optim
     
-
     def _select_urt_optimizer(self):
         urt_optim = optim.Adam(self.URT.parameters(), lr=0.0001)
         return urt_optim

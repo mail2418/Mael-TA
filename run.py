@@ -7,9 +7,9 @@ import numpy as np
 parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection')
 
 # basic config
-parser.add_argument('--is_training', type=int, default=0, help='status')
-parser.add_argument('--model_id', type=str, default='KBJNet_MSL', help='model id')
-parser.add_argument('--model', type=str, default='KBJNet',
+parser.add_argument('--is_training', type=int, default=1, help='status')
+parser.add_argument('--model_id', type=str, default='DCDetector_MSL', help='model id')
+parser.add_argument('--model', type=str, default='DCDetector',
                     help='model name, options: [MaelNet]')
 
 # # # data loader
@@ -31,8 +31,8 @@ parser.add_argument('--anomaly_ratio', type=float, default=1, help="Anomaly rati
 parser.add_argument('--n_windows', type=int, default=100, help="Sliding Windows KBJNet")
 
 #DCDetector
-parser.add_argument('--channel', type=int, default=55, help="Channel DCDetector")
-parser.add_argument('--patch_size', type=list, default=[5,7], help="Sliding Windows KBJNet")
+parser.add_argument('--channel', type=int, default=105, help="Channel DCDetector")
+parser.add_argument('--patch_size', type=list, default=[3,5], help="Sliding Windows KBJNet")
 
 # FEDFormer task
 parser.add_argument('--seq_len', type=int, default=96, help='input sequence length')

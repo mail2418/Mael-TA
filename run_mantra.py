@@ -46,6 +46,14 @@ parser.add_argument('--modes', type=int, default=32, help='modes to be selected 
 parser.add_argument('--L', type=int, default=3, help='ignore level')
 parser.add_argument('--base', type=str, default='legendre', help='mwt base')
 
+#Reinforcement Learning
+parser.add_argument('--use_weight',   action='store_true', default=False)
+parser.add_argument('--use_td',       action='store_false', default=True)
+parser.add_argument('--use_extra',    action='store_false', default=True)
+parser.add_argument('--use_pretrain', action='store_false', default=True)
+parser.add_argument('--epsilon', default=0.5, type=float)
+parser.add_argument('--exp_name', default='rlmc', type=str)
+
 #TimesNet
 parser.add_argument('--top_k', type=int, default=5)
 

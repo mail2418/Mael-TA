@@ -48,3 +48,29 @@ def evaluate_agent(agent, test_states, test_ranks, test_bm_preds, test_y, std, m
     mae_loss = mean_absolute_error(test_y), inv_trans(weighted_y, std, mean)
     mape_loss = mean_absolute_percentage_error(inv_trans(test_y,  std, mean), inv_trans(weighted_y,  std, mean))
     return mae_loss, mape_loss, act_sorted
+
+def sparse_explore(obs, act_dim):
+    N = len(obs)
+    x = np.zeros((N, act_dim))
+    randn_idx = np.random.randint(0, act_dim, size=(N,))
+    x[np.arange(N), randn_idx] = 1
+
+    # disturb from the vertex
+    delta = np.random.uniform(0.02, 0.1, size=(N, 1))
+    x[np.arange(N), randn_idx] -= delta.squeeze()
+
+    # noise
+    noise = np.abs(np.random.randn(N, act_dim))
+    noise[np.arange(N), randn_idx] = 0
+    noise /= noise.sum(1, keepdims=True)
+    noise = delta * noise
+    sparse_action = x + noise
+
+    return sparse_action
+
+def get_state_weight(train_error):
+    L = len(train_error)
+    best_model = train_error.argmin(1)
+    best_model_counter = Counter(best_model)
+    model_weight = {k:v/L for k,v in best_model_counter.items()}
+    return model_weight

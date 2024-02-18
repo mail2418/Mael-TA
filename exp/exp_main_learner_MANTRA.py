@@ -22,9 +22,9 @@ import numpy as np
 warnings.filterwarnings('ignore')
 
 
-class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
+class Exp_Anomaly_Detection_Learner(Exp_Basic):
     def __init__(self, args):
-        super(Exp_Anomaly_Detection_MANTRA, self).__init__(args)
+        super(Exp_Anomaly_Detection_Learner, self).__init__(args)
 
     def _build_model(self):
         model = self.model_dict[self.args.model].Model(self.args).float()
@@ -53,27 +53,54 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
             criterion = nn.MSELoss()
         return criterion
 
-    def vali(self, vali_data, vali_loader, criterion):
+    def vali(self, vali_data, vali_loader, criterion, header_bmcsvreader, flag):
         total_loss = []
         self.model.eval()
+        bm_valid_test_csv = open(f"bm_{flag}_preds.csv","w")
+        bmcsvreader = csv.writer(bm_valid_test_csv)
+        bmcsvreader.writerow(header_bmcsvreader)
+        list_of_bm_valid_test = [[]]
+
         with torch.no_grad():
-            for i, (batch_x, _) in enumerate(vali_loader):
+            for _ , (batch_x, _) in enumerate(vali_loader):
                 batch_x = batch_x.float().to(self.device)
 
-                if self.model.name not in ["KBJNet"]:
-                    outputs = self.model(batch_x)
-                else:
-                    outputs = self.model(batch_x.permute(0,2,1)) 
+                dec_out = []
+                for idx in range(self.args.n_learner):
+                    if self.model.name not in ["KBJNet"]:
+                        outputs = self.model.forward_1learner(batch_x, idx)
+                    else:
+                        outputs = self.model.forward_1learner(batch_x.permute(0,2,1),idx) 
+                    list_of_bm_valid_test[idx].append(outputs)
+                    dec_out.append(outputs)
+
+                outputs = torch.stack(dec_out)
+                outputs = torch.mean(outputs,axis=1) 
 
                 f_dim = -1 if self.args.features == 'MS' else 0
                 outputs = outputs[:, :, f_dim:]
 
+                s0,s1,s2 = batch_x.shape
+                randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
+                m_ones = torch.ones(s0,s1,s2)
+                slow_mark = torch.bernoulli(randuniform)
+                batch_x_slow = batch_x.clone()
+                batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
+
+                if self.slow_model.name not in ["KBJNet"]:
+                    slow_out = self.slow_model.forward(batch_x_slow)
+                else:
+                    slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
+
+                f_dim = -1 if self.args.features == 'MS' else 0
+                slow_out = slow_out[:, :, f_dim:]
+
                 pred = outputs.detach().cpu()
                 true = batch_x.detach().cpu()
 
-                loss = criterion(pred, true)
+                loss = criterion(pred, true) + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
                 total_loss.append(loss)
-                
+        bmcsvreader.writerows(list_of_bm_valid_test)         
         total_loss = np.average(total_loss)
         self.model.train()
         return total_loss
@@ -96,8 +123,13 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
         slow_model_optim = self._select_slow_optimizer()
         criterion = self._select_criterion()
         f = open("training_mantra_anomaly_detection.txt", 'a')
+
         f_csv = open("training_mantra_anomaly_detection.csv","a")
+        bm_train_csv = open("bm_train_preds.csv","w")
         csvreader = csv.writer(f_csv)
+        header_bmcsvreader = [f"learner{i}" for i in range(self.args.n_learner)]
+        bmcsvreader = csv.writer(bm_train_csv)
+        bmcsvreader.writerow(header_bmcsvreader)
 
         for epoch in tqdm(list(range(self.args.train_epochs))):
             iter_count = 0
@@ -105,20 +137,28 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
 
             self.model.train()
             epoch_time = time.time()
+            list_of_bm_train = [[] for _ in range(self.args.n_learner)]
             for i, (batch_x, _) in enumerate(train_loader):
                 iter_count += 1
                 model_optim.zero_grad()
 
                 batch_x = batch_x.float().to(self.device)
-                if self.model.name not in ["KBJNet"]:
-                    outputs = self.model(batch_x)
-                else:
-                    outputs = self.model(batch_x.permute(0,2,1)) 
-                    
+                dec_out = []
+                for idx in range(self.args.n_learner):
+                    if self.model.name not in ["KBJNet"]:
+                        outputs = self.model.forward_1learner(batch_x, idx)
+                    else:
+                        outputs = self.model.forward_1learner(batch_x.permute(0,2,1),idx) 
+                    list_of_bm_train[idx].append(outputs)
+                    dec_out.append(outputs)
+
+                outputs = torch.stack(dec_out)
+                outputs = torch.mean(outputs,axis=0)
+
                 f_dim = -1 if self.args.features == 'MS' else 0
                 outputs = outputs[:, :, f_dim:]
                 loss = criterion(outputs, batch_x)
-                train_loss.append(loss.item())
+                # train_loss.append(loss.item())
 
                 if (i + 1) % 100 == 0:
                     print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
@@ -128,10 +168,10 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
                     iter_count = 0
                     time_now = time.time()
                 
-                loss.backward()
-                model_optim.step()
+                # loss.backward() # coba-coba
+                # model_optim.step() # coba-coba
                 # Slow Learner
-                loss = 0
+                # loss = 0 # coba-coba
                 s0,s1,s2 = batch_x.shape
                 randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
                 m_ones = torch.ones(s0,s1,s2)
@@ -145,8 +185,9 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
                     slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
 
                 f_dim = -1 if self.args.features == 'MS' else 0
-                outputs = outputs[:, :, f_dim:]
+                slow_out = slow_out[:, :, f_dim:]
                 loss = loss + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
+                train_loss.append(loss.item())
 
                 slow_model_optim.zero_grad()    
                 loss.backward()
@@ -161,8 +202,8 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
             f.write("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             f.write("\n")
             train_loss = np.average(train_loss)
-            vali_loss = self.vali(vali_data, vali_loader, criterion)
-            test_loss = self.vali(test_data, test_loader, criterion)
+            vali_loss = self.vali(vali_data, vali_loader, criterion, header_bmcsvreader, "valid")
+            test_loss = self.vali(test_data, test_loader, criterion, header_bmcsvreader, "test")
 
             data_for_csv = [[epoch + 1, time.time() - epoch_time, train_steps, round(train_loss,7), round(vali_loss,7), round(test_loss,7)],[]]
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
@@ -171,7 +212,7 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
             f.write("\n")
             csvreader.writerows(data_for_csv)
-            
+            bmcsvreader.writerows(list_of_bm_train)
             # Saving Model
             early_stopping(vali_loss, self.model, path)
             if early_stopping.early_stop:
@@ -179,8 +220,8 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
                 break
             adjust_learning_rate(model_optim, epoch + 1, self.args)
 
-        best_model_path = path + '/' + 'checkpoint.pth'
-        self.model.load_state_dict(torch.load(best_model_path)) # load_state_dict
+        # best_model_path = path + '/' + 'checkpoint.pth'
+        # self.model.load_state_dict(torch.load(best_model_path)) # load_state_dict
         f.write("\n")
         csvreader.writerow([])
         f.close()

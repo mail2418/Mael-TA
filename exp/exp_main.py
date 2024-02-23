@@ -151,9 +151,10 @@ class Exp_Anomaly_Detection(Exp_Basic):
         csvreader.writerow([])
         return self.model
 
-    def test(self, setting, test=0):
+    def test(self, setting, test=1):
         _, test_loader = self._get_data(flag='test')
         _, train_loader = self._get_data(flag='train')
+
         if test:
             print('loading model')
             self.model.load_state_dict(torch.load(os.path.join('./checkpoints/' + setting, 'checkpoint.pth')))
@@ -195,7 +196,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
                 outputs = self.model(batch_x.permute(0,2,1)) 
             # criterion
             lossT = self.anomaly_criterion(batch_x, outputs)
-            score = torch.mean(lossT, dim=-1)
+            score = torch.mean(lossT, dim=-1) #anomaly score
             score = score.detach().cpu().numpy()
             attens_energy.append(score)
             test_labels.append(batch_y)

@@ -231,8 +231,7 @@ class OPT_RL_Mantra:
                 best_acc = acc
                 patience = 0
                 # update best model
-                for param, target_param in zip(
-                        actor.parameters(), best_actor.parameters()):
+                for param, target_param in zip(actor.parameters(), best_actor.parameters()):
                     target_param.data.copy_(param.data)
             else:
                 patience += 1
@@ -248,6 +247,7 @@ class OPT_RL_Mantra:
         return best_actor
  
     def active_urt_reinforcment_learning(self, setting):
+        epsilon = self.args.epsilon
         train_X, valid_X, test_X, test_y, train_error, valid_error, _ = load_data_rl(self.args.root_path)
         train_preds, valid_preds, test_preds = np.load(f'{self.args.root_path}bm_train_preds_new.npz'),np.load(f'{self.args.root_path}bm_valid_preds_new.npz'),np.load(f'{self.args.root_path}bm_test_preds_new.npz')
 
@@ -325,7 +325,8 @@ class OPT_RL_Mantra:
             shuffle_idxes   = np.random.randint(0, L, 300)
             sampled_states  = states[shuffle_idxes] 
             sampled_actions = self.agent.select_action(sampled_states)
-            sampled_rewards, _ = get_batch_rewards(env, shuffle_idxes, sampled_actions, q_mae)
+            #sampled_rewards ===> mae_reward + rank_reward
+            sampled_rewards, _ = get_batch_rewards(env, shuffle_idxes, sampled_actions, q_mae) 
             for i in range(len(sampled_states)):
                 self.replay_buffer.add(shuffle_idxes[i], sampled_actions[i], sampled_rewards[i])
 

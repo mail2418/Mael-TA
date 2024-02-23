@@ -10,14 +10,14 @@ class Actor(nn.Module):
                                             kernel_size=3,
                                             in_channels=obs_dim,
                                             channels=40,
-                                            out_channels=configs.d_model,
-                                            reduced_size=configs.d_model)
+                                            out_channels=configs.hidden_dim_rl,
+                                            reduced_size=configs.hidden_dim_rl)
         self.net = nn.Sequential(
-            nn.Linear(configs.d_model, configs.d_model), 
+            nn.Linear(configs.hidden_dim_rl, configs.hidden_dim_rl), 
             nn.ReLU(),
-            nn.Linear(configs.d_model, configs.d_model), 
+            nn.Linear(configs.hidden_dim_rl, configs.hidden_dim_rl), 
             nn.ReLU(),
-            nn.Linear(configs.d_model, act_dim)
+            nn.Linear(configs.hidden_dim_rl, act_dim)
         )
             
     def forward(self, obs):
@@ -34,15 +34,15 @@ class Critic(nn.Module):
                                             kernel_size=3,
                                             in_channels=obs_dim,
                                             channels=40,
-                                            out_channels=configs.d_model,
-                                            reduced_size=configs.d_model)
-        self.act_layer = nn.Linear(act_dim, configs.d_model)
+                                            out_channels=configs.hidden_dim_rl,
+                                            reduced_size=configs.hidden_dim_rl)
+        self.act_layer = nn.Linear(act_dim, configs.hidden_dim_rl)
         self.net = nn.Sequential(
-            nn.Linear(configs.d_model, configs.d_model), 
+            nn.Linear(configs.hidden_dim_rl, configs.hidden_dim_rl), 
             nn.ReLU(),
-            nn.Linear(configs.d_model, configs.d_model), 
+            nn.Linear(configs.hidden_dim_rl, configs.hidden_dim_rl), 
             nn.ReLU(),
-            nn.Linear(configs.d_model, act_dim)
+            nn.Linear(configs.hidden_dim_rl, act_dim)
         )
             
     def forward(self, obs, act):

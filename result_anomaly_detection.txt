@@ -244,3 +244,6 @@ Accuracy : 0.9647, Precision : 0.9088, Recall : 0.7887, F-score : 0.8445
 MaelNetB1_MaelNetS1_SWaT_Negative_Corr_MaelNetB1_SWaT_ftM_dm51_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
 Accuracy : 0.9645, Precision : 0.9081, Recall : 0.7873, F-score : 0.8434 
 
+DCDetector_MSL_DCDetector_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9561, Precision : 0.8695, Recall : 0.6873, F-score : 0.7677 
+

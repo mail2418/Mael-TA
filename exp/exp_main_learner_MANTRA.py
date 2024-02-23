@@ -99,8 +99,11 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         for learner_idx in range(self.args.n_learner):
             dict_learner_valid[header_bmnpzreader[learner_idx]] = list_of_bm_valid_test[learner_idx]
         if epoch == 0:
+            np_input_valid_X = valid_X[0]
+            for i in range(1,len(np_input_valid_X)):
+                np_input_valid_X = np.append(np_input_valid_X,valid_X[i])
             np.savez(f"{self.args.root_path}bm_{flag}_preds.npz", **dict_learner_valid)
-            np.save(f"{self.args.root_path}valid_X.npy",valid_X)
+            np.save(f"{self.args.root_path}valid_X.npy",np_input_valid_X)
         return total_loss,dict_learner_valid
     
     def vali_step_tester(self, vali_loader, criterion, header_bmnpzreader, list_of_bm_valid_test, test_X:List,test_y:List, epoch, flag):
@@ -150,8 +153,14 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         for learner_idx in range(self.args.n_learner):
             dict_learner_test[header_bmnpzreader[learner_idx]] = list_of_bm_valid_test[learner_idx]
         if epoch == 0 :
-            np.save(f"{self.args.root_path}test_X.npy",test_X)
-            np.save(f"{self.args.root_path}test_y.npy",test_y)
+            np_input_test_X = test_X[0] # biar punya awalan shape array numpy
+            np_input_test_y = test_y[0]
+            for i in range(1,len(np_input_test_X)):
+                np_input_test_X = np.append(np_input_test_X,test_X[i])
+            for j in range(1,len(np_input_test_y)):
+                np_input_test_y = np.append(np_input_test_y,test_y[j])
+            np.save(f"{self.args.root_path}test_X.npy",np_input_test_X)
+            np.save(f"{self.args.root_path}test_y.npy",np_input_test_y)
         return total_loss,dict_learner_test
     
     def vali(self, vali_data, vali_loader, criterion, header_bmnpzreader, epoch, flag):
@@ -254,7 +263,11 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 slow_model_optim.step()
                 model_optim.step()
             if epoch == 0:
-                np.save(f"{self.args.root_path}train_X.npy",train_X)
+                np_input_train_X = train_X[0] # biar punya awalan shape array numpy
+                for i in range(1,len(train_X)):
+                    np_input_train_X = np.append(np_input_train_X,train_X[i])
+                np.save(f"{self.args.root_path}train_X.npy",np_input_train_X)
+                
                 f.write(setting + "  \n")    
                 header = [[setting],["Epoch","Cost Time", "Steps", "Train Loss", "Vali Loss", "Test Loss"]]
                 csvreader.writerows(header)

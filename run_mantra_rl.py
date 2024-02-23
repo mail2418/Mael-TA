@@ -1,9 +1,9 @@
 import argparse
 import torch
 from exp.exp_main_learner_MANTRA import Exp_Anomaly_Detection_Learner
-# from exp.opt_rl_anomaly import OPT_RL_Mantra
 import random
 import numpy as np
+from utils.datapredsrl import unify_input_data
 
 parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection with MANTRA')
 
@@ -54,6 +54,8 @@ parser.add_argument('--use_pretrain', action='store_false', default=True)
 parser.add_argument('--step_size', default=4)
 parser.add_argument('--epsilon', default=0.5, type=float)
 parser.add_argument('--exp_name', default='rlmc', type=str)
+parser.add_argument("--hidden_dim_rl",default=100, type=int)
+parser.add_argument("--train_epochs_rl",default=500, type=int)
 
 parser.add_argument('--model_actor', type=str, default='MaelNetB1',
                     help='model name, options: [MaelNet]')
@@ -172,5 +174,6 @@ if __name__ == "__main__":
         else:
             print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
             # opt.active_urt_reinforcment_learning(setting)
-            # exp.test(setting)
+            unify_input_data(args)
+            exp.test(setting)
             torch.cuda.empty_cache()

@@ -24,26 +24,32 @@ def load_data_rl(root):
             train_error, valid_error, test_error)
 
 def unify_input_data(args):
-    train_X   = np.load(f'{args.root_path}train_X.npy')
-    valid_X   = np.load(f'{args.root_path}valid_X.npy')
-    test_X    = np.load(f'{args.root_path}test_X.npy')         
-    test_y    = np.load(f'{args.root_path}test_y.npy')        
+    train_X   = np.load(f'{args.root_path}train_X.npy', allow_pickle=True)
+    valid_X   = np.load(f'{args.root_path}valid_X.npy', allow_pickle=True)
+    test_X    = np.load(f'{args.root_path}test_X.npy', allow_pickle=True)         
+    test_y    = np.load(f'{args.root_path}test_y.npy', allow_pickle=True)        
 
     # predictions
     MODEL_LEARNER = [f"learner{i+1}" for i in range(args.n_learner)]
-    bm_train_preds = np.load(f'{args.root_path}bm_train_preds.npz')
-    bm_valid_preds = np.load(f'{args.root_path}/bm_valid_preds.npz')
-    bm_test_preds = np.load(f'{args.root_path}/bm_test_preds.npz')
+    bm_train_preds = np.load(f'{args.root_path}bm_train_preds.npz', allow_pickle=True)
+    bm_valid_preds = np.load(f'{args.root_path}/bm_valid_preds.npz', allow_pickle=True)
+    bm_test_preds = np.load(f'{args.root_path}/bm_test_preds.npz', allow_pickle=True)
     merge_train, merge_valid, merge_test = [],[],[]
     for model_name in MODEL_LEARNER:
         model_train_pred = bm_train_preds[model_name]
         model_valid_pred = bm_valid_preds[model_name]
         model_test_pred = bm_test_preds[model_name]
 
-        model_train_pred = np.expand_dims(model_train_pred, axis=1) # menambah 1 dimensi
+        model_train_pred = np.expand_dims(model_train_pred, axis=1)
         model_valid_pred = np.expand_dims(model_valid_pred, axis=1) # menambah 1 dimensi
-        model_test_pred = np.expand_dims(model_test_pred, axis=1) # menambah 1 dimensi
-
+        model_test_pred  = np.expand_dims(model_test_pred, axis=1)
+        # Harusnya menjadikan dimensi pada base model expand dimension makai looping
+        # for i in range(len(model_train_pred)):
+        #     model_train_pred[i] = np.expand_dims(model_train_pred[i], axis=1) # menambah 1 dimensi
+        # for j in range(len(model_valid_pred)):
+        #     model_valid_pred[j] = np.expand_dims(model_valid_pred[j], axis=1) # menambah 1 dimensi
+        #     model_test_pred[j] = np.expand_dims(model_test_pred[j], axis=1) # menambah 1 dimensi
+            
         merge_train.append(model_train_pred)
         merge_valid.append(model_valid_pred)
         merge_test.append(model_test_pred)
@@ -52,9 +58,9 @@ def unify_input_data(args):
     valid_preds = np.concatenate(merge_valid, axis=1)
     test_preds = np.concatenate(merge_test, axis=1)
 
-    np.save(f'{args.root_path}bm_train_preds_new.npy', train_preds)
-    np.save(f'{args.root_path}bm_valid_preds_new.npy', valid_preds)
-    np.save(f'{args.root_path}bm_test_preds.npy', test_preds)
+    # np.save(f'{args.root_path}bm_train_preds_new.npy', train_preds)
+    # np.save(f'{args.root_path}bm_valid_preds_new.npy', valid_preds)
+    # np.save(f'{args.root_path}bm_test_preds_new.npy', test_preds)
 
     train_error_df = compute_mae_error(train_X, train_preds)
     valid_error_df = compute_mae_error(valid_X, valid_preds)

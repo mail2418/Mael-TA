@@ -136,3 +136,6 @@ dmypy.json
 
 #test_results
 /test_results
+
+#playground
+playground.py

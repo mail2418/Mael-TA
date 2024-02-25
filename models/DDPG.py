@@ -42,7 +42,7 @@ class Critic(nn.Module):
             nn.ReLU(),
             nn.Linear(configs.hidden_dim_rl, configs.hidden_dim_rl), 
             nn.ReLU(),
-            nn.Linear(configs.hidden_dim_rl, act_dim)
+            nn.Linear(configs.hidden_dim_rl, 1)
         )
             
     def forward(self, obs, act):

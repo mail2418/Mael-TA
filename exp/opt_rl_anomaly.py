@@ -51,10 +51,10 @@ class ReplayBuffer:
         rewards = torch.FloatTensor(self.rewards[ind]).to(self.device)
         return (states, actions, rewards.squeeze())
 class Env:
-    def __init__(self, train_preds, train_error, train_X):
+    def __init__(self, train_preds, train_error, train_y):
         self.error = train_error
         self.bm_preds = train_preds
-        self.x = train_X
+        self.y = train_y
     
     def reward_func(self, idx, action):
         if isinstance(action, int):
@@ -63,8 +63,8 @@ class Env:
             action = tmp
         weighted_y = np.multiply(action.reshape(-1, 1), self.bm_preds[idx])
         weighted_y = weighted_y.sum(axis=0)
-        # new_mape = mean_absolute_percentage_error(inv_trans(self.x[idx]), inv_trans(weighted_y))
-        new_mae = mean_absolute_error(self.x[idx], weighted_y)
+        # new_mape = mean_absolute_percentage_error(inv_trans(self.y[idx]), inv_trans(weighted_y))
+        new_mae = mean_absolute_error(self.y[idx], weighted_y)
         new_error = np.array([*self.error[idx], new_mae])
         rank = np.where(np.argsort(new_error) == len(new_error) - 1)[0][0]
         # return rank, new_mape, new_mae 
@@ -88,12 +88,12 @@ class DDPGAgent:
     def _set_states(self, states):
         self.states = states
     def _init_actor(self):
-        self.actor = DDPG.Actor(self.obs_dim, self.act_dim, self.args.d_model).to(self.device)
-        self.target_actor = DDPG.Actor(self.obs_dim,self.act_dim, self.args.d_model).to(self.device)
+        self.actor = DDPG.Actor(self.args, self.act_dim, self.obs_dim).to(self.device)
+        self.target_actor = DDPG.Actor(self.args, self.act_dim, self.obs_dim).to(self.device)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=self.lr)
     def _init_critic(self):
-        self.critic = DDPG.Critic(self.obs_dim, self.act_dim, self.args.d_model).to(self.device)
-        self.target_critic = DDPG.Critic(self.obs_dim, self.act_dim, self.args.d_model).to(self.device)
+        self.critic = DDPG.Critic(self.args, self.act_dim, self.obs_dim).to(self.device)
+        self.target_critic = DDPG.Critic(self.args, self.act_dim, self.obs_dim).to(self.device)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=self.lr)
     def _update_network(self):
         for param, target_param in zip(
@@ -189,8 +189,8 @@ class OPT_RL_Mantra:
         return agent
     
     def _initiate_buffer(self, act_dim):
-        self.replay_buffer = ReplayBuffer(act_dim, max_size=int(1e5))
-        self.extra_buffer = ReplayBuffer(act_dim, max_size=int(1e5))
+        self.replay_buffer = ReplayBuffer(act_dim, self.device, max_size=int(1e5))
+        self.extra_buffer = ReplayBuffer(act_dim, self.device, max_size=int(1e5))
     
     def pretrain_actor(self, obs_dim, act_dim, states, train_error, cls_weights, 
                    valid_states, valid_error):
@@ -248,22 +248,32 @@ class OPT_RL_Mantra:
  
     def active_urt_reinforcment_learning(self, setting):
         epsilon = self.args.epsilon
-        train_X, valid_X, test_X, test_y, train_error, valid_error, _ = load_data_rl(self.args.root_path)
-        train_preds, valid_preds, test_preds = np.load(f'{self.args.root_path}bm_train_preds_new.npz'),np.load(f'{self.args.root_path}bm_valid_preds_new.npz'),np.load(f'{self.args.root_path}bm_test_preds_new.npz')
+        train_X, valid_X, test_X, train_y, valid_y, test_y, train_error, valid_error, _ = load_data_rl(self.args.root_path)
+        train_preds, valid_preds, test_preds = np.load(f'{self.args.root_path}bm_train_preds_new.npy', allow_pickle=True),np.load(f'{self.args.root_path}bm_valid_preds_new.npy', allow_pickle=True),np.load(f'{self.args.root_path}bm_test_preds_new.npy', allow_pickle=True)
 
-        train_X = np.swapaxes(train_X, 2, 1)
-        valid_X = np.swapaxes(valid_X, 2, 1)
-        test_X  = np.swapaxes(test_X,  2, 1)
+        train_X = np.swapaxes(train_X, 2, 1).astype(np.float32)
+        valid_X = np.swapaxes(valid_X, 2, 1).astype(np.float32)
+        test_X  = np.swapaxes(test_X,  2, 1).astype(np.float32)
+        train_y = train_y.astype(np.float32)
+        valid_y = valid_y.astype(np.float32)
+        test_y = test_y.astype(np.float32)
 
+        train_error = train_error.astype(np.float32)
+        valid_error = valid_error.astype(np.float32)
+
+        train_preds = train_preds.astype(np.float32)
+        valid_preds = valid_preds.astype(np.float32)
+        test_preds = test_preds.astype(np.float32)
+
+        L = len(train_X) - 1 if self.args.use_td else len(train_X)
         states = torch.FloatTensor(train_X).to(self.device)
         valid_states = torch.FloatTensor(valid_X).to(self.device)
         test_states = torch.FloatTensor(test_X).to(self.device)
 
-        L = len(train_X) - 1 if self.args.use_td else len(train_X)
-        obs_dim = states.shape[2] # Mengambil Feature
+        obs_dim = states.shape[1] # Mengambil Feature
         act_dim = train_error.shape[-1]
-
-        env = Env(train_preds,train_error, train_X)
+        
+        env = Env(train_preds,train_error, train_y)
         best_model_weight = get_state_weight(train_error)
 
         state_weights = [1/best_model_weight[i] for i in train_error.argmin(1)]
@@ -384,7 +394,7 @@ class OPT_RL_Mantra:
                     target_q_lst.append(info['target_q'])
 
             # VALIDATION
-            valid_mae_loss, _, count_lst = evaluate_agent(self.agent, valid_states, valid_preds, valid_X) #ERROR
+            valid_mae_loss, _, count_lst = evaluate_agent(self.agent, valid_states, valid_preds, valid_y) #ERROR
             print(f'\n# Epoch {epoch + 1} ({(time.time() - t1)/60:.2f} min): '
                 f'valid_mae_loss: {valid_mae_loss:.3f}\t'
                 f'q_loss: {np.average(q_loss_lst):.5f}\t'

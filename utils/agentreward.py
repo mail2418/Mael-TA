@@ -44,7 +44,7 @@ def evaluate_agent(agent, test_states, test_bm_preds, test_X):
     act_counter = Counter(weights.argmax(1))
     act_sorted  = sorted([(k, v) for k, v in act_counter.items()])
     weights = np.expand_dims(weights, -1)  # (2816, 9, 1)
-    weighted_y = weights * test_bm_preds  # (2816, 9, 24)
+    weighted_y = weights * test_bm_preds[:weights.shape[0]]  # (2816, 9, 24)
     weighted_y = weighted_y.sum(1)  # (2816, 24)
     mae_loss = mean_absolute_error(test_X, weighted_y)
     mape_loss = mean_absolute_percentage_error(test_X, weighted_y)

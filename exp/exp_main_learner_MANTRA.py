@@ -102,14 +102,11 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
 
                 loss = criterion(pred, true) + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
                 total_loss.append(loss.item())
-                if i == 300: break
+                
         dict_learner_valid = {}
         for learner_idx in range(self.args.n_learner):
             dict_learner_valid[header_bmnpzreader[learner_idx]] = np.array(all_bm_valid_test_outputs[learner_idx], dtype="object")
         if epoch == 0:
-            # np_input_valid_X = valid_X[0]
-            # for i in range(1,valid_X[0].shape[0]):
-            #     np_input_valid_X = np.append(np_input_valid_X,valid_X[i])
             np_input_valid_X = np.array(valid_X, dtype="object")
             np.save(f"{self.args.root_path}valid_X.npy",np_input_valid_X)
         total_loss = np.average(total_loss)
@@ -164,7 +161,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
 
                 loss = criterion(pred, true) + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
                 total_loss.append(loss.item())
-                if i == 300: break
+                
         dict_learner_test = {}
         for learner_idx in range(self.args.n_learner):
             dict_learner_test[header_bmnpzreader[learner_idx]] = np.array(all_bm_valid_test_outputs[learner_idx], dtype="object")
@@ -224,8 +221,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             self.model.train()
             epoch_time = time.time()
             for i, (batch_x, batch_y) in enumerate(train_loader):
-                if epoch == 0:
-                    train_X.extend(batch_x.detach().cpu().numpy())
+                train_X.extend(batch_x.detach().cpu().numpy())
 
                 iter_count += 1
                 model_optim.zero_grad()
@@ -287,13 +283,6 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 loss.backward()
                 slow_model_optim.step()
                 model_optim.step()
-                if i == 300: break
-            if epoch == 0:
-                # np_input_train_X = train_X[0] # biar punya awalan shape array numpy
-                # for i in range(1,train_X[0].shape[0]):
-                #     np_input_train_X = np.append(np_input_train_X,train_X[i])
-                np_input_train_X = np.array(train_X, dtype="object")
-                np.save(f"{self.args.root_path}train_X.npy",np_input_train_X)
                 
                 f.write(setting + "  \n")    
                 header = [[setting],["Epoch","Cost Time", "Steps", "Train Loss", "Vali Loss", "Test Loss"]]
@@ -318,7 +307,11 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 print("Early stopping")
                 break
             adjust_learning_rate(model_optim, epoch + 1, self.args)
-        
+
+        # Data train di save setelah akhir epoch atau setelah early stopping karena data train mengalami shuffle sehingga menyesuaikan dengan input dari model train
+        np_input_train_X = np.array(train_X, dtype="object")
+        np.save(f"{self.args.root_path}train_X.npy",np_input_train_X)
+
         dict_learner = {}
         for learner_idx in range(self.args.n_learner):
             dict_learner[header_bmnpzreader[learner_idx]] = np.array(all_bm_train_outputs[learner_idx], dtype="object")

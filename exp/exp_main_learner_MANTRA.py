@@ -211,7 +211,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             train_loss = []
             self.model.train()
             epoch_time = time.time()
-            for i, (batch_x, batch_y) in enumerate(train_loader):
+            for i, (batch_x, batch_y) in enumerate(train_loader): 
                 train_X.append(batch_x.detach().cpu().numpy())
 
                 iter_count += 1
@@ -234,6 +234,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                     list_of_bm_train[idx] = torch.mean(list_of_bm_train[idx],axis=0)
                     list_of_bm_train[idx] = list_of_bm_train[idx][:,:,f_dim:]
                     list_of_bm_train[idx] = list_of_bm_train[idx].detach().cpu().numpy().reshape(list_of_bm_train[idx].shape[0] * list_of_bm_train[idx].shape[1],-1)
+                
                 outputs = torch.stack(dec_out)
                 outputs = torch.mean(outputs,axis=0)
                 outputs = outputs[:, :, f_dim:]
@@ -296,6 +297,9 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
             f.write("\n")
             csvreader.writerows(data_for_csv)
+
+
+
             # Saving Model
             early_stopping(vali_loss, self.model, path)
             if early_stopping.early_stop:

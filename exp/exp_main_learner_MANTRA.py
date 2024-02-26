@@ -55,9 +55,12 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
     
     def vali_step_validator(self, vali_loader, criterion, header_bmnpzreader, valid_X:List, epoch, flag):
         total_loss = []
+        all_bm_valid_test_outputs = [[] for _ in range(self.args.n_learner)]
         with torch.no_grad():
             for i , (batch_x, _) in enumerate(vali_loader):
-                valid_X.append(batch_x.detach().cpu().numpy())
+                if epoch == 0:
+                    valid_X.extend(batch_x.detach().cpu().numpy())
+
                 batch_x = batch_x.float().to(self.device)
 
                 list_of_bm_valid_test = [[] for _ in range(self.args.n_learner)]
@@ -76,6 +79,8 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                     list_of_bm_valid_test[idx] = torch.mean(list_of_bm_valid_test[idx],axis=0)
                     list_of_bm_valid_test[idx] = list_of_bm_valid_test[idx][:,:,f_dim:]
                     list_of_bm_valid_test[idx] = list_of_bm_valid_test[idx].detach().cpu().numpy().reshape(list_of_bm_valid_test[idx].shape[0] * list_of_bm_valid_test[idx].shape[1],-1)
+
+                    all_bm_valid_test_outputs[idx].extend(list_of_bm_valid_test[idx])
                 outputs = torch.stack(dec_out)
                 outputs = torch.mean(outputs,axis=0) 
                 outputs = outputs[:, :, f_dim:]
@@ -97,13 +102,11 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
 
                 loss = criterion(pred, true) + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
                 total_loss.append(loss.item())
+                
         dict_learner_valid = {}
         for learner_idx in range(self.args.n_learner):
-            dict_learner_valid[header_bmnpzreader[learner_idx]] = list_of_bm_valid_test[learner_idx]
+            dict_learner_valid[header_bmnpzreader[learner_idx]] = np.array(all_bm_valid_test_outputs[learner_idx], dtype=np.float32)
         if epoch == 0:
-            # np_input_valid_X = valid_X[0]
-            # for i in range(1,valid_X[0].shape[0]):
-            #     np_input_valid_X = np.append(np_input_valid_X,valid_X[i])
             np_input_valid_X = np.array(valid_X, dtype="object")
             np.save(f"{self.args.root_path}valid_X.npy",np_input_valid_X)
         total_loss = np.average(total_loss)
@@ -111,10 +114,12 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
     
     def vali_step_tester(self, vali_loader, criterion, header_bmnpzreader, test_X:List,test_y:List, epoch, flag):
         total_loss = []
+        all_bm_valid_test_outputs = [[] for _ in range(self.args.n_learner)]
         with torch.no_grad():
-            for _ , (batch_x, batch_y) in enumerate(vali_loader):
-                test_X.append(batch_x.detach().cpu().numpy())
-                test_y.append(batch_y.detach().cpu().numpy())
+            for i , (batch_x, batch_y) in enumerate(vali_loader):
+                if epoch == 0:
+                    test_X.extend(batch_x.detach().cpu().numpy())
+                    test_y.extend(batch_y.detach().cpu().numpy())
                 batch_x = batch_x.float().to(self.device)
 
                 list_of_bm_valid_test = [[] for _ in range(self.args.n_learner)]
@@ -133,6 +138,8 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                     list_of_bm_valid_test[idx] = torch.mean(list_of_bm_valid_test[idx],axis=0)
                     list_of_bm_valid_test[idx] = list_of_bm_valid_test[idx][:,:,f_dim:]
                     list_of_bm_valid_test[idx] = list_of_bm_valid_test[idx].detach().cpu().numpy().reshape(list_of_bm_valid_test[idx].shape[0] * list_of_bm_valid_test[idx].shape[1],-1)
+                
+                    all_bm_valid_test_outputs[idx].extend(list_of_bm_valid_test[idx])
                 outputs = torch.stack(dec_out)
                 outputs = torch.mean(outputs,axis=0) 
                 outputs = outputs[:, :, f_dim:]
@@ -154,16 +161,11 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
 
                 loss = criterion(pred, true) + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
                 total_loss.append(loss.item())
+                
         dict_learner_test = {}
         for learner_idx in range(self.args.n_learner):
-            dict_learner_test[header_bmnpzreader[learner_idx]] = list_of_bm_valid_test[learner_idx]
+            dict_learner_test[header_bmnpzreader[learner_idx]] = np.array(all_bm_valid_test_outputs[learner_idx], dtype=np.float32)
         if epoch == 0 :
-            # np_input_test_X = test_X[0] # biar punya awalan shape array numpy
-            # np_input_test_y = test_y[0]
-            # for i in range(1,test_X[0].shape[0]):
-            #     np_input_test_X = np.append(np_input_test_X,test_X[i])
-            # for j in range(1,test_y[0].shape[0]):
-            #     np_input_test_y = np.append(np_input_test_y,test_y[j])
             np_input_test_X = np.array(test_X,dtype="object")
             np_input_test_y = np.array(test_y,dtype="object")
             np.save(f"{self.args.root_path}test_X.npy",np_input_test_X)
@@ -209,10 +211,12 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         for epoch in tqdm(list(range(self.args.train_epochs))):
             iter_count = 0
             train_loss = []
+            all_bm_train_outputs = [[] for _ in range(self.args.n_learner)]
             self.model.train()
             epoch_time = time.time()
-            for i, (batch_x, batch_y) in enumerate(train_loader): 
-                train_X.append(batch_x.detach().cpu().numpy())
+            for i, (batch_x, batch_y) in enumerate(train_loader):
+                
+                train_X.extend(batch_x.detach().cpu().numpy())
 
                 iter_count += 1
                 model_optim.zero_grad()
@@ -234,7 +238,8 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                     list_of_bm_train[idx] = torch.mean(list_of_bm_train[idx],axis=0)
                     list_of_bm_train[idx] = list_of_bm_train[idx][:,:,f_dim:]
                     list_of_bm_train[idx] = list_of_bm_train[idx].detach().cpu().numpy().reshape(list_of_bm_train[idx].shape[0] * list_of_bm_train[idx].shape[1],-1)
-                
+
+                    all_bm_train_outputs[idx].extend(list_of_bm_train[idx])
                 outputs = torch.stack(dec_out)
                 outputs = torch.mean(outputs,axis=0)
                 outputs = outputs[:, :, f_dim:]
@@ -273,13 +278,8 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 loss.backward()
                 slow_model_optim.step()
                 model_optim.step()
+
             if epoch == 0:
-                # np_input_train_X = train_X[0] # biar punya awalan shape array numpy
-                # for i in range(1,train_X[0].shape[0]):
-                #     np_input_train_X = np.append(np_input_train_X,train_X[i])
-                np_input_train_X = np.array(train_X, dtype="object")
-                np.save(f"{self.args.root_path}train_X.npy",np_input_train_X)
-                
                 f.write(setting + "  \n")    
                 header = [[setting],["Epoch","Cost Time", "Steps", "Train Loss", "Vali Loss", "Test Loss"]]
                 csvreader.writerows(header)
@@ -306,10 +306,13 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 print("Early stopping")
                 break
             adjust_learning_rate(model_optim, epoch + 1, self.args)
-        
+
+        # Data train di save setelah akhir epoch atau setelah early stopping karena data train mengalami shuffle sehingga menyesuaikan dengan input dari model train
+        np_input_train_X = np.array(train_X, dtype="object")
+        np.save(f"{self.args.root_path}train_X.npy",np_input_train_X)
         dict_learner = {}
         for learner_idx in range(self.args.n_learner):
-            dict_learner[header_bmnpzreader[learner_idx]] = list_of_bm_train[learner_idx]
+            dict_learner[header_bmnpzreader[learner_idx]] = np.array(all_bm_train_outputs[learner_idx], dtype=np.float32)
         np.savez(f"{self.args.root_path}bm_train_preds.npz", **dict_learner)
         np.savez(f"{self.args.root_path}bm_valid_preds.npz", **dict_learner_valid)
         np.savez(f"{self.args.root_path}bm_test_preds.npz", **dict_learner_test)
@@ -324,9 +327,9 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         _, test_loader = self._get_data(flag='test')
         _, train_loader = self._get_data(flag='train')
 
-        if test:
-            print('loading model')
-            self.model.load_state_dict(torch.load(os.path.join('./checkpoints/' + setting, 'checkpoint.pth')))
+        # if test:
+        #     print('loading model')
+        #     self.model.load_state_dict(torch.load(os.path.join('./checkpoints/' + setting, 'checkpoint.pth')))
 
         attens_energy = []
         folder_path = './test_results/' + setting + '/'

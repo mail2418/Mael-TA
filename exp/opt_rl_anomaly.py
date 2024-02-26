@@ -51,10 +51,10 @@ class ReplayBuffer:
         rewards = torch.FloatTensor(self.rewards[ind]).to(self.device)
         return (states, actions, rewards.squeeze())
 class Env:
-    def __init__(self, train_preds, train_error, train_X):
+    def __init__(self, train_preds, train_error, train_y):
         self.error = train_error
         self.bm_preds = train_preds
-        self.x = train_X
+        self.y = train_y
     
     def reward_func(self, idx, action):
         if isinstance(action, int):
@@ -63,8 +63,8 @@ class Env:
             action = tmp
         weighted_y = np.multiply(action.reshape(-1, 1), self.bm_preds[idx])
         weighted_y = weighted_y.sum(axis=0)
-        # new_mape = mean_absolute_percentage_error(inv_trans(self.x[idx]), inv_trans(weighted_y))
-        new_mae = mean_absolute_error(self.x[idx], weighted_y)
+        # new_mape = mean_absolute_percentage_error(inv_trans(self.y[idx]), inv_trans(weighted_y))
+        new_mae = mean_absolute_error(self.y[idx], weighted_y)
         new_error = np.array([*self.error[idx], new_mae])
         rank = np.where(np.argsort(new_error) == len(new_error) - 1)[0][0]
         # return rank, new_mape, new_mae 
@@ -88,12 +88,12 @@ class DDPGAgent:
     def _set_states(self, states):
         self.states = states
     def _init_actor(self):
-        self.actor = DDPG.Actor(self.obs_dim, self.act_dim, self.args.d_model).to(self.device)
-        self.target_actor = DDPG.Actor(self.obs_dim,self.act_dim, self.args.d_model).to(self.device)
+        self.actor = DDPG.Actor(self.args, self.act_dim, self.obs_dim).to(self.device)
+        self.target_actor = DDPG.Actor(self.args, self.act_dim, self.obs_dim).to(self.device)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=self.lr)
     def _init_critic(self):
-        self.critic = DDPG.Critic(self.obs_dim, self.act_dim, self.args.d_model).to(self.device)
-        self.target_critic = DDPG.Critic(self.obs_dim, self.act_dim, self.args.d_model).to(self.device)
+        self.critic = DDPG.Critic(self.args, self.act_dim, self.obs_dim).to(self.device)
+        self.target_critic = DDPG.Critic(self.args, self.act_dim, self.obs_dim).to(self.device)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=self.lr)
     def _update_network(self):
         for param, target_param in zip(
@@ -106,7 +106,7 @@ class DDPGAgent:
     def select_action(self, obs):
         with torch.no_grad():
             action = self.actor(obs).cpu().numpy()
-        return F.softmax(action, axis=1)
+        return softmax(action, axis=1)
 
     def update(self,sampled_obs_idxes,sampled_actions,sampled_rewards,sampled_weights=None):
         batch_obs = self.states[sampled_obs_idxes]  # (512, 7, 20)
@@ -138,7 +138,7 @@ class DDPGAgent:
         # actor loss ==> convert actor output to softmax weights
         if sampled_weights is None:
             actor_loss = -self.critic(
-                batch_obs, softmax(self.actor(batch_obs), dim=1)).mean()
+                batch_obs, F.softmax(self.actor(batch_obs), dim=1)).mean()
         else:
             # weighted actor loss
             actor_loss = -self.critic(batch_obs, F.softmax(self.actor(batch_obs), dim=1))
@@ -189,8 +189,8 @@ class OPT_RL_Mantra:
         return agent
     
     def _initiate_buffer(self, act_dim):
-        self.replay_buffer = ReplayBuffer(act_dim, max_size=int(1e5))
-        self.extra_buffer = ReplayBuffer(act_dim, max_size=int(1e5))
+        self.replay_buffer = ReplayBuffer(act_dim, self.device, max_size=int(1e5))
+        self.extra_buffer = ReplayBuffer(act_dim, self.device, max_size=int(1e5))
     
     def pretrain_actor(self, obs_dim, act_dim, states, train_error, cls_weights, 
                    valid_states, valid_error):
@@ -248,22 +248,31 @@ class OPT_RL_Mantra:
  
     def active_urt_reinforcment_learning(self, setting):
         epsilon = self.args.epsilon
-        train_X, valid_X, test_X, test_y, train_error, valid_error, _ = load_data_rl(self.args.root_path)
-        train_preds, valid_preds, test_preds = np.load(f'{self.args.root_path}bm_train_preds_new.npz'),np.load(f'{self.args.root_path}bm_valid_preds_new.npz'),np.load(f'{self.args.root_path}bm_test_preds_new.npz')
+        train_X, valid_X, test_X, train_y, valid_y, test_labels, train_error, valid_error, _ = load_data_rl(self.args.root_path)
+        train_preds, valid_preds, test_preds = np.load(f'{self.args.root_path}bm_train_preds_new.npy', allow_pickle=True),np.load(f'{self.args.root_path}bm_valid_preds_new.npy', allow_pickle=True),np.load(f'{self.args.root_path}bm_test_preds_new.npy', allow_pickle=True)
 
-        train_X = np.swapaxes(train_X, 2, 1)
-        valid_X = np.swapaxes(valid_X, 2, 1)
-        test_X  = np.swapaxes(test_X,  2, 1)
+        train_X = np.swapaxes(train_X, 2, 1).astype(np.float32)
+        valid_X = np.swapaxes(valid_X, 2, 1).astype(np.float32)
+        test_X  = np.swapaxes(test_X,  2, 1).astype(np.float32)
+        train_y = train_y.astype(np.float32)
+        valid_y = valid_y.astype(np.float32)
 
+        train_error = train_error.astype(np.float32)
+        valid_error = valid_error.astype(np.float32)
+
+        train_preds = train_preds.astype(np.float32)
+        valid_preds = valid_preds.astype(np.float32)
+        test_preds = test_preds.astype(np.float32)
+
+        L = len(train_X) - 1 if self.args.use_td else len(train_X)
         states = torch.FloatTensor(train_X).to(self.device)
         valid_states = torch.FloatTensor(valid_X).to(self.device)
         test_states = torch.FloatTensor(test_X).to(self.device)
 
-        L = len(train_X) - 1 if self.args.use_td else len(train_X)
-        obs_dim = states.shape[2] # Mengambil Feature
+        obs_dim = states.shape[1] # Mengambil Feature
         act_dim = train_error.shape[-1]
-
-        env = Env(train_preds,train_error, train_X)
+        
+        env = Env(train_preds,train_error, train_y)
         best_model_weight = get_state_weight(train_error)
 
         state_weights = [1/best_model_weight[i] for i in train_error.argmin(1)]
@@ -291,7 +300,7 @@ class OPT_RL_Mantra:
         # INIT AGENT AND REPLAY EXTRA BUFFERS
         self._initiate_buffer(act_dim)
         self.agent._set_states(states)
-        self.agent._set_obs_dim(states.shape[2])
+        self.agent._set_obs_dim(states.shape[1])
         self.agent._set_act_dim(act_dim)
         self.agent._init_actor()
         self.agent._init_critic()
@@ -316,7 +325,7 @@ class OPT_RL_Mantra:
                 target_param.data.copy_(param.data)
         
         # to save the best model
-        best_actor = DDPG.Actor(obs_dim, act_dim).to(self.device)
+        best_actor = DDPG.Actor(self.args, act_dim, obs_dim).to(self.device)
         for param, target_param in zip(self.agent.actor.parameters(), best_actor.parameters()):
             target_param.data.copy_(param.data)
         
@@ -326,7 +335,7 @@ class OPT_RL_Mantra:
             sampled_states  = states[shuffle_idxes] 
             sampled_actions = self.agent.select_action(sampled_states)
             #sampled_rewards ===> mae_reward + rank_reward
-            sampled_rewards, _ = get_batch_rewards(env, shuffle_idxes, sampled_actions, q_mae) 
+            sampled_rewards = get_batch_rewards(env, shuffle_idxes, sampled_actions, q_mae) 
             for i in range(len(sampled_states)):
                 self.replay_buffer.add(shuffle_idxes[i], sampled_actions[i], sampled_rewards[i])
 
@@ -351,7 +360,7 @@ class OPT_RL_Mantra:
                 else:
                     batch_actions = self.agent.select_action(batch_states)
 
-                batch_rewards, batch_mae = get_batch_rewards(env, batch_idx, batch_actions, q_mae)
+                batch_rewards = get_batch_rewards(env, batch_idx, batch_actions, q_mae)
                 for j in range(len(batch_idx)):
                     self.replay_buffer.add(batch_idx[j], batch_actions[j], batch_rewards[j])
                     if self.args.use_extra and batch_rewards[j] <= -1.:
@@ -384,7 +393,7 @@ class OPT_RL_Mantra:
                     target_q_lst.append(info['target_q'])
 
             # VALIDATION
-            valid_mae_loss, _, count_lst = evaluate_agent(self.agent, valid_states, valid_preds, valid_X) #ERROR
+            valid_mae_loss, _, count_lst = evaluate_agent(self.agent, valid_states, valid_preds, valid_y) #ERROR
             print(f'\n# Epoch {epoch + 1} ({(time.time() - t1)/60:.2f} min): '
                 f'valid_mae_loss: {valid_mae_loss:.3f}\t'
                 f'q_loss: {np.average(q_loss_lst):.5f}\t'
@@ -407,12 +416,23 @@ class OPT_RL_Mantra:
             param.data.copy_(target_param)
 
         # Testing
-        accuracy, precision, recall, f_score = evaluate_agent_test(self.agent, states, train_preds, test_states, test_preds, test_y, self.args.anomaly_ratio)
+        accuracy, precision, recall, f_score = evaluate_agent_test(self.agent, states, train_preds, test_states, test_preds, test_labels, self.args.anomaly_ratio)
+        print("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
+            accuracy, precision,
+            recall, f_score))
+        # CSV
         f_csv = open("training_mantra_anomaly_detection_rl.csv","a")
         csvreader = csv.writer(f_csv)
         datas = [[setting],["Accuracy","Precision","Recall","F-score"],[round(accuracy,4),round(precision,4),round(recall,4),round(f_score,4)]]
         csvreader.writerows(datas)
-        print("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
+        
+        #Text
+        f = open("result_anomaly_detection_mantra_rl.txt", 'a')
+        f.write(setting + "  \n")
+        f.write("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
             accuracy, precision,
             recall, f_score))
+        f.write('\n')
+        f.write('\n')
+        f.close()
     

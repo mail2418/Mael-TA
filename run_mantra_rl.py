@@ -1,6 +1,7 @@
 import argparse
 import torch
 from exp.exp_main_learner_MANTRA import Exp_Anomaly_Detection_Learner
+from exp.opt_rl_anomaly import OPT_RL_Mantra
 import random
 import numpy as np
 from utils.datapredsrl import unify_input_data
@@ -8,7 +9,7 @@ from utils.datapredsrl import unify_input_data
 parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection with MANTRA AND REINFORCEMENT LEARNING')
 
 # basic config
-parser.add_argument('--is_training', type=int, default=1, help='status')
+parser.add_argument('--is_training', type=int, default=0, help='status')
 parser.add_argument('--model_id', type=str, default='MaelNetB1_MaelNetS1_NegativeCorr_RL_1', help='model id')
 parser.add_argument('--model', type=str, default='MaelNetB1',
                     help='model name, options: [MaelNet]')
@@ -96,8 +97,9 @@ parser.add_argument('--do_predict', action='store_true', help='whether to predic
 # optimization
 parser.add_argument('--num_workers', type=int, default=10, help='data loader num workers')
 parser.add_argument('--itr', type=int, default=1, help='experiments times')
+
 #train epoch 10 harusnya
-parser.add_argument('--train_epochs', type=int, default=1, help='train epochs')
+parser.add_argument('--train_epochs', type=int, default=10, help='train epochs')
 parser.add_argument('--batch_size', type=int, default=32, help='batch size of train input data')
 parser.add_argument('--patience', type=int, default=3, help='early stopping patience') # Apabila Counter >= patience, akan dilakukan early stop
 parser.add_argument('--learning_rate', type=float, default=0.0001, help='optimizer learning rate')
@@ -138,7 +140,7 @@ if args.use_gpu:
 if __name__ == "__main__":
 
     Exp = Exp_Anomaly_Detection_Learner
-    # OptRLMantra= OPT_RL_Mantra
+    OptRLMantra= OPT_RL_Mantra
 
     print('Args in experiment:')
     print(args)
@@ -159,18 +161,15 @@ if __name__ == "__main__":
             args.distil,
             args.des,ii)
         exp = Exp(args)  # set experiments
-        # opt = OptRLMantra(args)
-        """
-        Alurnya yaitu Mantra setiap error pada learner akan disimpan pada data csv, error tersebut bisa berupa mae
-        Selanjutnya pada testing akan dimasukkan ke reinforcement learning untuk menentukan weight terbaik dari setiap learner
-        """
+        opt = OptRLMantra(args)
         if args.is_training:
             print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
             #exp main Mantra
             exp.train(setting)
+            print("UNIFY INPUT DATA")
+            unify_input_data(args)
         else:
             print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-            # opt.active_urt_reinforcment_learning(setting)
-            unify_input_data(args)
-            exp.test(setting)
+            print("REINFORCEMENT LEARNING START")
+            opt.active_urt_reinforcment_learning(setting)
             torch.cuda.empty_cache()

@@ -202,6 +202,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         model_optim = self._select_optimizer()
         slow_model_optim = self._select_slow_optimizer()
         criterion = self._select_criterion()
+
         f = open("training_mantra_anomaly_detection.txt", 'a')
         f_csv = open("training_mantra_anomaly_detection.csv","a")
         csvreader = csv.writer(f_csv)
@@ -321,102 +322,6 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         f.write("\n")
         csvreader.writerow([])
         f.close()
-        return
-    
-    def test(self, setting, test=1):
-        _, test_loader = self._get_data(flag='test')
-        _, train_loader = self._get_data(flag='train')
-
-        # if test:
-        #     print('loading model')
-        #     self.model.load_state_dict(torch.load(os.path.join('./checkpoints/' + setting, 'checkpoint.pth')))
-
-        attens_energy = []
-        folder_path = './test_results/' + setting + '/'
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-
-        self.model.eval()
-        self.anomaly_criterion = nn.MSELoss(reduce=False)
-        # (1) stastic on the TRAIN SET
-        with torch.no_grad():
-            for i, (batch_x, _) in enumerate(train_loader):
-                batch_x = batch_x.float().to(self.device)
-                # reconstruction
-                if self.model.name not in ["KBJNet"]:
-                    outputs = self.model(batch_x)
-                else:
-                    outputs = self.model(batch_x.permute(0,2,1)) 
-                # criterion
-                loss = self.anomaly_criterion(batch_x, outputs)
-                score = torch.mean(loss, dim=-1)
-                score = score.detach().cpu().numpy()
-                attens_energy.append(score)
-
-        attens_energy = np.concatenate(attens_energy, axis=0).reshape(-1)
-        train_energy = np.array(attens_energy)
-
-        # (2) find the threshold TEST SET
-        attens_energy = []
-        test_labels = []
-        for i, (batch_x, batch_y) in enumerate(test_loader):
-            batch_x = batch_x.float().to(self.device)
-            # reconstruction
-            if self.model.name not in ["KBJNet"]:
-                outputs = self.model(batch_x)
-            else:
-                outputs = self.model(batch_x.permute(0,2,1)) 
-            # criterion
-            lossT = self.anomaly_criterion(batch_x, outputs)
-            score = torch.mean(lossT, dim=-1)
-            score = score.detach().cpu().numpy()
-            attens_energy.append(score)
-            test_labels.append(batch_y)
-
-        attens_energy = np.concatenate(attens_energy, axis=0).reshape(-1)
-        test_energy = np.array(attens_energy)
-        combined_energy = np.concatenate([train_energy, test_energy], axis=0)
-
-        threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio)
-
-        print("Threshold :", threshold)
-
-        # (3) evaluation on the test set
-        pred = (test_energy > threshold).astype(int)
-        test_labels = np.concatenate(test_labels, axis=0).reshape(-1)
-        test_labels = np.array(test_labels)
-
-        gt = test_labels.astype(int)
-        print("pred:   ", pred.shape)
-        print("gt:     ", gt.shape)
-
-        # (4) detection adjustment
-        gt, pred = adjustment(gt, pred) #gt == label
-
-        pred = np.array(pred)
-        gt = np.array(gt)
-        print("pred: ", pred.shape)
-        print("gt:   ", gt.shape)
-
-        accuracy = accuracy_score(gt, pred)
-        precision, recall, f_score, support = precision_recall_fscore_support(gt, pred, average='binary')
-        print("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
-            accuracy, precision,
-            recall, f_score))
-
-        # result_anomaly_detection.txt
-        f = open("result_anomaly_detection.txt", 'a')
-        f.write(setting + "  \n")
-        f.write("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
-            accuracy, precision,
-            recall, f_score))
-        f.write('\n')
-        f.write('\n')
-        f.close()
-
-        np.save(folder_path + 'metrics.npy', np.array([accuracy, precision, recall, f_score]))
-        np.save(folder_path + 'pred.npy', pred)
-        np.save(folder_path + 'groundtruth.npy', gt)
         return
     
     # def test_1learner(self, setting, test=0, idx=0):

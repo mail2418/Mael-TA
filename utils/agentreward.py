@@ -5,6 +5,7 @@ from sktime.performance_metrics.forecasting import \
     mean_absolute_error, mean_absolute_percentage_error
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 from utils.tools import adjustment
+import math
 
 def get_mape_reward(q_mape, mape, R=1):
         q = 0
@@ -44,8 +45,16 @@ def evaluate_agent(agent, test_states, test_bm_preds, test_X):
     act_counter = Counter(weights.argmax(1))
     act_sorted  = sorted([(k, v) for k, v in act_counter.items()])
     weights = np.expand_dims(weights, -1)  # (2816, 9, 1)
-    weighted_y = weights * test_bm_preds[:weights.shape[0]]  # (2816, 9, 24)
-    weighted_y = weighted_y.sum(1)  # (2816, 24)
+
+    list_weighted_y = []
+    for i in range(math.ceil(test_bm_preds.shape[0]/weights.shape[0])):
+        list_weighted_y.append(np.multiply(weights, test_bm_preds[i*weights.shape[0]:(i+1)*weights.shape[0]]).sum(1)) 
+    weighted_y = list_weighted_y[0]                                                                                                   
+    for i in range(1, len(list_weighted_y)):
+        weighted_y = np.concatenate((weighted_y, list_weighted_y[i]), axis=0)
+        
+    # weighted_y = weights * test_bm_preds[:weights.shape[0]]  # (2816, 9, 24)
+    # weighted_y = weighted_y.sum(1)  # (2816, 24)
     mae_loss = mean_absolute_error(test_X, weighted_y)
     mape_loss = mean_absolute_percentage_error(test_X, weighted_y)
     return mae_loss, mape_loss, act_sorted

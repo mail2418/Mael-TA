@@ -197,6 +197,13 @@ class OPT_RL_Mantra:
         best_train_model = torch.LongTensor(train_error.argmin(1)).to(self.device)
         best_valid_model = torch.LongTensor(valid_error.argmin(1)).to(self.device)
 
+        memory_allocated = torch.cuda.memory_allocated()
+        print(f"Memory Allocated: {memory_allocated / 1024**3:.2f} GB")
+
+        # Get the peak amount of memory allocated on the GPU
+        max_memory_allocated = torch.cuda.max_memory_allocated()
+        print(f"Peak Memory Allocated: {max_memory_allocated / 1024**3:.2f} GB")
+
         actor = DDPG.Actor(self.args, act_dim, obs_dim).to(self.device)
         best_actor = DDPG.Actor(self.args, act_dim, obs_dim).to(self.device)
         cls_weights = torch.FloatTensor([1/cls_weights[w] for w in range(act_dim)]).to(self.device)
@@ -248,8 +255,9 @@ class OPT_RL_Mantra:
  
     def active_urt_reinforcment_learning(self, setting):
         epsilon = self.args.epsilon
-        train_X, valid_X, test_X, train_y, valid_y, test_labels, train_error, valid_error, _ = load_data_rl(self.args.root_path)
-        train_preds, valid_preds, test_preds = np.load(f'{self.args.root_path}bm_train_preds_new.npy', allow_pickle=True),np.load(f'{self.args.root_path}bm_valid_preds_new.npy', allow_pickle=True),np.load(f'{self.args.root_path}bm_test_preds_new.npy', allow_pickle=True)
+        path_ds = os.path.join(self.args.root_path, setting)
+        train_X, valid_X, test_X, train_y, valid_y, test_labels, train_error, valid_error, _ = load_data_rl(self.args.root_path, setting)
+        train_preds, valid_preds, test_preds = np.load(f'{path_ds}/bm_train_preds_new.npy', allow_pickle=True),np.load(f'{path_ds}/bm_valid_preds_new.npy', allow_pickle=True),np.load(f'{path_ds}/bm_test_preds_new.npy', allow_pickle=True)
 
         train_X = np.swapaxes(train_X, 2, 1).astype(np.float32)
         valid_X = np.swapaxes(valid_X, 2, 1).astype(np.float32)
@@ -281,7 +289,7 @@ class OPT_RL_Mantra:
         else:
             state_weights = None
         
-        if not os.path.exists(f'{self.args.root_path}batch_buffer.csv'):
+        if not os.path.exists(f'{path_ds}/batch_buffer.csv'):
             batch_buffer = []
             for state_idx in tqdm.trange(L, desc='[Create buffer]'):
                 best_model_idx = train_error[state_idx].argmin()
@@ -291,9 +299,9 @@ class OPT_RL_Mantra:
             batch_buffer_df = pd.DataFrame(
                 batch_buffer,
                 columns=['state_idx', 'action_idx', 'rank', 'mae', 'weight']) 
-            batch_buffer_df.to_csv(f'{self.args.root_path}batch_buffer.csv')
+            batch_buffer_df.to_csv(f'{path_ds}/batch_buffer.csv')
         else:
-            batch_buffer_df = pd.read_csv(f'{self.args.root_path}batch_buffer.csv', index_col=0)
+            batch_buffer_df = pd.read_csv(f'{path_ds}/batch_buffer.csv', index_col=0)
 
         q_mae = [batch_buffer_df['mae'].quantile(0.1*i) for i in range(1, 10)] 
         

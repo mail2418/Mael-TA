@@ -9,8 +9,8 @@ from utils.datapredsrl import unify_input_data
 parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection with MANTRA AND REINFORCEMENT LEARNING')
 
 # basic config
-parser.add_argument('--is_training', type=int, default=1, help='status')
-parser.add_argument('--model_id', type=str, default='MaelNetB1_MaelNetS1_NegativeCorr_RL_1', help='model id')
+parser.add_argument('--is_training', type=int, default=0, help='status')
+parser.add_argument('--model_id', type=str, default='MaelNetB1_MaelNetS1_NegativeCorr_RL_2', help='model id')
 parser.add_argument('--model', type=str, default='MaelNetB1',
                     help='model name, options: [MaelNet]')
 
@@ -98,7 +98,7 @@ parser.add_argument('--num_workers', type=int, default=10, help='data loader num
 parser.add_argument('--itr', type=int, default=1, help='experiments times')
 
 #train epoch 10 harusnya
-parser.add_argument('--train_epochs', type=int, default=10, help='train epochs')
+parser.add_argument('--train_epochs', type=int, default=1, help='train epochs')
 parser.add_argument('--batch_size', type=int, default=32, help='batch size of train input data')
 parser.add_argument('--patience', type=int, default=3, help='early stopping patience') # Apabila Counter >= patience, akan dilakukan early stop
 parser.add_argument('--learning_rate', type=float, default=0.0001, help='optimizer learning rate')
@@ -165,13 +165,14 @@ if __name__ == "__main__":
             print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
             #exp main Mantra
             exp.train(setting)
-            # print("UNIFY INPUT DATA")
-            # unify_input_data(args)
-            # print("REINFORCEMENT LEARNING START")
-            # opt.active_urt_reinforcment_learning(setting)
-            # torch.cuda.empty_cache()
-        else:
-            print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+            print("UNIFY INPUT DATA")
+            unify_input_data(args, setting)
             print("REINFORCEMENT LEARNING START")
             opt.active_urt_reinforcment_learning(setting)
             torch.cuda.empty_cache()
+        else:
+            torch.cuda.empty_cache()
+            print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+            print("REINFORCEMENT LEARNING START")
+            opt.active_urt_reinforcment_learning(setting)
+            # torch.cuda.empty_cache()

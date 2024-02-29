@@ -25,6 +25,7 @@ warnings.filterwarnings('ignore')
 class Exp_Anomaly_Detection_Learner(Exp_Basic):
     def __init__(self, args):
         super(Exp_Anomaly_Detection_Learner, self).__init__(args)
+        self.anomaly_criterion = nn.MSELoss(reduce=False)
 
     def _build_model(self):
         model = self.model_dict[self.args.model].Model(self.args).float()
@@ -131,6 +132,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         time_now = time.time()
         total_loss = []
         all_bm_valid_test_outputs = [[] for _ in range(self.args.n_learner)]
+        # attens_energy = [[] for _ in range(self.args.n_learner)]
         with torch.no_grad():
             for i , (batch_x, batch_y) in enumerate(vali_loader):
                 iter_count += 1
@@ -140,6 +142,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 batch_x = batch_x.float().to(self.device)
 
                 list_of_bm_valid_test = [[] for _ in range(self.args.n_learner)]
+                # data_test_labels = [[] for _ in range(self.args.n_learner)]
                 dec_out = []
                 f_dim = -1 if self.args.features == 'MS' else 0
                 for idx in range(self.args.n_learner):
@@ -148,9 +151,13 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                     else:
                         outputs = self.model.forward_1learner(batch_x.permute(0,2,1),idx) 
                     list_of_bm_valid_test[idx].append(outputs)
-                    dec_out.append(outputs)
+                    dec_out.append(outputs) # 4 Dimensi 3 x 32 x 100 x 55 kalau MSL
 
                 for idx in range(self.args.n_learner):
+                    # data_test_labels[idx] = self.anomaly_criterion(batch_x, list_of_bm_valid_test[idx])
+                    # data_test_labels[idx] = torch.mean(data_test_labels[idx], dim=-1).detach().cpu().numpy()
+                    # attens_energy[idx].extend(data_test_labels[idx])
+
                     list_of_bm_valid_test[idx] = torch.stack(list_of_bm_valid_test[idx])
                     list_of_bm_valid_test[idx] = torch.mean(list_of_bm_valid_test[idx],axis=0)
                     list_of_bm_valid_test[idx] = list_of_bm_valid_test[idx][:,:,f_dim:]
@@ -161,7 +168,6 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 outputs = torch.stack(dec_out)
                 outputs = torch.mean(outputs,axis=0) 
                 outputs = outputs[:, :, f_dim:]
-
 
                 s0,s1,s2 = batch_x.shape
                 randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
@@ -187,13 +193,15 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                     print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
                     iter_count = 0
                     time_now = time.time()
-                
+         
         dict_learner_test = {}
+        # dict_test_energy = {}
         for learner_idx in range(self.args.n_learner):
+            # dict_test_energy[header_bmnpzreader[learner_idx]] = np.array(attens_energy[idx].reshape(-1))
             dict_learner_test[header_bmnpzreader[learner_idx]] = np.array(all_bm_valid_test_outputs[learner_idx], dtype=np.float16)
         if epoch == 0 :
             np_input_test_X = np.array(test_X,dtype="object")
-            np_input_test_y = np.array(test_y,dtype="object")
+            np_input_test_y = np.array(test_y.reshape(-1))
             np.save(f"{path_ds}/test_X.npy",np_input_test_X)
             np.save(f"{path_ds}/test_y.npy",np_input_test_y)
         total_loss = np.average(total_loss)

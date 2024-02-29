@@ -9,8 +9,8 @@ from utils.datapredsrl import unify_input_data
 parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection with MANTRA AND REINFORCEMENT LEARNING')
 
 # basic config
-parser.add_argument('--is_training', type=int, default=0, help='status')
-parser.add_argument('--model_id', type=str, default='MaelNetB1_MaelNetS1_NegativeCorr_RL_2', help='model id')
+parser.add_argument('--is_training', type=int, default=1, help='status')
+parser.add_argument('--model_id', type=str, default='MaelNetB1_MaelNetS1_NegativeCorr_RL_1', help='model id')
 parser.add_argument('--model', type=str, default='MaelNetB1',
                     help='model name, options: [MaelNet]')
 
@@ -56,7 +56,7 @@ parser.add_argument('--step_size', default=4)
 parser.add_argument('--epsilon', default=0.5, type=float)
 parser.add_argument('--exp_name', default='rlmc', type=str)
 parser.add_argument("--hidden_dim_rl",default=100, type=int)
-parser.add_argument("--train_epochs_rl",default=500, type=int)
+parser.add_argument("--train_epochs_rl",default=1, type=int)
 
 #TimesNet
 parser.add_argument('--top_k', type=int, default=5)

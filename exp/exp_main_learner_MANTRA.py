@@ -276,9 +276,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 outputs = torch.mean(outputs,axis=0)
                 outputs = outputs[:, :, f_dim:]
                 loss = criterion(outputs, batch_x)
-                train_loss.append(loss.item())
-
-                
+                train_loss.append(loss.item())           
                 # loss.backward()
                 # model_optim.step()
                 # Slow Learner

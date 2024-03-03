@@ -45,7 +45,6 @@
 
 import torch
 
-
 class Chomp1d(torch.nn.Module):
     """
     Removes the last elements of a time series.

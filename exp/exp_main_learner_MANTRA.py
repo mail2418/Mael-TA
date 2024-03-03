@@ -201,7 +201,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             dict_learner_test[header_bmnpzreader[learner_idx]] = np.array(all_bm_valid_test_outputs[learner_idx], dtype=np.float16)
         if epoch == 0 :
             np_input_test_X = np.array(test_X,dtype="object")
-            np_input_test_y = np.array(test_y.reshape(-1))
+            np_input_test_y = np.array(test_y, dtype="object").reshape(-1)
             np.save(f"{path_ds}/test_X.npy",np_input_test_X)
             np.save(f"{path_ds}/test_y.npy",np_input_test_y)
         total_loss = np.average(total_loss)
@@ -284,9 +284,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 outputs = torch.mean(outputs,axis=0)
                 outputs = outputs[:, :, f_dim:]
                 loss = criterion(outputs, batch_x)
-                train_loss.append(loss.item())
-
-                
+                train_loss.append(loss.item())           
                 # loss.backward()
                 # model_optim.step()
                 # Slow Learner

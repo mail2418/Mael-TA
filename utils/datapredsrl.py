@@ -5,6 +5,7 @@ from sktime.performance_metrics.forecasting import \
     mean_absolute_error
 import os
 
+
 def compute_mae_error(y, bm_preds, flag):
     loss_df = pd.DataFrame()
     for i in trange(bm_preds.shape[1], desc=f'[Compute Error {flag}]'):

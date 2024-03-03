@@ -48,11 +48,12 @@ def evaluate_agent(agent, test_states, test_bm_preds, test_X):
 
     list_weighted_y = []
     for i in range(math.ceil(test_bm_preds.shape[0]/weights.shape[0])):
-        list_weighted_y.append(np.multiply(weights, test_bm_preds[i*weights.shape[0]:(i+1)*weights.shape[0]]).sum(1)) 
-    weighted_y = list_weighted_y[0]                                                                                                   
-    for i in range(1, len(list_weighted_y)):
-        weighted_y = np.concatenate((weighted_y, list_weighted_y[i]), axis=0)
-        
+        start_idx = i * weights.shape[0]
+        end_idx = (i + 1) * weights.shape[0]
+        chunk = test_bm_preds[start_idx:end_idx]
+        weighted_sum = np.multiply(weights, chunk).sum(1)
+        list_weighted_y.append(weighted_sum)
+    weighted_y = np.concatenate(list_weighted_y, axis=0)
     # weighted_y = weights * test_bm_preds[:weights.shape[0]]  # (2816, 9, 24)
     # weighted_y = weighted_y.sum(1)  # (2816, 24)
     mae_loss = mean_absolute_error(test_X, weighted_y)
@@ -61,17 +62,17 @@ def evaluate_agent(agent, test_states, test_bm_preds, test_X):
 
 def evaluate_agent_test(agent, train_states, train_bm_preds, test_states, test_bm_preds, test_labels, anomaly_ratio):
     with torch.no_grad():
-        weights_train = agent.select_action(train_states)  # (2816, 9)
-        weights_test = agent.select_action(test_states)  # (2816, 9)
+        weights_train = agent.select_action(train_states)  # (58120, 3) #outputs train pada test misal = 32,100,55
+        weights_test = agent.select_action(test_states)  # (58120, 3)
 
-    weights_train = np.expand_dims(weights_train, -1)  # (2816, 9, 1)
-    weights_test = np.expand_dims(weights_test, -1)  # (2816, 9, 1)
+    weights_train = np.expand_dims(weights_train, -1)  # (58120, 3, 1)
+    weights_test = np.expand_dims(weights_test, -1)  # (58120, 3, 1)
 
-    weighted_train_y = weights_train * train_bm_preds  # (2816, 9, 24)
-    weighted_test_y = weights_test * test_bm_preds  # (2816, 9, 24)
+    weighted_train_y = weights_train * train_bm_preds  # (58120, 3, 55)
+    weighted_test_y = weights_test * test_bm_preds  # (58120, 3, 55)
 
-    weighted_train_y = weighted_train_y.sum(1).reshape(-1)  # (2816, 24) --> 2816 .  24
-    weighted_test_y = weighted_test_y.sum(1).reshape(-1)  # (2816, 24) --> 2816 . 24
+    weighted_train_y = weighted_train_y.sum(1, dim=-1) # (58120)
+    weighted_test_y = weighted_test_y.sum(1, dim=-1)# (58120)
 
     # Accuracy Precision Recall Fscore
     combined_energy = np.concatenate([weighted_train_y, weighted_test_y], axis=0)

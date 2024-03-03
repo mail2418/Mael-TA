@@ -16,6 +16,7 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 warnings.filterwarnings('ignore')
 
 def scale_input(x):
@@ -33,9 +34,9 @@ class ReplayBuffer:
         self.size = 0
 
         # In TS data, `next_state` is just the S[i+1]
-        self.states = np.zeros((max_size, 1), dtype=np.int32)
-        self.actions = np.zeros((max_size, action_dim), dtype=np.float32)
-        self.rewards = np.zeros((max_size, 1), dtype=np.float32)
+        self.states = np.zeros((max_size, 1), dtype=np.int8)
+        self.actions = np.zeros((max_size, action_dim), dtype=np.float16)
+        self.rewards = np.zeros((max_size, 1), dtype=np.float16)
 
     def add(self, state, action, reward):
         self.states[self.ptr] = state
@@ -259,18 +260,18 @@ class OPT_RL_Mantra:
         train_X, valid_X, test_X, train_y, valid_y, test_labels, train_error, valid_error, _ = load_data_rl(self.args.root_path, setting)
         train_preds, valid_preds, test_preds = np.load(f'{path_ds}/bm_train_preds_new.npy', allow_pickle=True),np.load(f'{path_ds}/bm_valid_preds_new.npy', allow_pickle=True),np.load(f'{path_ds}/bm_test_preds_new.npy', allow_pickle=True)
 
-        train_X = np.swapaxes(train_X, 2, 1).astype(np.float32)
-        valid_X = np.swapaxes(valid_X, 2, 1).astype(np.float32)
-        test_X  = np.swapaxes(test_X,  2, 1).astype(np.float32)
-        train_y = train_y.astype(np.float32)
-        valid_y = valid_y.astype(np.float32)
+        train_X = np.swapaxes(train_X, 2, 1).astype(np.float16)
+        valid_X = np.swapaxes(valid_X, 2, 1).astype(np.float16)
+        test_X  = np.swapaxes(test_X,  2, 1).astype(np.float16)
+        train_y = train_y.astype(np.float16)
+        valid_y = valid_y.astype(np.float16)
 
-        train_error = train_error.astype(np.float32)
-        valid_error = valid_error.astype(np.float32)
+        train_error = train_error.astype(np.float16)
+        valid_error = valid_error.astype(np.float16)
 
-        train_preds = train_preds.astype(np.float32)
-        valid_preds = valid_preds.astype(np.float32)
-        test_preds = test_preds.astype(np.float32)
+        train_preds = train_preds.astype(np.float16)
+        valid_preds = valid_preds.astype(np.float16)
+        test_preds = test_preds.astype(np.float16)
 
         L = len(train_X) - 1 if self.args.use_td else len(train_X)
         states = torch.FloatTensor(train_X).to(self.device)

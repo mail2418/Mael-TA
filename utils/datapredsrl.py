@@ -13,6 +13,21 @@ def compute_mae_error(y, bm_preds, flag):
         loss_df[i] = model_mae_loss
     return loss_df
 
+def load_data_rl(root, setting):
+    path_ds = os.path.join(root, setting)
+    input_data = np.load(f'{path_ds}/input.npz', allow_pickle=True)
+    train_X = input_data['train_X']
+    valid_X = input_data['valid_X']
+    test_X  = input_data['test_X' ]
+    train_y  = input_data['train_y' ]
+    valid_y  = input_data['valid_y' ]
+    test_labels = input_data["test_labels"]
+    train_error = input_data['train_error'] 
+    valid_error = input_data['valid_error']  
+    test_error  = input_data['test_error' ]  
+    return (train_X, valid_X, test_X, train_y, valid_y, test_labels, 
+            train_error, valid_error, test_error)
+
 def unify_input_data(args, setting):
     path_ds = os.path.join(args.root_path, setting)
 

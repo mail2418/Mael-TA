@@ -314,7 +314,8 @@ class OPT_RL_Mantra:
         self.agent._init_actor()
         self.agent._init_critic()
         self.agent._update_network()
-
+        
+        #Error dari pretrain apabila pakai dataset besar
         # mengcopy parameter dari pretrain_actor ke agent actor
         if self.args.use_pretrain:
             pretrained_actor = self.pretrain_actor(obs_dim,

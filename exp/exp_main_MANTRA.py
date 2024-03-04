@@ -79,7 +79,7 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
         return total_loss
 
     def train(self, setting):
-        _, train_loader = self._get_data(flag='train')
+        train_data, train_loader = self._get_data(flag='train')
         vali_data, vali_loader = self._get_data(flag='val')
         test_data, test_loader = self._get_data(flag='test')
 
@@ -105,7 +105,7 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
 
             self.model.train()
             epoch_time = time.time()
-            for i, (batch_x, _) in enumerate(train_loader):
+            for i, (batch_x, batch_y) in enumerate(train_loader):
                 iter_count += 1
                 model_optim.zero_grad()
 

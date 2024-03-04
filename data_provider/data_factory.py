@@ -9,10 +9,8 @@ data_dict = {
     'SWaT': SWATSegLoader,
 }
 
-
 def data_provider(args, flag):
     Data = data_dict[args.data]
-    # Data = data_dict["SMAP"]
     shuffle_flag = True if flag != "test" else False
     batch_size = args.batch_size
     drop_last = False
@@ -27,5 +25,6 @@ def data_provider(args, flag):
         batch_size=batch_size,
         shuffle=shuffle_flag,
         num_workers=args.num_workers,
-        drop_last=drop_last)
+        drop_last=drop_last
+        )
     return data_set, data_loader

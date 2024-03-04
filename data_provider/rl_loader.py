@@ -6,24 +6,59 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-class MSLRLLoader(object):
-    def __init__(self, root_path, setting, win_size, step=1):
+class MSLRLLoader(Dataset):
+    def __init__(self, root_path, setting, win_size, step=1, flag="train"):
         path_ds = os.path.join(root_path, setting)
         input_data = np.load(f'{path_ds}/input.npz', allow_pickle=True)
-        self.train_X = input_data['train_X']
-        self.valid_X = input_data['valid_X']
-        self.test_X  = input_data['test_X' ]
-        self.train_y  = input_data['train_y' ]
-        self.valid_y  = input_data['valid_y' ]
-        self.test_labels = input_data["test_labels"]
-        self.train_error = input_data['train_error'] 
-        self.valid_error = input_data['valid_error']  
-        self.test_error  = input_data['test_error' ]  
+        if flag == "train":
+            self.train_X = np.swapaxes(input_data['train_X'], 2, 1).astype(np.float16)
+            self.train_preds = np.load(f'{path_ds}/bm_train_preds_new.npy', allow_pickle=True).astype(np.float16)
+            self.train_y  = input_data['train_y'].astype(np.float16)
+            self.train_error = input_data['train_error'].astype(np.float16) 
+        elif flag == "valid":
+            self.valid_X = np.swapaxes(input_data['valid_X'], 2, 1).astype(np.float16)
+            self.valid_preds = np.load(f'{path_ds}/bm_valid_preds_new.npy', allow_pickle=True).astype(np.float16)
+            self.valid_y  = input_data['valid_y' ].astype(np.float16)
+            self.valid_error = input_data['valid_error'].astype(np.float16) 
+        elif flag == "test":
+            self.test_X  = np.swapaxes(input_data['test_X' ], 2, 1).astype(np.float16)
+            self.test_preds = np.load(f'{path_ds}/bm_test_preds_new.npy', allow_pickle=True).astype(np.float16)
+            self.test_labels = input_data["test_labels"]
+        else:
+            # self.
+            pass
         self.step = step
         self.win_size = win_size
-        # train_data = 
-    def __len__(self, flag):
-        pass
-    def __getitem__(self, index):
-        index = index * self.step
+        self.mode = flag
 
+    def __len__(self):
+        if self.mode == "train":
+            pass
+        elif self.mode == "valid":
+            pass
+        elif self.mode == "test":
+            pass
+        else: #pretrain
+            return
+    def __getitem__(self, idx):
+        index = idx * self.step
+        if self.mode == "train":
+            pass
+        elif self.mode == "valid":
+            pass
+        elif self.mode == "test":
+            pass
+        else: #pretrain
+            pass
+
+class PSMRLLoader(Dataset):       
+    pass
+
+class SMAPRLLoader(object):
+    pass
+
+class SMDRLLoader(object):
+    pass
+
+class SWATRLLoader(object):
+    pass

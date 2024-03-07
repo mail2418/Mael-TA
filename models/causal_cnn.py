@@ -116,7 +116,12 @@ class CausalConvolutionBlock(torch.nn.Module):
 
         # Causal network
         self.causal = torch.nn.Sequential(
-            conv1, chomp1, relu1, conv2, chomp2, relu2
+            conv1, 
+            chomp1, 
+            relu1, 
+            conv2, 
+            chomp2, 
+            relu2
         )
 
         # Residual connection

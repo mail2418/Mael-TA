@@ -62,6 +62,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         all_bm_valid_test_outputs = [[] for _ in range(self.args.n_learner)]
         with torch.no_grad():
             for i , (batch_x, _) in enumerate(vali_loader):
+                if i == 300 : break
                 iter_count += 1
                 if epoch == 0:
                     valid_X.extend(batch_x.detach().cpu().numpy())
@@ -135,6 +136,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         # attens_energy = [[] for _ in range(self.args.n_learner)]
         with torch.no_grad():
             for i , (batch_x, batch_y) in enumerate(vali_loader):
+                if i == 300 : break
                 iter_count += 1
                 if epoch == 0:
                     test_X.extend(batch_x.detach().cpu().numpy())
@@ -201,7 +203,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             dict_learner_test[header_bmnpzreader[learner_idx]] = np.array(all_bm_valid_test_outputs[learner_idx], dtype=np.float16)
         if epoch == 0 :
             np_input_test_X = np.array(test_X,dtype="object")
-            np_input_test_y = np.array(test_y, dtype="object").reshape(-1)
+            np_input_test_y = np.array(test_y, dtype="object")
             np.save(f"{path_ds}/test_X.npy",np_input_test_X)
             np.save(f"{path_ds}/test_y.npy",np_input_test_y)
         total_loss = np.average(total_loss)
@@ -254,6 +256,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             self.model.train()
             epoch_time = time.time()
             for i, (batch_x, batch_y) in enumerate(train_loader):
+                if i == 300 : break
                 
                 train_X.extend(batch_x.detach().cpu().numpy())
 

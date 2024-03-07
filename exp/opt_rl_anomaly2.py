@@ -65,7 +65,6 @@
 #         self.device = device
 #         self.obs_dim = None
 #         self.act_dim = None
-#         self.states = None
 #         self.lr = lr
 #         self.gamma  = gamma
 #         self.tau    = tau
@@ -74,8 +73,6 @@
 #         self.obs_dim = obs_dim
 #     def _set_act_dim(self, act_dim):
 #         self.act_dim = act_dim
-#     def _set_states(self, states):
-#         self.states = states
 #     def _init_actor(self):
 #         self.actor = DDPG.Actor(self.args, self.act_dim, self.obs_dim).to(self.device)
 #         self.target_actor = DDPG.Actor(self.args, self.act_dim, self.obs_dim).to(self.device)
@@ -288,7 +285,7 @@
 #         # INIT AGENT AND REPLAY EXTRA BUFFERS
 #         self._initiate_buffer(act_dim)
 #         self.agent._set_states(states)
-#         self.agent._set_obs_dim(states.shape[1])
+#         self.agent._set_obs_dim(obs_dim)
 #         self.agent._set_act_dim(act_dim)
 #         self.agent._init_actor()
 #         self.agent._init_critic()

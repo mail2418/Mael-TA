@@ -71,21 +71,27 @@ def evaluate_agent_test(agent, train_states, train_bm_preds, test_states, test_b
     weighted_train_y = weights_train * train_bm_preds  # (58120, 3, 55)
     weighted_test_y = weights_test * test_bm_preds  # (58120, 3, 55)
 
-    weighted_train_y = weighted_train_y.sum(1, dim=-1) # (58120)
-    weighted_test_y = weighted_test_y.sum(1, dim=-1)# (58120)
+    weighted_train_y = weighted_train_y.sum(1) # (58120)
+    weighted_test_y = weighted_test_y.sum(1)# (58120)
+    # weighted_test_y = test_bm_preds.mean(2).sum(1)# (58120)
 
     # Accuracy Precision Recall Fscore
-    combined_energy = np.concatenate([weighted_train_y, weighted_test_y], axis=0)
+    combined_energy = np.concatenate([weighted_train_y, weighted_test_y], axis=0).reshape(-1)
+
     threshold = np.percentile(combined_energy, 100 - anomaly_ratio)
 
     print("Threshold :", threshold)
 
-    gt = test_labels.astype(int)
+    gt = test_labels[:,:weighted_test_y.shape[1]].reshape(-1).astype(int)
     weighted_test_y = weighted_test_y.reshape(-1)
+    # weighted_test_y = weighted_test_y.reshape(-1)
     pred = (weighted_test_y > threshold).astype(int)
+    # pred = (test_bm_preds > threshold).astype(int)
 
     gt, pred = adjustment(gt, pred) #gt == label
-    gt, pred = np.array(pred), np.array(gt)
+    gt, pred = np.array(gt), np.array(pred)
+    print("pred: ", pred.shape)
+    print("gt:   ", gt.shape)
 
     accuracy = accuracy_score(gt, pred)
     precision, recall, f_score, support = precision_recall_fscore_support(gt, pred, average='binary')

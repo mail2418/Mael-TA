@@ -158,3 +158,11 @@ MaelNetB1_MaelNetS1_NegativeCorr_RL_3_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_
 Epoch: 1 cost time: 478.49663400650024
 Epoch: 1, Steps: 1820 | Train Loss: 0.3361377 Vali Loss: 2.2863886 Test Loss: 2.2914687
 
+MaelNetB1_MaelNetS1_NegativeCorr_RL_4_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Epoch: 1 cost time: 129.95303583145142
+Epoch: 1, Steps: 1820 | Train Loss: 0.5446160 Vali Loss: 3.1852072 Test Loss: 4.4295394
+
+MaelNetB1_MaelNetS1_NegativeCorr_RL_4_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Epoch: 1 cost time: 123.9022045135498
+Epoch: 1, Steps: 1820 | Train Loss: 0.5446175 Vali Loss: 3.1852079 Test Loss: 4.4295100
+

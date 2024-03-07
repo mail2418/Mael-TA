@@ -48,8 +48,8 @@ class ReplayBuffer:
     def sample(self, batch_size=256):
         ind = np.random.randint(self.size, size=batch_size)
         states = self.states[ind].squeeze()
-        actions = torch.HalfTensor(self.actions[ind]).to(self.device)
-        rewards = torch.HalfTensor(self.rewards[ind]).to(self.device)
+        actions = torch.FloatTensor(self.actions[ind]).to(self.device)
+        rewards = torch.FloatTensor(self.rewards[ind]).to(self.device)
         return (states, actions, rewards.squeeze())
 class Env:
     def __init__(self, train_preds, train_error, train_y):
@@ -195,8 +195,8 @@ class OPT_RL_Mantra:
     
     def pretrain_actor(self, obs_dim:int, act_dim:int, states, train_error:np, cls_weights, 
                    valid_states, valid_error:np):
-        best_train_model = torch.ShortTensor(train_error.argmin(1)).to(self.device)
-        best_valid_model = torch.ShortTensor(valid_error.argmin(1)).to(self.device)
+        best_train_model = torch.LongTensor(train_error.argmin(1)).to(self.device)
+        best_valid_model = torch.LongTensor(valid_error.argmin(1)).to(self.device)
 
         memory_allocated = torch.cuda.memory_allocated()
         print(f"Memory Allocated: {memory_allocated / 1024**3:.2f} GB")
@@ -207,7 +207,7 @@ class OPT_RL_Mantra:
 
         actor = DDPG.Actor(self.args, act_dim, obs_dim).to(self.device)
         best_actor = DDPG.Actor(self.args, act_dim, obs_dim).to(self.device)
-        cls_weights = torch.HalfTensor([1/cls_weights[w] for w in range(act_dim)]).to(self.device)
+        cls_weights = torch.FloatTensor([1/cls_weights[w] for w in range(act_dim)]).to(self.device)
 
         L = len(states)
         batch_size = 512
@@ -274,9 +274,9 @@ class OPT_RL_Mantra:
         test_preds = test_preds.astype(np.float16)
 
         L = len(train_X) - 1 if self.args.use_td else len(train_X)
-        states = torch.HalfTensor(train_X).to(self.device)
-        valid_states = torch.HalfTensor(valid_X).to(self.device)
-        test_states = torch.HalfTensor(test_X).to(self.device)
+        states = torch.FloatTensor(train_X).to(self.device)
+        valid_states = torch.FloatTensor(valid_X).to(self.device)
+        test_states = torch.FloatTensor(test_X).to(self.device)
 
         obs_dim = states.shape[1] # Mengambil Feature
         act_dim = train_error.shape[-1]
@@ -286,7 +286,7 @@ class OPT_RL_Mantra:
 
         state_weights = [1/best_model_weight[i] for i in train_error.argmin(1)]
         if self.args.use_weight:
-            state_weights = torch.HalfTensor(state_weights).to(self.device)
+            state_weights = torch.FloatTensor(state_weights).to(self.device)
         else:
             state_weights = None
         

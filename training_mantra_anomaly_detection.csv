@@ -18,3 +18,13 @@ Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
 1,1670.2037723064423,1820,0.3361377,2.2863886,2.2914687
 
 
+MaelNetB1_MaelNetS1_NegativeCorr_RL_4_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+1,308.0115702152252,1820,0.544616,3.1852072,4.4295394
+
+
+MaelNetB1_MaelNetS1_NegativeCorr_RL_4_MaelNetB1_MSL_ftM_dm55_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+1,299.5671353340149,1820,0.5446175,3.1852079,4.42951
+
+

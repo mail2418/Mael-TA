@@ -11,7 +11,7 @@ data_dict = {
 
 def data_provider(args, setting, flag):
     Data = data_dict[args.data]
-    batch_size = args.batch_size
+    batch_size = 2
     drop_last = False
     data_set = Data(
         root_path=args.root_path,

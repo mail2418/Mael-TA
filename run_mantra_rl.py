@@ -9,7 +9,7 @@ from utils.datapredsrl import unify_input_data
 parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection with MANTRA AND REINFORCEMENT LEARNING')
 
 # basic confi1g
-parser.add_argument('--is_training', type=int, default=1, help='status')
+parser.add_argument('--is_training', type=int, default=0, help='status')
 parser.add_argument('--model_id', type=str, default='MaelNetB1_MaelNetS1_NegativeCorr_RL_4', help='model id')
 parser.add_argument('--model', type=str, default='MaelNetB1',
                     help='model name, options: [MaelNet]')
@@ -172,9 +172,9 @@ if __name__ == "__main__":
             torch.cuda.empty_cache()
         else:
             torch.cuda.empty_cache()
-            print("UNIFY INPUT DATA")
-            unify_input_data(args, setting)
-            print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+            # print("UNIFY INPUT DATA")
+            # unify_input_data(args, setting)
+            # print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
             print("REINFORCEMENT LEARNING START")
-            # opt.active_urt_reinforcment_learning(setting)
+            opt.active_urt_reinforcment_learning(setting)
             # torch.cuda.empty_cache()

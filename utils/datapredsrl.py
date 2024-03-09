@@ -38,7 +38,7 @@ def unify_input_data(args, setting):
 
     train_y = train_X.reshape(train_X.shape[0] * train_X.shape[1],-1).astype(np.float32) 
     valid_y = valid_X.reshape(valid_X.shape[0] * valid_X.shape[1],-1).astype(np.float32)  
-    test_y  = test_X.reshape(valid_X.shape[0] * valid_X.shape[1],-1).astype(np.float32)
+    test_y  = test_X.reshape(test_X.shape[0] * test_X.shape[1],-1).astype(np.float32)
 
     L_test, L_train = len(test_labels), len(train_X)
     L = L_test if L_test < L_train else L_train

@@ -62,7 +62,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         all_bm_valid_test_outputs = [[] for _ in range(self.args.n_learner)]
         with torch.no_grad():
             for i , (batch_x, _) in enumerate(vali_loader):
-                if i == 300 : break
+                # if i == 300 : break
                 iter_count += 1
                 if epoch == 0:
                     valid_X.extend(batch_x.detach().cpu().numpy())
@@ -136,7 +136,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         # attens_energy = [[] for _ in range(self.args.n_learner)]
         with torch.no_grad():
             for i , (batch_x, batch_y) in enumerate(vali_loader):
-                if i == 300 : break
+                # if i == 300 : break
                 iter_count += 1
                 if epoch == 0:
                     test_X.extend(batch_x.detach().cpu().numpy())
@@ -256,7 +256,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             self.model.train()
             epoch_time = time.time()
             for i, (batch_x, batch_y) in enumerate(train_loader):
-                if i == 300 : break
+                # if i == 300 : break
                 
                 train_X.extend(batch_x.detach().cpu().numpy())
 

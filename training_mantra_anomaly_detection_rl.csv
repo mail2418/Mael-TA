@@ -55,3 +55,12 @@ Accuracy,Precision,Recall,F-score
 MaelNetB1_MaelNetS1_PSM_Negative_Corr_RL_2_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0
 Accuracy,Precision,Recall,F-score
 0.9821,0.9981,0.9558,0.9765
+MaelNetB1_MaelNetS1_SMD_Negative_Corr_RL_2_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0
+Accuracy,Precision,Recall,F-score
+0.9812,0.0,0.0,0.0
+MaelNetB1_MaelNetS1_SMD_Negative_Corr_RL_2_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0
+Accuracy,Precision,Recall,F-score
+0.9846,0.7029,0.3136,0.4337
+MaelNetB1_MaelNetS1_SMD_Negative_Corr_RL_3_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0
+Accuracy,Precision,Recall,F-score
+0.9852,0.6631,0.4263,0.519

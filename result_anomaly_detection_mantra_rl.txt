@@ -34,3 +34,12 @@ Accuracy : 0.9850, Precision : 0.7389, Recall : 0.3136, F-score : 0.4403
 MaelNetB1_MaelNetS1_PSM_Negative_Corr_RL_2_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
 Accuracy : 0.9821, Precision : 0.9981, Recall : 0.9558, F-score : 0.9765 
 
+MaelNetB1_MaelNetS1_SMD_Negative_Corr_RL_2_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9812, Precision : 0.0000, Recall : 0.0000, F-score : 0.0000 
+
+MaelNetB1_MaelNetS1_SMD_Negative_Corr_RL_2_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9846, Precision : 0.7029, Recall : 0.3136, F-score : 0.4337 
+
+MaelNetB1_MaelNetS1_SMD_Negative_Corr_RL_3_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9852, Precision : 0.6631, Recall : 0.4263, F-score : 0.5190 
+

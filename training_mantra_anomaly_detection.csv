@@ -90,3 +90,43 @@ Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
 1,1198.7052285671234,4137,0.0324851,0.2087486,0.2739936
 
 
+MaelNetB1_MaelNetS1_SMAP_Negative_Corr_RL_2_MaelNetB1_SMAP_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+MaelNetB1_MaelNetS1_SMD_Negative_Corr_RL_2_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+1,162.99290990829468,222,0.2289676,0.4653256,2.189052
+
+
+MaelNetB1_MaelNetS1_SMD_Negative_Corr_RL_3_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+1,161.79951310157776,222,0.2289626,0.4653246,2.1889856
+
+2,164.99404001235962,222,0.1937654,0.4089792,2.1252095
+
+3,170.19137454032898,222,0.177019,0.3834838,2.0291684
+
+4,167.1534125804901,222,0.1711871,0.3724811,2.0512869
+
+5,166.51168537139893,222,0.1678518,0.3672457,1.9833882
+
+6,166.26428747177124,222,0.1660781,0.3674278,1.9571357
+
+7,166.24270391464233,222,0.165213,0.3647187,2.0191686
+
+8,166.72967386245728,222,0.1648643,0.3631872,2.0326993
+
+9,166.5577311515808,222,0.1644071,0.3618207,1.9613973
+
+10,166.5490334033966,222,0.1644169,0.3616661,2.0145774
+
+
+MaelNetB1_MaelNetS1_PSM_Negative_Corr_RL_3_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+MaelNetB1_MaelNetS1_PSM_Negative_Corr_RL_3_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+MaelNetB1_MaelNetS1_PSM_Negative_Corr_RL_3_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+MaelNetB1_MaelNetS1_PSM_Negative_Corr_RL_3_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+MaelNetB1_MaelNetS1_PSM_Negative_Corr_RL_3_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss

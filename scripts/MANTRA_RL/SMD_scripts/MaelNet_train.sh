@@ -1,7 +1,7 @@
 py -u run_mantra_rl.py \
   --is_training 1 \
   --root_path ./dataset/SMD/ \
-  --model_id MaelNetB1_MaelNetS1_SMD_Negative_Corr_RL_3 \
+  --model_id MaelNetB1_MaelNetS1_SMD_Negative_Corr_RL_1_epoch10 \
   --model MaelNetB1 \
   --slow_model MaelNetS1 \
   --data SMD \
@@ -16,4 +16,5 @@ py -u run_mantra_rl.py \
   --gpu 0 \
   --p_hidden_dims 128 128 \
   --p_hidden_layers 2 \
+  --epoch_itr 1500 \
   --itr 1 &

@@ -1,10 +1,10 @@
 py -u run_mantra_rl.py \
   --is_training 1 \
-  --root_path ./dataset/PSM/ \
-  --model_id MaelNetB1_MaelNetS1_PSM_Negative_Corr_RL_2_epoch10_itr1500 \
-  --model MaelNetB1 \
-  --slow_model MaelNetS1 \
-  --data PSM \
+  --root_path ./dataset/SMAP/ \
+  --model_id NSTransformerB1_NSTransformerS1_SMAP_Negative_Corr_RL_1_epoch10_itr1500 \
+  --model NSTransformerB1 \
+  --slow_model NSTransformerS1 \
+  --data SMAP \
   --e_layers 2 \
   --d_layers 1 \
   --anomaly_ratio 1 \
@@ -12,7 +12,7 @@ py -u run_mantra_rl.py \
   --enc_in 25 \
   --dec_in 25 \
   --c_out 25 \
-  --d_model 25 \
+  --d_model 512 \
   --gpu 0 \
   --p_hidden_dims 128 128 \
   --p_hidden_layers 2 \

@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly De
 
 # basic confi1g
 parser.add_argument('--is_training', type=int, default=1, help='status')
-parser.add_argument('--model_id', type=str, default='MaelNetB1_MaelNetS1_SWaT_NegativeCorr_RL_1', help='model id')
+parser.add_argument('--model_id', type=str, default='MaelNetB1_MaelNetS1_SMD_Negative_Corr_RL_1_epoch10', help='model id')
 parser.add_argument('--model', type=str, default='MaelNetB1',
                     help='model name, options: [MaelNet]')
 
@@ -56,7 +56,7 @@ parser.add_argument('--step_size', default=4)
 parser.add_argument('--epsilon', default=0.5, type=float)
 parser.add_argument('--exp_name', default='rlmc', type=str)
 parser.add_argument("--hidden_dim_rl",default=100, type=int)
-parser.add_argument("--train_epochs_rl",default=1, type=int)
+parser.add_argument("--train_epochs_rl",default=500, type=int)
 
 #TimesNet
 parser.add_argument('--top_k', type=int, default=5)
@@ -96,9 +96,9 @@ parser.add_argument('--do_predict', action='store_true', help='whether to predic
 # optimization
 parser.add_argument('--num_workers', type=int, default=10, help='data loader num workers')
 parser.add_argument('--itr', type=int, default=1, help='experiments times')
+parser.add_argument("--epoch_itr", type=int, default=1500, help="iterations per epoch")
 
-#train epoch 10 harusnya
-parser.add_argument('--train_epochs', type=int, default=1, help='train epochs')
+parser.add_argument('--train_epochs', type=int, default=10, help='train epochs')
 parser.add_argument('--batch_size', type=int, default=32, help='batch size of train input data')
 parser.add_argument('--patience', type=int, default=3, help='early stopping patience') # Apabila Counter >= patience, akan dilakukan early stop
 parser.add_argument('--learning_rate', type=float, default=0.0001, help='optimizer learning rate')
@@ -164,7 +164,10 @@ if __name__ == "__main__":
         if args.is_training:
             print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
             #exp main Mantra
+            torch.cuda.empty_cache()
             exp.train(setting)
+            print("TEST MODEL")
+            exp.test(setting)
             print("UNIFY INPUT DATA")
             unify_input_data(args, setting)
             print("REINFORCEMENT LEARNING START")
@@ -172,6 +175,8 @@ if __name__ == "__main__":
             torch.cuda.empty_cache()
         else:
             torch.cuda.empty_cache()
+            # print("TEST MODEL")
+            # exp.test(setting)
             print("UNIFY INPUT DATA")
             unify_input_data(args, setting)
             print("REINFORCEMENT LEARNING START")

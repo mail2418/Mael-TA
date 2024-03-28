@@ -1,7 +1,7 @@
 py -u run_mantra_rl.py \
   --is_training 0 \
   --root_path ./dataset/PSM/ \
-  --model_id MaelNetB1_MaelNetS1_PSM_Negative_Corr_RL_2 \
+  --model_id MaelNetB1_MaelNetS1_PSM_Negative_Corr_RL_6_epoch10 \
   --model MaelNetB1 \
   --slow_model MaelNetS1 \
   --data PSM \

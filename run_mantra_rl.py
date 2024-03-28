@@ -10,13 +10,13 @@ parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly De
 
 # basic confi1g
 parser.add_argument('--is_training', type=int, default=1, help='status')
-parser.add_argument('--model_id', type=str, default='MaelNetB1_MaelNetS1_PSM_NegativeCorr_RL_1', help='model id')
+parser.add_argument('--model_id', type=str, default='MaelNetB1_MaelNetS1_SWaT_NegativeCorr_RL_1', help='model id')
 parser.add_argument('--model', type=str, default='MaelNetB1',
                     help='model name, options: [MaelNet]')
 
 # # # data loader
-parser.add_argument('--data', type=str, default='PSM', help='dataset type')
-parser.add_argument('--root_path', type=str, default='./dataset/PSM/', help='root path of the data file')
+parser.add_argument('--data', type=str, default='SWaT', help='dataset type')
+parser.add_argument('--root_path', type=str, default='./dataset/SWaT/', help='root path of the data file')
 parser.add_argument('--win_size', type=int, default=100, help='window size')
 
 parser.add_argument('--features', type=str, default='M',

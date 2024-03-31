@@ -34,7 +34,11 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         if self.args.use_multi_gpu and self.args.use_gpu:
             model = nn.DataParallel(model, device_ids=self.args.device_ids)
         return model
-
+    def _build_slow_model(self):
+        slow_model = self.model_dict[self.args.slow_model].Model(self.args).float().to(self.device)
+        if self.args.use_multi_gpu and self.args.use_gpu:
+            slow_model = nn.DataParallel(slow_model, device_ids=self.args.device_ids)
+        return slow_model
     def _get_data(self, flag):
         data_set, data_loader = data_provider(self.args, flag)
         return data_set, data_loader
@@ -256,6 +260,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             self.model.train()
             epoch_time = time.time()
             for i, (batch_x, batch_y) in enumerate(train_loader):
+
                 if i == self.args.epoch_itr or i > train_steps : break
                 
                 train_X.extend(batch_x.detach().cpu().numpy())

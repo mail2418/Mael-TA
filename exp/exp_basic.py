@@ -21,11 +21,14 @@ class Exp_Basic(object):
         }
         self.device = self._acquire_device()
         self.model = self._build_model().to(self.device)
+        self.slow_model = self._build_slow_model().to(self.device)
         
     def _build_model(self):
         raise NotImplementedError
         return None
-
+    def _build_slow_model(self):
+        raise NotImplementedError
+        return None
     def _acquire_device(self):
         if self.args.use_gpu:
             os.environ["CUDA_VISIBLE_DEVICES"] = str(

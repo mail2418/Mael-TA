@@ -11,7 +11,7 @@ data_dict = {
 
 def data_provider(args, setting, flag):
     Data = data_dict[args.data]
-    batch_size = 2
+    batch_size = args.batch_rl
     drop_last = False
     data_set = Data(
         root_path=args.root_path,
@@ -24,7 +24,7 @@ def data_provider(args, setting, flag):
         data_set,
         shuffle=False,
         batch_size=batch_size,
-        num_workers=args.num_workers,
+        num_workers=0,
         drop_last=drop_last,
         )
     return data_set, data_loader

@@ -26,8 +26,6 @@ class PSMSegLoader(Dataset):
         data_len = len(self.train)
         self.val = self.train[(int)(data_len * 0.8):]
         self.test_labels = pd.read_csv(os.path.join(root_path, 'test_label.csv')).values[:, 1:]
-        print("test:", self.test.shape)
-        print("train:", self.train.shape)
 
     def __len__(self):
         if self.flag == "train":
@@ -69,8 +67,6 @@ class MSLSegLoader(Dataset):
         data_len = len(self.train)
         self.val = self.train[(int)(data_len * 0.8):]
         self.test_labels = np.load(os.path.join(root_path, "MSL_test_label.npy"))
-        print("test:", self.test.shape)
-        print("train:", self.train.shape)
 
     def __len__(self):
         if self.flag == "train":
@@ -154,8 +150,6 @@ class SMDSegLoader(Dataset):
         data_len = len(self.train)
         self.val = self.train[(int)(data_len * 0.8):]
         self.test_labels = np.load(os.path.join(root_path, "SMD_test_label.npy"))
-        print("test:", self.test.shape)
-        print("train:", self.train.shape)
 
     def __len__(self):
         if self.flag == "train":
@@ -203,8 +197,6 @@ class SWATSegLoader(Dataset):
         data_len = len(self.train)
         self.val = self.train[(int)(data_len * 0.8):]
         self.test_labels = labels
-        print("test:", self.test.shape)
-        print("train:", self.train.shape)
 
     def __len__(self):
         """

@@ -535,3 +535,8 @@ Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
 10,1032.2915933132172,4222,0.0701011,0.607391,0.9908161
 
 
+MaelNetB1_MaelNetS1_New_Anomaly_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+1,242.2755410671234,222,0.2356907,0.1445035,0.8573733
+
+

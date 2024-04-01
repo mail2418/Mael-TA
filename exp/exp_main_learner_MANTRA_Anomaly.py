@@ -51,7 +51,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         else:
             criterion = nn.MSELoss()
         return criterion
-    def vali(self, vali_loader, criterion, epoch):
+    def vali(self, vali_loader, criterion, epoch, flag):
         steps = len(vali_loader)
         iter_count = 0
         time_now = time.time()
@@ -59,7 +59,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         with torch.no_grad():
             for i , (batch_x, batch_y) in enumerate(vali_loader):
                 if i == 200: break
-                iter_count += 1
+                iter_count = iter_count + 1
                 batch_x = batch_x.float().to(self.device)
                 f_dim = -1 if self.args.features == 'MS' else 0
                 if self.model.name not in ["KBJNet"]:
@@ -72,7 +72,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 loss = criterion(pred, true)
                 total_loss.append(loss.item())
                 if (i + 1) % 100 == 0:
-                    print("\titers test: {0}, epoch : {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
+                    print("\titers {3}: {0}, epoch : {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item(), flag))
                     speed = (time.time() - time_now) / iter_count
                     left_time = speed * ((self.args.train_epochs - epoch) * steps - i)
                     print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
@@ -110,7 +110,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             epoch_time = time.time()
             for i, (batch_x, batch_y) in enumerate(train_loader):
                 if i == 200: break
-                iter_count += 1
+                iter_count = iter_count + 1
                 model_optim.zero_grad()
                 batch_x = batch_x.float().to(self.device)
                 f_dim = -1 if self.args.features == 'MS' else 0
@@ -118,8 +118,8 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                     outputs = self.model(batch_x)
                 else:
                     outputs = self.model(batch_x.permute(0,2,1)) 
-                outputs = outputs[:, :, f_dim:]
-                loss = criterion(outputs, batch_x)
+                outputs = outputs[:, :, f_dim:].detach().cpu()
+                loss = criterion(outputs, batch_x.detach().cpu())
                 train_loss.append(loss.item())           
                 if (i + 1) % 100 == 0:
                     print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
@@ -142,8 +142,8 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             f.write("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             f.write("\n")
             train_loss = np.average(train_loss)
-            vali_loss = self.vali(vali_loader, criterion, epoch)
-            test_loss = self.vali(test_loader, criterion, epoch)
+            vali_loss = self.vali(vali_loader, criterion, epoch, "Validation")
+            test_loss = self.vali(test_loader, criterion, epoch, "Test")
 
             data_for_csv = [[epoch + 1, time.time() - epoch_time, train_steps, round(train_loss,7), round(vali_loss,7), round(test_loss,7)],[]]
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(

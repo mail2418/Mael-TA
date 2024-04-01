@@ -67,7 +67,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         with torch.no_grad():
             for i , (batch_x, _) in enumerate(vali_loader):
                 if i == self.args.epoch_itr or i > vali_step : break
-                iter_count += 1
+                iter_count = iter_count + 1
                 if epoch == 0:
                     valid_X.extend(batch_x.detach().cpu().numpy())
 
@@ -141,7 +141,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         with torch.no_grad():
             for i , (batch_x, batch_y) in enumerate(test_loader):
                 if i == self.args.epoch_itr or i > test_step : break
-                iter_count += 1
+                iter_count = iter_count + 1
                 if epoch == 0:
                     test_X.extend(batch_x.detach().cpu().numpy())
                     test_y.extend(batch_y.detach().cpu().numpy())
@@ -265,7 +265,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 
                 train_X.extend(batch_x.detach().cpu().numpy())
 
-                iter_count += 1
+                iter_count = iter_count + 1
                 model_optim.zero_grad()
 
                 batch_x = batch_x.float().to(self.device)

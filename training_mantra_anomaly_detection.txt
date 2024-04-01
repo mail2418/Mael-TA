@@ -636,3 +636,7 @@ Epoch: 9, Steps: 4222 | Train Loss: 0.0700855 Vali Loss: 0.6073206 Test Loss: 0.
 Epoch: 10 cost time: 633.3867883682251
 Epoch: 10, Steps: 4222 | Train Loss: 0.0701011 Vali Loss: 0.6073910 Test Loss: 0.9908161
 
+MaelNetB1_MaelNetS1_New_Anomaly_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Epoch: 1 cost time: 101.6240439414978
+Epoch: 1, Steps: 222 | Train Loss: 0.2356907 Vali Loss: 0.1445035 Test Loss: 0.8573733
+

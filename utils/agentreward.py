@@ -16,14 +16,14 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 def get_mape_reward(q_mape, mape, R=1):
         q = 0
         while (q < 9) and (mape > q_mape):
-            q += 1
+            q = q+ 1
         reward = -R + 2*R*(9 - q)/9
         return reward
 
 def get_mae_reward(q_mae, mae, R=1):
     q = 0
     while (q < 9) and (mae > q_mae[q]):
-        q += 1
+        q = q+ 1
     reward = -R + 2*R*(9 - q)/9
     return reward
 # RANK dari
@@ -111,12 +111,12 @@ def sparse_explore(obs, act_dim):
 
     # disturb from the vertex
     delta = np.random.uniform(0.02, 0.1, size=(N, 1))
-    x[np.arange(N), randn_idx] -= delta.squeeze()
+    x[np.arange(N), randn_idx] = x[np.arange(N), randn_idx] - delta.squeeze()
 
     # noise
     noise = np.abs(np.random.randn(N, act_dim))
     noise[np.arange(N), randn_idx] = 0
-    noise /= noise.sum(1, keepdims=True)
+    noise = noise/ noise.sum(1, keepdims=True)
     noise = delta * noise
     sparse_action = x + noise
 
@@ -225,7 +225,7 @@ class TrainEnvOffline_dist_conf(EnvOffline_dist_conf):
         # Get the reward
         reward=self._get_reward(observation)
 
-        self.pointer += 1
+        self.pointer = self.pointer + 1
 
         # Check whether the episode is over
         if self.pointer >= self.len_data:

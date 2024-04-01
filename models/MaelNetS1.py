@@ -20,9 +20,9 @@ class Projector(nn.Module):
 
         layers = [nn.Linear(2 * enc_in, hidden_dims[0]), nn.ReLU()]
         for i in range(hidden_layers-1):
-            layers += [nn.Linear(hidden_dims[i], hidden_dims[i+1]), nn.ReLU()]
+            layers = layers + [nn.Linear(hidden_dims[i], hidden_dims[i+1]), nn.ReLU()]
         
-        layers += [nn.Linear(hidden_dims[-1], output_dim, bias=False)]
+        layers = layers + [nn.Linear(hidden_dims[-1], output_dim, bias=False)]
         self.backbone = nn.Sequential(*layers)
 
     def forward(self, x, stats):

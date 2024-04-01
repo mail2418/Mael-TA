@@ -7,7 +7,6 @@ from functools import partial
 
 from scipy.special import eval_legendre
 from sympy import Poly, legendre, Symbol, chebyshevt
-
 plt.switch_backend('agg')
 
 class moving_avg(nn.Module):
@@ -112,7 +111,7 @@ class EarlyStopping:
             if save:
                 self.save_checkpoint(val_loss, model, path) 
         elif score < self.best_score + self.delta:
-            self.counter += 1
+            self.counter = self.counter + 1
             print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
             if self.counter >= self.patience:
                 self.early_stop = True

@@ -18,8 +18,8 @@ class PositionalEmbedding(nn.Module):
         position = torch.arange(0, max_len).float().unsqueeze(1)
         if self.model_name in ["MaelNet", "MaelNetS1", "MaelNetB1"]:
             div_term = (torch.arange(0, d_model).float() * -(math.log(10000.0) / d_model)).exp()
-            pe += torch.sin(position * div_term)
-            pe += torch.cos(position * div_term)
+            pe = pe + torch.sin(position * div_term)
+            pe = pe + torch.cos(position * div_term)
         else:
             div_term = (torch.arange(0, d_model, 2).float() * -(math.log(10000.0) / d_model)).exp()
             pe[:, 0::2] = torch.sin(position * div_term)
@@ -66,7 +66,7 @@ class TokenTCNEmbedding(nn.Module):
             self.tokenConv = weight_norm(nn.Conv1d(in_channels=c_in, out_channels=d_model,
                                     kernel_size=3, padding=padding, dilation=dilation_size, bias=False))
             self.net = nn.Sequential(self.tokenConv, self.chomp, self.leakyrelu, self.dropout)
-            layers += [self.net]
+            layers = layers + [self.net]
             self.init_weights()
         self.network = nn.Sequential(*layers)
 
@@ -189,8 +189,8 @@ class PositionalEncoding(nn.Module):
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
         div_term = torch.exp(torch.arange(0, d_model).float() * (-math.log(10000.0) / d_model))
-        pe += torch.sin(position * div_term)
-        pe += torch.cos(position * div_term)
+        pe = pe+ torch.sin(position * div_term)
+        pe = pe + torch.cos(position * div_term)
         pe = pe.unsqueeze(0).transpose(0, 1)
         self.register_buffer('pe', pe)
 
@@ -231,7 +231,7 @@ class Tcn_Global(nn.Module):
         out_channels = num_outputs #out_channels = 25
         for i in range(num_levels):
             dilation_size = 2 ** i  # Expansion coefficient: 1，2，4，8……
-            layers += [TemporalCnn(out_channels, out_channels, kernel_size, stride=1, dilation=dilation_size,
+            layers = layers + [TemporalCnn(out_channels, out_channels, kernel_size, stride=1, dilation=dilation_size,
                                    padding=(kernel_size - 1) * dilation_size,
                                    dropout=dropout)]
 
@@ -239,58 +239,4 @@ class Tcn_Global(nn.Module):
 
     def forward(self, x):
         x = self.network(x)
-        return x
-
-#DCDetector
-class RevIN(nn.Module):
-    def __init__(self, num_features: int, eps=1e-5, affine=True):
-        """
-        :param num_features: the number of features or channels
-        :param eps: a value added for numerical stability
-        :param affine: if True, RevIN has learnable affine parameters
-        """
-        super(RevIN, self).__init__()
-        self.num_features = num_features
-        self.eps = eps
-        self.affine = affine
-        if self.affine:
-            self._init_params()
-
-    def forward(self, x, mode:str):
-        if mode == 'norm':
-            self._get_statistics(x)
-            x = self._normalize(x)
-        elif mode == 'denorm':
-            x = self._denormalize(x)
-        else: raise NotImplementedError
-        return x
-
-    def _init_params(self):
-        # initialize RevIN params: (C,)
-        self.affine_weight = torch.ones(self.num_features)
-        self.affine_bias = torch.zeros(self.num_features)
-        self.affine_weight=self.affine_weight.to(device=torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'))
-        self.affine_bias=self.affine_bias.to(device=torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'))
-        
-
-    def _get_statistics(self, x):
-        dim2reduce = tuple(range(1, x.ndim-1))
-        self.mean = torch.mean(x, dim=dim2reduce, keepdim=True).detach()
-        self.stdev = torch.sqrt(torch.var(x, dim=dim2reduce, keepdim=True, unbiased=False) + self.eps).detach()
-            
-
-    def _normalize(self, x):
-        x = x - self.mean
-        x = x / self.stdev
-        if self.affine:
-            x = x * self.affine_weight
-            x = x + self.affine_bias
-        return x
-
-    def _denormalize(self, x):
-        if self.affine:
-            x = x - self.affine_bias
-            x = x / (self.affine_weight + self.eps*self.eps)
-        x = x * self.stdev
-        x = x + self.mean
         return x

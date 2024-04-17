@@ -6,7 +6,7 @@ import math
 from utils.masking import TriangularCausalMask, ProbMask
 from einops import reduce, repeat
 import os
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
+
 class DSAttention(nn.Module):
     '''De-stationary Attention'''
     def __init__(self, mask_flag=True, factor=5, scale=None, attention_dropout=0.1, output_attention=False):

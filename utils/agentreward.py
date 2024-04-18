@@ -11,7 +11,7 @@ from gym import spaces
 import gym
 import random
 import os
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 def get_mape_reward(q_mape, mape, R=1):
         q = 0
@@ -137,7 +137,7 @@ class EnvOffline_dist_conf(gym.Env):
                     of the testing data from each model;
     list_thresholds: the list of raw anomaly thresholds from each model;'''
     
-    def __init__(self, list_pred_sc, list_thresholds,list_gtruth, setting, model_path="./checkpoints/"):
+    def __init__(self, list_pred_sc, list_thresholds,list_gtruth):
 
         # Length of the testing data, number of models
         self.len_data = len(list_pred_sc[0])
@@ -151,13 +151,11 @@ class EnvOffline_dist_conf(gym.Env):
         self.list_thresholds = list_thresholds
 
         # Scale the raw scores/thresholds and save each scaler
-        self.scaler = []
         self.list_scaled_sc = []
         self.list_scaled_thresholds = []
         for i in range(self.num_models):
-            scaler_tmp = MinMaxScaler()
+            scaler_tmp = StandardScaler()
             self.list_scaled_sc.append(scaler_tmp.fit_transform(self.list_pred_sc[i].reshape(-1,1)))
-            self.scaler.append(scaler_tmp)
             self.list_scaled_thresholds.append(scaler_tmp.transform(self.list_thresholds[i].reshape(-1,1)))
 
         # Extract predictions

@@ -6,6 +6,7 @@ import math
 from utils.masking import TriangularCausalMask, ProbMask
 from einops import reduce, repeat
 import os
+
 class DSAttention(nn.Module):
     '''De-stationary Attention'''
     def __init__(self, mask_flag=True, factor=5, scale=None, attention_dropout=0.1, output_attention=False):

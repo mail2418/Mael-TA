@@ -11,7 +11,7 @@ from gym import spaces
 import gym
 import random
 import os
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 def get_mape_reward(q_mape, mape, R=1):
         q = 0
@@ -137,7 +137,7 @@ class EnvOffline_dist_conf(gym.Env):
                     of the testing data from each model;
     list_thresholds: the list of raw anomaly thresholds from each model;'''
     
-    def __init__(self, list_pred_sc, list_thresholds,list_gtruth, model_path="./base_detectors"):
+    def __init__(self, list_pred_sc, list_thresholds,list_gtruth, setting, model_path="./checkpoints/"):
 
         # Length of the testing data, number of models
         self.len_data = len(list_pred_sc[0])
@@ -145,13 +145,6 @@ class EnvOffline_dist_conf(gym.Env):
 
         #List of ground truth labels
         self.gtruth = list_gtruth
-        
-        # Get the list of pretrained models
-        self.model_path = model_path 
-        self.model_list = [f for f in os.listdir(self.model_path) if f.endswith('.sav')]
-
-        # Extract the model names
-        self.model_names = [f.split('_')[0] for f in self.model_list]
         
         # Raw scores and thresholds of the testing data
         self.list_pred_sc = list_pred_sc
@@ -205,8 +198,8 @@ class TrainEnvOffline_dist_conf(EnvOffline_dist_conf):
         list_gtruth: the list of ground truth labels (each one being 1D numpy array) of the 
                     testing data by each models.'''
 
-    def __init__(self, list_pred_sc, list_thresholds, list_gtruth):
-        super().__init__(list_pred_sc, list_thresholds, list_gtruth)
+    def __init__(self, list_pred_sc, list_thresholds, list_gtruth, setting):
+        super().__init__(list_pred_sc, list_thresholds, list_gtruth, setting)
     
     def reset(self):
         self.pointer = 0 # Reset the pointer to the beginning of the testing data

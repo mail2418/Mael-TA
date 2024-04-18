@@ -1082,3 +1082,13 @@ Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
 
 
 
+MaelNetB1_MaelNetS1_New_Anomaly_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+1,424.1925308704376,4137,0.0898498,0.079193,0.0602976
+
+
+MaelNetB1_MaelNetS1_New_Anomaly_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+1,3816.5701701641083,4137,0.0325546,0.0155925,0.0242913
+
+

@@ -21,6 +21,7 @@ import numpy as np
 from typing import List
 from utils.agentreward import TrainEnvOffline_dist_conf, eval_model
 from stable_baselines3 import DQN
+from tqdm import trange
 warnings.filterwarnings('ignore')
 
 
@@ -58,7 +59,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         total_loss = []
         with torch.no_grad():
             for i , (batch_x, batch_y) in enumerate(vali_loader):
-                if i == 200: break
+                # if i == 200: break
                 iter_count = iter_count + 1
                 batch_x = batch_x.float().to(self.device)
                 f_dim = -1 if self.args.features == 'MS' else 0
@@ -109,7 +110,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             self.model.train()
             epoch_time = time.time()
             for i, (batch_x, batch_y) in enumerate(train_loader):
-                if i == 200: break
+                # if i == 200: break
                 iter_count = iter_count + 1
                 model_optim.zero_grad()
                 batch_x = batch_x.float().to(self.device)
@@ -118,8 +119,8 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                     outputs = self.model(batch_x)
                 else:
                     outputs = self.model(batch_x.permute(0,2,1)) 
-                outputs = outputs[:, :, f_dim:].detach().cpu()
-                loss = criterion(outputs, batch_x.detach().cpu())
+                outputs = outputs[:, :, f_dim:]
+                loss = criterion(outputs, batch_x)
                 train_loss.append(loss.item())           
                 if (i + 1) % 100 == 0:
                     print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
@@ -177,15 +178,13 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         list_gtruth = []
         list_thresholds = []
         list_predsrc = []
-        for learner_idx in range(self.args.n_learner):
+        for learner_idx in trange(self.args.n_learner, desc=f'Testing Learner'):
             attens_energy = []
             self.model.eval()
             self.anomaly_criterion = nn.MSELoss(reduce=False)
             # (1) stastic on the TRAIN SET
             with torch.no_grad():
                 for i, (batch_x, _) in enumerate(train_loader):
-                    if i == 200: break
-                    
                     batch_x = batch_x.float().to(self.device)
                     # reconstruction
                     if self.model.name not in ["KBJNet"]:
@@ -210,6 +209,8 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                     # criterion
                     loss = self.anomaly_criterion(batch_x, outputs)
                     loss = loss + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
+                    if (i + 1) % 100 == 0:
+                        print("\titers data train for learner {0}: {1}".format(learner_idx + 1,i + 1))
                     score = torch.mean(loss, dim=-1)
                     score = score.detach().cpu().numpy()
                     attens_energy.append(score)
@@ -221,7 +222,6 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             attens_energy = []
             test_labels = []
             for i, (batch_x, batch_y) in enumerate(test_loader):
-                if i == 200: break
                 batch_x = batch_x.float().to(self.device)
                 # reconstruction
                 if self.model.name not in ["KBJNet"]:
@@ -247,11 +247,12 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 # criterion
                 lossT = self.anomaly_criterion(batch_x, outputs)
                 loss = loss + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
+                if (i + 1) % 100 == 0:
+                    print("\titers data test for learner {0}: {1}".format(learner_idx + 1,i + 1))
                 score = torch.mean(lossT, dim=-1)
                 score = score.detach().cpu().numpy()
                 attens_energy.append(score)
                 test_labels.append(batch_y)
-
             attens_energy = np.concatenate(attens_energy, axis=0).reshape(-1)
             test_energy = np.array(attens_energy)
             combined_energy = np.concatenate([train_energy, test_energy], axis=0)
@@ -280,7 +281,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             list_predsrc.append(pred)
             if learner_idx == self.args.n_learner - 1:
                 list_gtruth.append(gt)
-
+        list_gtruth = list_gtruth.pop()
         EXP_TIMES=10 # How many runs to average the results
         # Store the precision, recall, F1-score
         store_prec=np.zeros(EXP_TIMES)
@@ -291,7 +292,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             # Set up the training environment on all the dataset
             # env_off=TrainEnvOffline(list_pred_sc=list_pred_sc, list_thresholds=list_thresholds, list_gtruth=list_gtruth)
             # env_off=TrainEnvOffline_consensus_conf(list_pred_sc=list_pred_sc, list_thresholds=list_thresholds, list_gtruth=list_gtruth)
-            env_off=TrainEnvOffline_dist_conf(list_pred_sc=list_predsrc, list_thresholds=list_thresholds, list_gtruth=list_gtruth)
+            env_off=TrainEnvOffline_dist_conf(list_pred_sc=list_predsrc, list_thresholds=list_thresholds, list_gtruth=list_gtruth, setting=setting)
 
             # Train the model on all the dataset  
             model = DQN('MlpPolicy', env_off, verbose=0)
@@ -316,11 +317,23 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         std_prec=np.std(store_prec)
         std_rec=np.std(store_rec)
         std_f1=np.std(store_f1)
-
+        f = open("testing_rl_anomaly_detection.txt", 'a')
         print("Total number of reported anomalies: ",sum(list_preds))
+        f.write("Total number of reported anomalies: ",sum(list_preds))
+        f.write("Total number of reported anomalies: ",sum(list_preds))
+        f.write("\n")
         print("Total number of true anomalies: ",sum(list_gtruth))
+        f.write("Total number of true anomalies: ",sum(list_gtruth))
+        f.write("\n")
 
         print("Average precision: %.4f, std: %.4f" % (average_prec, std_prec))
         print("Average recall: %.4f, std: %.4f" % (average_rec, std_rec))
         print("Average F1-score: %.4f, std: %.4f" % (average_f1, std_f1))
+
+        f.write("Average precision: %.4f, std: %.4f" % (average_prec, std_prec))
+        f.write("\n")
+        f.write("Average recall: %.4f, std: %.4f" % (average_rec, std_rec))
+        f.write("\n")
+        f.write("Average F1-score: %.4f, std: %.4f" % (average_f1, std_f1))
+
         return

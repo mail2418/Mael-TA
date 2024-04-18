@@ -640,3 +640,11 @@ MaelNetB1_MaelNetS1_New_Anomaly_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc3_eb
 Epoch: 1 cost time: 101.6240439414978
 Epoch: 1, Steps: 222 | Train Loss: 0.2356907 Vali Loss: 0.1445035 Test Loss: 0.8573733
 
+MaelNetB1_MaelNetS1_New_Anomaly_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Epoch: 1 cost time: 193.00040292739868
+Epoch: 1, Steps: 4137 | Train Loss: 0.0898498 Vali Loss: 0.0791930 Test Loss: 0.0602976
+
+MaelNetB1_MaelNetS1_New_Anomaly_MaelNetB1_PSM_ftM_dm25_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Epoch: 1 cost time: 2727.5421516895294
+Epoch: 1, Steps: 4137 | Train Loss: 0.0325546 Vali Loss: 0.0155925 Test Loss: 0.0242913
+

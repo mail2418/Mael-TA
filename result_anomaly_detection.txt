@@ -304,3 +304,45 @@ Accuracy : 0.9359, Precision : 0.9012, Recall : 0.5602, F-score : 0.6909
 MaelNetB1_MaelNetS1_SMAP_Negative_Corr_RL_4_epoch10_itr4000_noslowleraner_MaelNetB1_SMAP_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
 Accuracy : 0.9351, Precision : 0.9046, Recall : 0.5508, F-score : 0.6847 
 
+NSTransformer_MSL_NSTransformer_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9566, Precision : 0.8852, Recall : 0.6764, F-score : 0.7668 
+
+NSTransformer_PSM_NSTransformer_PSM_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9805, Precision : 0.9849, Recall : 0.9440, F-score : 0.9640 
+
+NSTransformer_100_96_NSTransformer_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9864, Precision : 0.8540, Recall : 0.8113, F-score : 0.8321 
+
+NSTransformer_100_96_NSTransformer_SWaT_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9856, Precision : 0.9474, Recall : 0.9334, F-score : 0.9404 
+
+MaelNet_100_96_MaelNet_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9864, Precision : 0.8540, Recall : 0.8113, F-score : 0.8321 
+
+MaelNet_100_96_MaelNet_SWaT_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9856, Precision : 0.9473, Recall : 0.9335, F-score : 0.9404 
+
+MaelNet_PSM_MaelNet_PSM_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9804, Precision : 0.9849, Recall : 0.9439, F-score : 0.9640 
+
+MaelNet_MSL_MaelNet_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9566, Precision : 0.8852, Recall : 0.6765, F-score : 0.7669 
+
+MaelNet_SMAP_MaelNet_SMAP_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9336, Precision : 0.9141, Recall : 0.5305, F-score : 0.6714 
+
+NSTransformer_SMAP_NSTransformer_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9439, Precision : 0.9249, Recall : 0.6113, F-score : 0.7361 
+
+NSTransformer_SMD_NSTransformer_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9862, Precision : 0.8581, Recall : 0.7998, F-score : 0.8279 
+
+NSTransformer_SWaT_NSTransformer_SWaT_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9843, Precision : 0.9392, Recall : 0.9310, F-score : 0.9351 
+
+NSTransformer_PSM_NSTransformer_PSM_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9837, Precision : 0.9897, Recall : 0.9511, F-score : 0.9700 
+
+NSTransformer_MSL_NSTransformer_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9595, Precision : 0.8895, Recall : 0.7037, F-score : 0.7857 
+

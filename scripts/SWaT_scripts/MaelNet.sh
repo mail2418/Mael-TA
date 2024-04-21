@@ -1,4 +1,4 @@
-python -u run.py \
+py -u run.py \
   --is_training 1 \
   --root_path ./dataset/SWaT/ \
   --model_id MaelNet_100_96 \

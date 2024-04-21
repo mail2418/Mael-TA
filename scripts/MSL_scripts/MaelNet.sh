@@ -1,4 +1,4 @@
-python -u run.py \
+py -u run.py \
   --is_training 1 \
   --root_path ./dataset/MSL/ \
   --model_id MaelNet_MSL \

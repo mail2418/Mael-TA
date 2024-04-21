@@ -1,7 +1,7 @@
-python -u run.py \
+py -u run.py \
   --is_training 1 \
   --root_path ./dataset/SMD/ \
-  --model_id NSTransformer_100_96 \
+  --model_id NSTransformer_SMD\
   --model NSTransformer \
   --data SMD \
   --e_layers 2 \

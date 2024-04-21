@@ -192,23 +192,23 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                     else:
                         outputs = self.model.forward_1learner(batch_x.permute(0,2,1),learner_idx) 
                     # Slow Learner
-                    # s0,s1,s2 = batch_x.shape
-                    # randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
-                    # m_ones = torch.ones(s0,s1,s2)
-                    # slow_mark = torch.bernoulli(randuniform)
-                    # batch_x_slow = batch_x.clone()
-                    # batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
+                    s0,s1,s2 = batch_x.shape
+                    randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
+                    m_ones = torch.ones(s0,s1,s2)
+                    slow_mark = torch.bernoulli(randuniform)
+                    batch_x_slow = batch_x.clone()
+                    batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
 
-                    # if self.slow_model.name not in ["KBJNet"]:
-                    #     slow_out = self.slow_model.forward(batch_x_slow)
-                    # else:
-                    #     slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
+                    if self.slow_model.name not in ["KBJNet"]:
+                        slow_out = self.slow_model.forward(batch_x_slow)
+                    else:
+                        slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
 
                     f_dim = -1 if self.args.features == 'MS' else 0
                     outputs = outputs[:, :, f_dim:]
                     # criterion
                     loss = self.anomaly_criterion(batch_x, outputs)
-                    # loss = loss + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
+                    loss = loss + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
                     score = torch.mean(loss, dim=-1)
                     score = score.detach().cpu().numpy()
                     attens_energy.append(score)
@@ -229,18 +229,18 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 else:
                     outputs = self.model.forward_1learner(batch_x.permute(0,2,1),learner_idx) 
 
-                # # Slow Learner
-                # s0,s1,s2 = batch_x.shape
-                # randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
-                # m_ones = torch.ones(s0,s1,s2)
-                # slow_mark = torch.bernoulli(randuniform)
-                # batch_x_slow = batch_x.clone()
-                # batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
+                # Slow Learner
+                s0,s1,s2 = batch_x.shape
+                randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
+                m_ones = torch.ones(s0,s1,s2)
+                slow_mark = torch.bernoulli(randuniform)
+                batch_x_slow = batch_x.clone()
+                batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
 
-                # if self.slow_model.name not in ["KBJNet"]:
-                #     slow_out = self.slow_model.forward(batch_x_slow)
-                # else:
-                #     slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
+                if self.slow_model.name not in ["KBJNet"]:
+                    slow_out = self.slow_model.forward(batch_x_slow)
+                else:
+                    slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
 
                 f_dim = -1 if self.args.features == 'MS' else 0
                 outputs = outputs[:, :, f_dim:] 
@@ -249,7 +249,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 new_outputs = outputs.reshape(outputs.shape[0], outputs.shape[1]) if self.args.features == 'MS' else outputs.reshape(outputs.shape[0], outputs.shape[1] * outputs.shape[2])
                 new_outputs = torch.mean(outputs, dim=-1)
                 sc_pred.extend(new_outputs)
-                # loss = lossT + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
+                loss = lossT + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
                 score = torch.mean(lossT, dim=-1)
                 score = score.detach().cpu().numpy()
                 attens_energy.append(score)
@@ -291,7 +291,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             # Set up the training environment on all the dataset
             # env_off=TrainEnvOffline(list_pred_sc=list_pred_sc, list_thresholds=list_thresholds, list_gtruth=list_gtruth)
             # env_off=TrainEnvOffline_consensus_conf(list_pred_sc=list_pred_sc, list_thresholds=list_thresholds, list_gtruth=list_gtruth)
-            env_off=TrainEnvOffline_dist_conf(list_pred_sc=list_predsrc, list_thresholds=list_thresholds, list_gtruth=list_gtruth, setting=setting)
+            env_off=TrainEnvOffline_dist_conf(list_pred_sc=list_predsrc, list_thresholds=list_thresholds, list_gtruth=list_gtruth)
 
             # Train the model on all the dataset  
             model = DQN('MlpPolicy', env_off, verbose=0)
@@ -318,21 +318,19 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         std_f1=np.std(store_f1)
         f = open("testing_rl_anomaly_detection.txt", 'a')
         print("Total number of reported anomalies: ",sum(list_preds))
-        f.write("Total number of reported anomalies: ",sum(list_preds))
-        f.write("Total number of reported anomalies: ",sum(list_preds))
+        f.write(f"Total number of reported anomalies: {sum(list_preds)}")
         f.write("\n")
         print("Total number of true anomalies: ",sum(list_gtruth))
-        f.write("Total number of true anomalies: ",sum(list_gtruth))
+        f.write(f"Total number of true anomalies: {sum(list_gtruth)}")
         f.write("\n")
-
         print("Average precision: %.4f, std: %.4f" % (average_prec, std_prec))
         print("Average recall: %.4f, std: %.4f" % (average_rec, std_rec))
         print("Average F1-score: %.4f, std: %.4f" % (average_f1, std_f1))
 
-        f.write("Average precision: %.4f, std: %.4f" % (average_prec, std_prec))
+        f.write("Average precision: {0:.4f}, std: {1:.4f}".format(average_prec, std_prec))
         f.write("\n")
-        f.write("Average recall: %.4f, std: %.4f" % (average_rec, std_rec))
+        f.write("Average recall: {0:.4f}, std: {1:.4f}".format(average_rec, std_rec))
         f.write("\n")
-        f.write("Average F1-score: %.4f, std: %.4f" % (average_f1, std_f1))
+        f.write("Average F1-score: {0:.4f}, std: {1:.4f}".format(average_f1, std_f1))
 
         return

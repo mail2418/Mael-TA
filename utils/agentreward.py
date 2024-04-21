@@ -196,8 +196,8 @@ class TrainEnvOffline_dist_conf(EnvOffline_dist_conf):
         list_gtruth: the list of ground truth labels (each one being 1D numpy array) of the 
                     testing data by each models.'''
 
-    def __init__(self, list_pred_sc, list_thresholds, list_gtruth, setting):
-        super().__init__(list_pred_sc, list_thresholds, list_gtruth, setting)
+    def __init__(self, list_pred_sc, list_thresholds, list_gtruth):
+        super().__init__(list_pred_sc, list_thresholds, list_gtruth)
     
     def reset(self):
         self.pointer = 0 # Reset the pointer to the beginning of the testing data

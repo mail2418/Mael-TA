@@ -8,13 +8,13 @@ parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly De
 
 # basic config
 parser.add_argument('--is_training', type=int, default=1, help='status')
-parser.add_argument('--model_id', type=str, default='MaelNet_testing_decout', help='model id')
-parser.add_argument('--model', type=str, default='MaelNet',
+parser.add_argument('--model_id', type=str, default='DCDetector_SMD', help='model id')
+parser.add_argument('--model', type=str, default='DCDetector',
                     help='model name, options: [MaelNet]')
 
 # # # data loader
-parser.add_argument('--data', type=str, default='MSL', help='dataset type')
-parser.add_argument('--root_path', type=str, default='./dataset/MSL/', help='root path of the data file')
+parser.add_argument('--data', type=str, default='SMD', help='dataset type')
+parser.add_argument('--root_path', type=str, default='./dataset/SMD/', help='root path of the data file')
 parser.add_argument('--win_size', type=int, default=100, help='window size')
 
 parser.add_argument('--features', type=str, default='M',
@@ -31,8 +31,8 @@ parser.add_argument('--anomaly_ratio', type=float, default=1, help="Anomaly rati
 parser.add_argument('--n_windows', type=int, default=100, help="Sliding Windows KBJNet")
 
 #DCDetector
-parser.add_argument('--channel', type=int, default=105, help="Channel DCDetector")
-parser.add_argument('--patch_size', type=list, default=[3,5], help="Sliding Windows KBJNet")
+parser.add_argument('--channel', type=int, default=38, help="Channel DCDetector")
+parser.add_argument('--patch_size', type=list, default=[5], help="Sliding Windows KBJNet")
 
 # FEDFormer task
 parser.add_argument('--seq_len', type=int, default=96, help='input sequence length')
@@ -58,9 +58,9 @@ parser.add_argument('--exp_name', default='rlmc', type=str)
 
 # model define
 parser.add_argument('--kernel_size', type=int, default=3, help='kernel input size')
-parser.add_argument('--enc_in', type=int, default=55, help='encoder input size')
-parser.add_argument('--dec_in', type=int, default=55, help='decoder input size')
-parser.add_argument('--c_out', type=int, default=55, help='output size')
+parser.add_argument('--enc_in', type=int, default=38, help='encoder input size')
+parser.add_argument('--dec_in', type=int, default=38, help='decoder input size')
+parser.add_argument('--c_out', type=int, default=38, help='output size')
 parser.add_argument('--d_model', type=int, default=512, help='dimension of model')
 parser.add_argument('--n_heads', type=int, default=8, help='num of heads attention')
 parser.add_argument('--e_layers', type=int, default=2, help='num of encoder layers')
@@ -104,7 +104,7 @@ parser.add_argument('--p_hidden_dims', type=int, nargs='+', default=[128, 128], 
 parser.add_argument('--p_hidden_layers', type=int, default=2, help='number of hidden layers in projector')
 
 args = parser.parse_args()
-
+args.patch_size = [int(patch_index) for patch_index in args.patch_size]
 args.use_gpu = True if torch.cuda.is_available() and args.use_gpu else False
 
 fix_seed = args.seed

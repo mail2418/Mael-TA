@@ -11,7 +11,7 @@ python -u run.py \
   --version Wavelets \
   --e_layers 2 \
   --d_layers 1 \
-  --anomaly_ratio 0.85 \
+  --anomaly_ratio 0.6 \
   --factor 5 \
   --enc_in 38 \
   --dec_in 38 \

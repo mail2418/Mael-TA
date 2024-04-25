@@ -2,7 +2,6 @@ from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from utils.tools import EarlyStopping, adjustment, visual
 from utils.metrics import NegativeCorr
-from models import MaelNet, KBJNet, DCDetector, ns_Transformer, FEDFormer, TimesNet, MaelNetB1, MaelNetS1, ns_TransformerB1, ns_TransformerS1
 from models.PropPrototype import MultiHeadURT
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import accuracy_score
@@ -30,38 +29,23 @@ class Opt_URT_Anomaly(Exp_Basic):
         super(Opt_URT_Anomaly, self).__init__(args)
 
     def _build_model(self):
-        model_dict = {
-            "MaelNet"    : MaelNet,
-            "MaelNetB1":MaelNetB1,
-            "MaelNetS1":MaelNetS1,
-            "KBJNet"     : KBJNet,
-            "DCDetector" : DCDetector,
-            "NSTransformer": ns_Transformer,
-            "NSTransformerB1": ns_TransformerB1,
-            "NSTransformerS1": ns_TransformerS1,
-            "FEDFormer" : FEDFormer,
-            "TimesNet": TimesNet,
-        }
-        model = model_dict[self.args.model].Model(self.args).float()
-        # self.slow_model = model_dict[self.args.slow_model].Model(self.args).float().to(self.device)
-        self.URT = MultiHeadURT(key_dim=self.args.win_size , query_dim=self.args.win_size*self.args.enc_in, hid_dim=4096, temp=1, att="cosine", n_head=self.args.urt_heads).float().to(self.device)
-
+        model = self.model_dict[self.args.model].Model(self.args).float()
         if self.args.use_multi_gpu and self.args.use_gpu:
             model = nn.DataParallel(model, device_ids=self.args.device_ids)
         return model
-
+    def _build_slow_model(self):
+        slow_model = self.model_dict[self.args.slow_model].Model(self.args).float()
+        if self.args.use_multi_gpu and self.args.use_gpu:
+            slow_model = nn.DataParallel(slow_model, device_ids=self.args.device_ids)
+        return slow_model
+    def _build_urt(self):
+        URT = MultiHeadURT(key_dim=self.args.win_size , query_dim=self.args.win_size*self.args.enc_in, hid_dim=4096, temp=1, att="cosine", n_head=self.args.urt_heads).float()
+        if self.args.use_multi_gpu and self.args.use_gpu:
+            URT = nn.DataParallel(URT, device_ids=self.args.device_ids)
+        return URT
     def _get_data(self, flag):
         data_set, data_loader = data_provider(self.args, flag)
         return data_set, data_loader
-
-    def _select_optimizer(self):
-        model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
-        # slow_model_optim = optim.Adam(self.slow_model.parameters(), lr=self.args.learning_rate)
-        return model_optim
-
-    # def _select_slow_optimizer(self):
-    #     slow_model_optim = optim.Adam(self.slow_model.parameters(), lr=self.args.learning_rate)
-    #     return slow_model_optim
     
     def _select_urt_optimizer(self):
         urt_optim = optim.Adam(self.URT.parameters(), lr=0.0001)
@@ -74,7 +58,6 @@ class Opt_URT_Anomaly(Exp_Basic):
             criterion = nn.MSELoss()
         return criterion
 
-
     def vali2(self, vali_data, vali_loader, criterion):
         total_loss = []
         self.model.eval()
@@ -82,7 +65,7 @@ class Opt_URT_Anomaly(Exp_Basic):
         with torch.no_grad():
             for i, (batch_x, _) in enumerate(vali_loader):
                 batch_x = batch_x.float().to(self.device)
-                # encoder - decoder
+                # FAST LEARNER
                 dec_out = []
                 for idx in range(0,self.args.n_learner):
                     outputs = self.model.forward_1learner(batch_x,idx=idx)
@@ -100,7 +83,20 @@ class Opt_URT_Anomaly(Exp_Basic):
                     for l in range(0,a):
                         fin_out[:,:,k] = fin_out[:,:,k] + (dec_out[l,:,:,k] * urt_out[l,k])
                 
-                outputs = fin_out
+                # SLOW LEARNER
+                s0,s1,s2 = batch_x.shape
+                randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
+                m_ones = torch.ones(s0,s1,s2)
+                slow_mark = torch.bernoulli(randuniform)
+                batch_x_slow = batch_x.clone()
+                batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
+
+                if self.slow_model.name not in ["KBJNet"]:
+                    slow_out = self.slow_model.forward(batch_x_slow)
+                else:
+                    slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
+
+                outputs = fin_out + slow_out
 
                 f_dim = -1 if self.args.features == 'MS' else 0
                 outputs = outputs[:, :, f_dim:]
@@ -112,13 +108,13 @@ class Opt_URT_Anomaly(Exp_Basic):
                 total_loss.append(loss)
 
         total_loss = np.average(total_loss)
-        # self.model.train()
         self.URT.train()
         return total_loss
 
     def train_urt(self, setting):
         
         self.model.load_state_dict(torch.load(os.path.join(str(self.args.checkpoints) + setting, 'checkpoint.pth')))
+        # self.slow_model.load_state_dict(torch.load(os.path.join(str(self.args.checkpoints) + setting, 'checkpoint_slow_learner.pth')))
         
         print("Train URT layer >>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     
@@ -138,29 +134,22 @@ class Opt_URT_Anomaly(Exp_Basic):
         urt_optim = self._select_urt_optimizer()
         criterion = self._select_criterion()
 
-        best_mse = float(10.0 ** 10)
-        # best_urt = self.URT.state_dict()
-        print("Best MSE: " + str(best_mse))
-        best_urt = copy.deepcopy(self.URT)
-
-        if self.args.use_amp:
-            scaler = torch.cuda.amp.GradScaler()
         f = open("training_urt_anomaly_detection.txt", 'a')
         for epoch in range(self.args.train_epochs):
             iter_count = 0
             train_loss = []
 
             self.model.eval()
+            self.slow_model.eval()
             self.URT.train()
             epoch_time = time.time()
-
 
             for i, (batch_x, _) in enumerate(train_loader):
                 iter_count += 1
                 urt_optim.zero_grad()
                 batch_x = batch_x.float().to(self.device)
 
-                # encoder - decoder
+                # FAST LEARNER
                 dec_out = []
                 for idx in range(self.args.n_learner):
                     if self.args.use_multi_gpu and self.args.use_gpu:
@@ -187,9 +176,23 @@ class Opt_URT_Anomaly(Exp_Basic):
                 for k in range(0,d):
                     for l in range(0,a):
                         fin_out[:,:,k] = fin_out[:,:,k] + (dec_out[l,:,:,k] * urt_out[l,k])
-                
-                outputs = fin_out
 
+                # # SLOW LEARNER
+                # s0,s1,s2 = batch_x.shape
+                # randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
+                # m_ones = torch.ones(s0,s1,s2)
+                # slow_mark = torch.bernoulli(randuniform)
+                # batch_x_slow = batch_x.clone()
+                # batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
+
+                # if self.slow_model.name not in ["KBJNet"]:
+                #     slow_out = self.slow_model.forward(batch_x_slow)
+                # else:
+                #     slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
+
+                # outputs = fin_out + slow_out
+
+                outputs = fin_out 
                 f_dim = -1 if self.args.features == 'MS' else 0
                 outputs = outputs[:, :, f_dim:]
 
@@ -200,7 +203,6 @@ class Opt_URT_Anomaly(Exp_Basic):
                 loss.requires_grad = True
                 train_loss.append(loss.item())
 
-                urt_optim.zero_grad()
                 if (i + 1) % 100 == 0:
                     print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
                     speed = (time.time() - time_now) / iter_count
@@ -210,9 +212,7 @@ class Opt_URT_Anomaly(Exp_Basic):
                     time_now = time.time()
 
                 loss.backward()
-                # model_optim.step()
                 urt_optim.step()
-                # slow_model_optim.step()
             if epoch == 0:
                 f.write(setting + "  \n")  
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
@@ -227,21 +227,12 @@ class Opt_URT_Anomaly(Exp_Basic):
             f.write("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
             f.write("\n")
-            if (vali_loss < best_mse):
-                best_mse = vali_loss
-                # best_urt = self.URT.state_dict()
-                best_urt = copy.deepcopy(self.URT)
-                print("Update Best URT params")
-
-            early_stopping(vali_loss, self.URT, path, save=False)
-
+            early_stopping(vali_loss, self.URT, path)
             if early_stopping.early_stop:
                 print("Early stopping")
                 break
-        # self.URT.load_state_dict(best_urt)
         f.close()
-        self.URT=best_urt
-        torch.save(self.URT.state_dict(), path + '/' + 'checkpoint_urt.pth')
+        return
 
     def test2(self, setting, test=0):
         test_data, test_loader = self._get_data(flag='test')
@@ -250,6 +241,7 @@ class Opt_URT_Anomaly(Exp_Basic):
         if test:
             print('loading model')
             self.model.load_state_dict(torch.load(os.path.join('./checkpoints/' + setting, 'checkpoint.pth')))
+            # self.slow_model.load_state_dict(torch.load(os.path.join('./checkpoints/' + setting, 'checkpoint.pth')))
             self.URT.load_state_dict(torch.load(os.path.join('./checkpoints/' + setting, 'checkpoint_urt.pth')))
 
         attens_energy = []
@@ -258,6 +250,7 @@ class Opt_URT_Anomaly(Exp_Basic):
             os.makedirs(folder_path)
 
         self.model.eval()
+        self.slow_model.eval()
         self.URT.eval()
         self.anomaly_criterion = nn.MSELoss(reduce=False)
 
@@ -291,8 +284,23 @@ class Opt_URT_Anomaly(Exp_Basic):
                 for k in range(0,d):
                     for l in range(0,a):
                         fin_out[:,:,k] = fin_out[:,:,k] + (dec_out[l,:,:,k] * urt_out[l,k])
+                # # SLOW LEARNER
+                # s0,s1,s2 = batch_x.shape
+                # randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
+                # m_ones = torch.ones(s0,s1,s2)
+                # slow_mark = torch.bernoulli(randuniform)
+                # batch_x_slow = batch_x.clone()
+                # batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
+
+                # if self.slow_model.name not in ["KBJNet"]:
+                #     slow_out = self.slow_model.forward(batch_x_slow)
+                # else:
+                #     slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
                 
+                # outputs = fin_out + slow_out
                 outputs = fin_out
+                f_dim = -1 if self.args.features == 'MS' else 0
+                outputs = outputs[:, :, f_dim:]
                 # Check Anomaly Train Loader
                 loss = self.anomaly_criterion(batch_x, outputs)
                 score = torch.mean(loss, dim=-1)
@@ -326,14 +334,30 @@ class Opt_URT_Anomaly(Exp_Basic):
             dec_out2 = dec_out2.reshape(dec_out2.shape[0],dec_out2.shape[2],dec_out2.shape[1])
             # Test URT
             urt_out = self.URT(dec_out2)
-
             a,b,c,d = dec_out.shape
             fin_out = torch.zeros([b,c,d]).cuda() if self.args.use_gpu else torch.zeros([b,c,d])
             for k in range(0,d):
                 for l in range(0,a):
                     fin_out[:,:,k] = fin_out[:,:,k] + (dec_out[l,:,:,k] * urt_out[l,k])
             
+            # # SLOW LEARNER
+            # s0,s1,s2 = batch_x.shape
+            # randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
+            # m_ones = torch.ones(s0,s1,s2)
+            # slow_mark = torch.bernoulli(randuniform)
+            # batch_x_slow = batch_x.clone()
+            # batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
+
+            # if self.slow_model.name not in ["KBJNet"]:
+            #     slow_out = self.slow_model.forward(batch_x_slow)
+            # else:
+            #     slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
+            
+            # outputs = fin_out + slow_out
             outputs = fin_out
+            f_dim = -1 if self.args.features == 'MS' else 0
+            outputs = outputs[:, :, f_dim:]
+
             lossT = self.anomaly_criterion(batch_x, outputs)
             score = torch.mean(lossT, dim=-1)
             score = score.detach().cpu().numpy()
@@ -372,7 +396,7 @@ class Opt_URT_Anomaly(Exp_Basic):
             recall, f_score))
 
         # result_anomaly_detection.txt
-        f = open("result_anomaly_detection.txt", 'a')
+        f = open("result_anomaly_detection_mantra.txt", 'a')
         f.write(setting + "  \n")
         f.write("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
             accuracy, precision,

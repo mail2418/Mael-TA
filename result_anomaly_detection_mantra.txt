@@ -1,0 +1,9 @@
+MaelNetB1_MaelNetS1_SMD_Negative_Corr_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9826, Precision : 0.8044, Recall : 0.7665, F-score : 0.7850 
+
+MaelNetB1_MaelNetS1_SMD_MSE_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9826, Precision : 0.8045, Recall : 0.7665, F-score : 0.7850 
+
+MaelNetB1_MaelNetS1_SMD_MSE_NO_SL_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9861, Precision : 0.8499, Recall : 0.8090, F-score : 0.8290 
+

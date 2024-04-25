@@ -1,4 +1,4 @@
-python -u run.py \
+py -u run.py \
   --is_training 1 \
   --root_path ./dataset/PSM/ \
   --model_id MaelNet_PSM \
@@ -11,6 +11,7 @@ python -u run.py \
   --enc_in 25 \
   --dec_in 25 \
   --c_out 25 \
+  --d_model 25 \
   --moving_avg 100 \
   --gpu 0 \
   --des 'Exp_h256_l2' \

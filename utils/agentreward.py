@@ -11,19 +11,19 @@ from gym import spaces
 import gym
 import random
 import os
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 def get_mape_reward(q_mape, mape, R=1):
         q = 0
         while (q < 9) and (mape > q_mape):
-            q += 1
+            q = q+ 1
         reward = -R + 2*R*(9 - q)/9
         return reward
 
 def get_mae_reward(q_mae, mae, R=1):
     q = 0
     while (q < 9) and (mae > q_mae[q]):
-        q += 1
+        q = q+ 1
     reward = -R + 2*R*(9 - q)/9
     return reward
 # RANK dari
@@ -111,12 +111,12 @@ def sparse_explore(obs, act_dim):
 
     # disturb from the vertex
     delta = np.random.uniform(0.02, 0.1, size=(N, 1))
-    x[np.arange(N), randn_idx] -= delta.squeeze()
+    x[np.arange(N), randn_idx] = x[np.arange(N), randn_idx] - delta.squeeze()
 
     # noise
     noise = np.abs(np.random.randn(N, act_dim))
     noise[np.arange(N), randn_idx] = 0
-    noise /= noise.sum(1, keepdims=True)
+    noise = noise/ noise.sum(1, keepdims=True)
     noise = delta * noise
     sparse_action = x + noise
 
@@ -137,7 +137,7 @@ class EnvOffline_dist_conf(gym.Env):
                     of the testing data from each model;
     list_thresholds: the list of raw anomaly thresholds from each model;'''
     
-    def __init__(self, list_pred_sc, list_thresholds,list_gtruth, model_path="./base_detectors"):
+    def __init__(self, list_pred_sc, list_thresholds,list_gtruth):
 
         # Length of the testing data, number of models
         self.len_data = len(list_pred_sc[0])
@@ -145,19 +145,17 @@ class EnvOffline_dist_conf(gym.Env):
 
         #List of ground truth labels
         self.gtruth = list_gtruth
-           
+        
         # Raw scores and thresholds of the testing data
         self.list_pred_sc = list_pred_sc
         self.list_thresholds = list_thresholds
 
         # Scale the raw scores/thresholds and save each scaler
-        self.scaler = []
         self.list_scaled_sc = []
         self.list_scaled_thresholds = []
         for i in range(self.num_models):
-            scaler_tmp = MinMaxScaler()
+            scaler_tmp = StandardScaler()
             self.list_scaled_sc.append(scaler_tmp.fit_transform(self.list_pred_sc[i].reshape(-1,1)))
-            self.scaler.append(scaler_tmp)
             self.list_scaled_thresholds.append(scaler_tmp.transform(self.list_thresholds[i].reshape(-1,1)))
 
         # Extract predictions
@@ -218,7 +216,7 @@ class TrainEnvOffline_dist_conf(EnvOffline_dist_conf):
         # Get the reward
         reward=self._get_reward(observation)
 
-        self.pointer += 1
+        self.pointer = self.pointer + 1
 
         # Check whether the episode is over
         if self.pointer >= self.len_data:

@@ -7,8 +7,8 @@ import numpy as np
 parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection with MANTRA AND REINFORCEMENT LEARNING')
 
 # basic confi1g
-parser.add_argument('--is_training', type=int, default=1, help='status')
-parser.add_argument('--model_id', type=str, default='MaelNetB1_MaelNetS1_New_Anomaly', help='model id')
+parser.add_argument('--is_training', type=int, default=0, help='status')
+parser.add_argument('--model_id', type=str, default='MaelNetB1_MaelNetS1_3', help='model id')
 parser.add_argument('--model', type=str, default='MaelNetB1',
                     help='model name, options: [MaelNet]')
 
@@ -95,7 +95,7 @@ parser.add_argument('--do_predict', action='store_true', help='whether to predic
 parser.add_argument('--num_workers', type=int, default=10, help='data loader num workers')
 parser.add_argument('--itr', type=int, default=1, help='experiments times')
 
-parser.add_argument('--train_epochs', type=int, default=1, help='train epochs')
+parser.add_argument('--train_epochs', type=int, default=10, help='train epochs')
 parser.add_argument('--batch_size', type=int, default=32, help='batch size of train input data')
 parser.add_argument('--batch_rl', type=int, default=7919, help='batch size of RL input data')
 parser.add_argument('--patience', type=int, default=3, help='early stopping patience') # Apabila Counter >= patience, akan dilakukan early stop

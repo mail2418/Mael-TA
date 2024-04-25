@@ -191,8 +191,8 @@ class PositionalEncoding(nn.Module):
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
         div_term = torch.exp(torch.arange(0, d_model).float() * (-math.log(10000.0) / d_model))
-        pe += torch.sin(position * div_term)
-        pe += torch.cos(position * div_term)
+        pe = pe+ torch.sin(position * div_term)
+        pe = pe + torch.cos(position * div_term)
         pe = pe.unsqueeze(0).transpose(0, 1)
         self.register_buffer('pe', pe)
 
@@ -233,7 +233,7 @@ class Tcn_Global(nn.Module):
         out_channels = num_outputs #out_channels = 25
         for i in range(num_levels):
             dilation_size = 2 ** i  # Expansion coefficient: 1，2，4，8……
-            layers += [TemporalCnn(out_channels, out_channels, kernel_size, stride=1, dilation=dilation_size,
+            layers = layers + [TemporalCnn(out_channels, out_channels, kernel_size, stride=1, dilation=dilation_size,
                                    padding=(kernel_size - 1) * dilation_size,
                                    dropout=dropout)]
 
@@ -243,7 +243,6 @@ class Tcn_Global(nn.Module):
         x = self.network(x)
         return x
 
-#DCDetector
 class RevIN(nn.Module):
     def __init__(self, num_features: int, eps=1e-5, affine=True):
         """

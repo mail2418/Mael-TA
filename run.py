@@ -31,8 +31,8 @@ parser.add_argument('--anomaly_ratio', type=float, default=1, help="Anomaly rati
 parser.add_argument('--n_windows', type=int, default=100, help="Sliding Windows KBJNet")
 
 #DCDetector
-parser.add_argument('--channel', type=int, default=105, help="Channel DCDetector")
-parser.add_argument('--patch_size', type=list, default=[3,5], help="Sliding Windows KBJNet")
+parser.add_argument('--channel', type=int, default=38, help="Channel DCDetector")
+parser.add_argument('--patch_size', type=list, default=[5], help="Sliding Windows KBJNet")
 
 # FEDFormer task
 parser.add_argument('--seq_len', type=int, default=96, help='input sequence length')
@@ -104,7 +104,7 @@ parser.add_argument('--p_hidden_dims', type=int, nargs='+', default=[128, 128], 
 parser.add_argument('--p_hidden_layers', type=int, default=2, help='number of hidden layers in projector')
 
 args = parser.parse_args()
-
+args.patch_size = [int(patch_index) for patch_index in args.patch_size]
 args.use_gpu = True if torch.cuda.is_available() and args.use_gpu else False
 
 fix_seed = args.seed
@@ -146,6 +146,7 @@ if __name__ == "__main__":
         if args.is_training:
             print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
             exp.train(setting)
+            exp.test(setting,1)
         else:
             print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
             exp.test(setting,1)

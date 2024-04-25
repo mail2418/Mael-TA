@@ -27,8 +27,8 @@ class Exp_Anomaly_Detection(Exp_Basic):
         super(Exp_Anomaly_Detection, self).__init__(args)
 
     def _build_model(self):
-        # model = self.model_dict[self.args.model].Model(self.args).float()
-        model = self.model_dict["MaelNet"].Model(self.args).float().to(self.device)
+        model = self.model_dict[self.args.model].Model(self.args).float()
+        # model = self.model_dict["MaelNet"].Model(self.args).float().to(self.device)
 
         if self.args.use_multi_gpu and self.args.use_gpu:
             model = nn.DataParallel(model, device_ids=self.args.device_ids)

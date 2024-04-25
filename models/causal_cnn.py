@@ -164,13 +164,13 @@ class CausalCNN(torch.nn.Module):
 
         for i in range(depth):
             in_channels_block = in_channels if i == 0 else channels
-            layers += [CausalConvolutionBlock(
+            layers = layers + [CausalConvolutionBlock(
                 in_channels_block, channels, kernel_size, dilation_size
             )]
-            dilation_size *= 2  # Doubles the dilation size at each step
+            dilation_size = dilation_size * 2  # Doubles the dilation size at each step
 
         # Last layer
-        layers += [CausalConvolutionBlock(
+        layers = layers + [CausalConvolutionBlock(
             channels, out_channels, kernel_size, dilation_size
         )]
 

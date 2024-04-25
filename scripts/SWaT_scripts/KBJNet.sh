@@ -1,7 +1,7 @@
-python -u run.py \
+py -u run.py \
   --is_training 1 \
   --root_path ./dataset/SWaT/ \
-  --model_id KBJNet_100_96 \
+  --model_id KBJNet_SWaT \
   --model KBJNet \
   --data SWaT \
   --anomaly_ratio 0.6 \
@@ -11,7 +11,8 @@ python -u run.py \
   --enc_in 51 \
   --dec_in 51 \
   --c_out 51 \
-   --n_windows 100\
+  --d_model 51 \
+  --n_windows 100\
   --gpu 0 \
   --des 'Exp_h256_l2' \
   --p_hidden_dims 128 128 \

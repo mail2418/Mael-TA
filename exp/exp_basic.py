@@ -21,12 +21,16 @@ class Exp_Basic(object):
         }
         self.device = self._acquire_device()
         self.model = self._build_model().to(self.device)
-        self.slow_model = self._build_slow_model().to(self.device)
-        
+        self.slow_model = self._build_slow_model().to(self.device) if self._build_slow_model() else None
+        self.URT = self._build_urt().to(self.device) if self._build_urt() else None
+  
     def _build_model(self):
         raise NotImplementedError
-        return None
+    # For MANTRA
     def _build_slow_model(self):
+        return None
+    # For MANTRA
+    def _build_urt(self):
         return None
     def _acquire_device(self):
         if self.args.use_gpu:

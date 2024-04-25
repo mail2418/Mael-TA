@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from einops import rearrange
 from layers.Attention import DAC_structure, AttentionLayerDCDetector
 from layers.Embed import DataEmbedding,RevIN
-from layers.Encoder import Encoder
+from layers.Encoder import DCDetectorEncoder
 
 class Model(nn.Module):
     def __init__(self, configs):
@@ -25,7 +25,7 @@ class Model(nn.Module):
         self.embedding_window_size = DataEmbedding(self.name, configs.enc_in, configs.d_model, configs.dropout)
          
         # Dual Attention Encoder
-        self.encoder = Encoder(
+        self.encoder = DCDetectorEncoder(
             [
                 AttentionLayerDCDetector(
                     DAC_structure(self.win_size, configs.patch_size, configs.channel, False, attention_dropout=configs.dropout, output_attention=configs.output_attention),
@@ -54,9 +54,9 @@ class Model(nn.Module):
             x_patch_num = rearrange(x_patch_num, 'b l m -> b m l') #Batch channel win_size
             
             x_patch_size = rearrange(x_patch_size, 'b m (n p) -> (b m) n p', p = patchsize) 
-            x_patch_size = self.embedding_patch_size[patch_index](x_patch_size)
+            x_patch_size = self.embedding_patch_size[patch_index](x_patch_size, None)
             x_patch_num = rearrange(x_patch_num, 'b m (p n) -> (b m) p n', p = patchsize) 
-            x_patch_num = self.embedding_patch_num[patch_index](x_patch_num)
+            x_patch_num = self.embedding_patch_num[patch_index](x_patch_num, None)
             
             series, prior = self.encoder(x_patch_size, x_patch_num, x_ori, patch_index)
             series_patch_mean.append(series), prior_patch_mean.append(prior)

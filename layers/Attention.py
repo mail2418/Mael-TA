@@ -5,6 +5,7 @@ from math import sqrt
 import math
 from utils.masking import TriangularCausalMask, ProbMask
 from einops import reduce, repeat
+import os
 
 class DSAttention(nn.Module):
     '''De-stationary Attention'''

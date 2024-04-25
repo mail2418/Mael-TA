@@ -89,3 +89,19 @@ class TransformerEncoderLayer(nn.Module):
         src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
         src = src + self.dropout2(src2)
         return src
+
+# encoder dcdetector
+class DCDetectorEncoder(nn.Module):
+    def __init__(self, attn_layers, norm_layer=None):
+        super(DCDetectorEncoder, self).__init__()
+        self.attn_layers = nn.ModuleList(attn_layers)
+        self.norm = norm_layer
+
+    def forward(self, x_patch_size, x_patch_num, x_ori, patch_index, attn_mask=None):
+        series_list = []
+        prior_list = []
+        for attn_layer in self.attn_layers:
+            series, prior = attn_layer(x_patch_size, x_patch_num, x_ori, patch_index, attn_mask=attn_mask)
+            series_list.append(series)
+            prior_list.append(prior)
+        return series_list, prior_list

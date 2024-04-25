@@ -27,7 +27,6 @@ class Exp_Basic(object):
         raise NotImplementedError
         return None
     def _build_slow_model(self):
-        raise NotImplementedError
         return None
     def _acquire_device(self):
         if self.args.use_gpu:

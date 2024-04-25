@@ -145,14 +145,7 @@ class EnvOffline_dist_conf(gym.Env):
 
         #List of ground truth labels
         self.gtruth = list_gtruth
-        
-        # Get the list of pretrained models
-        self.model_path = model_path 
-        self.model_list = [f for f in os.listdir(self.model_path) if f.endswith('.sav')]
-
-        # Extract the model names
-        self.model_names = [f.split('_')[0] for f in self.model_list]
-        
+           
         # Raw scores and thresholds of the testing data
         self.list_pred_sc = list_pred_sc
         self.list_thresholds = list_thresholds

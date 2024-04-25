@@ -278,7 +278,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             print("pred: ", pred.shape)
             print("gt:   ", gt.shape)
             list_predsrc.append(pred)
-            if learner_idx == self.args.n_learner - 1:
+            if learner_idx == self.args.n_learner - 1: #Ambil ground truth dari learner terakhir saja
                 list_gtruth.append(gt)
 
         EXP_TIMES=10 # How many runs to average the results

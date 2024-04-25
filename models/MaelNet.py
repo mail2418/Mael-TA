@@ -44,10 +44,10 @@ class Model(nn.Module):
         self.dec_in = configs.dec_in
         self.decomp = series_decomp(configs.moving_avg)
         # Embedding
-        self.enc_embedding = DataEmbedding(self.name, configs.enc_in, configs.enc_in, configs.kernel_size, configs.embed, configs.freq,
+        self.enc_embedding = DataEmbedding(self.name, configs.enc_in, configs.d_model, configs.kernel_size, configs.embed, configs.freq,
                                            configs.dropout, configs.n_windows)
         # Decoder Digunakan untuk mengaggregasi informasi dan memperbaiki prediksi dari simpel inisialisasi
-        self.dec_embedding = DataEmbedding(self.name, configs.dec_in, configs.enc_in, configs.kernel_size, configs.embed, configs.freq,
+        self.dec_embedding = DataEmbedding(self.name, configs.dec_in, configs.d_model, configs.kernel_size, configs.embed, configs.freq,
                                            configs.dropout, configs.n_windows)
         # Encoder digunakan untuk mengekstrak informasi pada observasi sebelumnya
         self.encoder = Encoder(
@@ -55,26 +55,26 @@ class Model(nn.Module):
                 EncoderLayer(
                     AttentionLayer(
                         DSAttention(False, configs.factor, attention_dropout=configs.dropout,output_attention=configs.output_attention), 
-                        configs.enc_in,configs.n_heads),
-                    configs.enc_in,
+                        configs.d_model,configs.n_heads),
+                    configs.d_model,
                     configs.d_ff,
                     configs.moving_avg,
                     dropout=configs.dropout,
                     activation=configs.activation
                 ) for l in range(configs.e_layers)
             ],
-            norm_layer=torch.nn.LayerNorm(configs.enc_in)
+            norm_layer=torch.nn.LayerNorm(configs.d_model)
         )
         self.decoder = Decoder(
             [
                 DecoderLayer(
                     AttentionLayer(
                         DSAttention(True, configs.factor, attention_dropout=configs.dropout, output_attention=False),
-                        configs.dec_in, configs.n_heads),
+                        configs.d_model, configs.n_heads),
                     AttentionLayer(
                         DSAttention(False, configs.factor, attention_dropout=configs.dropout, output_attention=False),
-                        configs.dec_in, configs.n_heads),
-                    configs.dec_in,
+                        configs.d_model, configs.n_heads),
+                    configs.d_model,
                     configs.c_out,
                     configs.moving_avg,
                     configs.d_ff,
@@ -83,8 +83,8 @@ class Model(nn.Module):
                 )
                 for l in range(configs.d_layers)
             ],
-            norm_layer=torch.nn.LayerNorm(configs.dec_in),
-            projection=nn.Linear(configs.dec_in, configs.c_out, bias=True)
+            norm_layer=torch.nn.LayerNorm(configs.d_model),
+            projection=nn.Linear(configs.d_model, configs.c_out, bias=True)
         )
         
         # Projector digunakan untuk mempelajari faktor de-stationary

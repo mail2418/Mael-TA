@@ -49,7 +49,7 @@ class Model(nn.Module):
                                            configs.dropout)
         # Decoder Digunakan untuk mengaggregasi informasi dan memperbaiki prediksi dari simpel inisialisasi
         self.dec_embedding = DataEmbedding(self.name, configs.dec_in, configs.d_model, configs.embed, configs.freq,
-                                           configs.dropout) #dec_in = 7, d_model = 512 
+                                           configs.dropout) 
         # Encoder digunakan untuk mengekstrak informasi pada observasi sebelumnya
         self.encoder = Encoder(
             [

@@ -8,8 +8,8 @@ parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly De
 
 # basic config
 parser.add_argument('--is_training', type=int, default=1, help='status')
-parser.add_argument('--model_id', type=str, default='DCDetector_SMD', help='model id')
-parser.add_argument('--model', type=str, default='DCDetector',
+parser.add_argument('--model_id', type=str, default='MaelNet_testing_NEW_EMBEDDING', help='model id')
+parser.add_argument('--model', type=str, default='MaelNet',
                     help='model name, options: [MaelNet]')
 
 # # # data loader

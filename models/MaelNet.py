@@ -55,26 +55,26 @@ class Model(nn.Module):
                 EncoderLayer(
                     AttentionLayer(
                         DSAttention(False, configs.factor, attention_dropout=configs.dropout,output_attention=configs.output_attention), 
-                        configs.enc_in,configs.n_heads),
-                    configs.enc_in,
+                        configs.d_model,configs.n_heads),
+                    configs.d_model,
                     configs.d_ff,
                     configs.moving_avg,
                     dropout=configs.dropout,
                     activation=configs.activation
                 ) for l in range(configs.e_layers)
             ],
-            norm_layer=torch.nn.LayerNorm(configs.enc_in)
+            norm_layer=torch.nn.LayerNorm(configs.d_model)
         )
         self.decoder = Decoder(
             [
                 DecoderLayer(
                     AttentionLayer(
                         DSAttention(True, configs.factor, attention_dropout=configs.dropout, output_attention=False),
-                        configs.dec_in, configs.n_heads),
+                        configs.d_model, configs.n_heads),
                     AttentionLayer(
                         DSAttention(False, configs.factor, attention_dropout=configs.dropout, output_attention=False),
-                        configs.dec_in, configs.n_heads),
-                    configs.dec_in,
+                        configs.d_model, configs.n_heads),
+                    configs.d_model,
                     configs.c_out,
                     configs.moving_avg,
                     configs.d_ff,
@@ -83,8 +83,8 @@ class Model(nn.Module):
                 )
                 for l in range(configs.d_layers)
             ],
-            norm_layer=torch.nn.LayerNorm(configs.dec_in),
-            projection=nn.Linear(configs.dec_in, configs.c_out, bias=True)
+            norm_layer=torch.nn.LayerNorm(configs.d_model),
+            projection=nn.Linear(configs.d_model, configs.c_out, bias=True)
         )
         
         # Projector digunakan untuk mempelajari faktor de-stationary

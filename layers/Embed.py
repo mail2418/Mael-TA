@@ -159,10 +159,10 @@ class TimeFeatureEmbedding(nn.Module):
         return output 
 
 class DataEmbedding(nn.Module):
-    def __init__(self, model_name, c_in, d_model, kernel_size=3, embed_type='fixed', freq='h', dropout=0.1, n_windows=5):
+    def __init__(self, model_name, c_in, d_model, kernel_size=3, embed_type='fixed', freq='h', dropout=0.1, n_windows=5, decode=False):
         super(DataEmbedding, self).__init__()
 
-        self.value_embedding = TokenTCNEmbedding(c_in=c_in, c_out= c_in, d_model=d_model, kernel_size=kernel_size, n_windows=n_windows) if model_name in ["MaelNet", "MaelNetS1", "MaelNetB1"] else TokenEmbedding(
+        self.value_embedding = TokenTCNEmbedding(c_in=c_in, c_out= c_in, d_model=d_model, kernel_size=kernel_size, n_windows=n_windows) if not decode else TokenEmbedding(
             c_in=c_in, d_model=d_model)
         self.position_embedding = PositionalEmbedding(model_name, d_model=d_model)
         self.temporal_embedding = TemporalEmbedding(d_model=d_model, embed_type=embed_type,

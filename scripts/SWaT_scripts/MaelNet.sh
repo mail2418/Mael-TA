@@ -1,7 +1,7 @@
 py -u run.py \
   --is_training 1 \
   --root_path ./dataset/SWaT/ \
-  --model_id MaelNet_SWaT \
+  --model_id MaelNet_SWaT_TCNEmbeddingEnc_TokenEmbedDec \
   --model MaelNet \
   --data SWaT \
   --e_layers 2 \
@@ -11,7 +11,7 @@ py -u run.py \
   --enc_in 51 \
   --dec_in 51 \
   --c_out 51 \
-  --d_model 51 \
+  --d_model 512 \
   --moving_avg 100 \
   --gpu 0 \
   --des 'Exp_h256_l2' \

@@ -48,7 +48,7 @@ class Model(nn.Module):
                                            configs.dropout, configs.n_windows)
         # Decoder Digunakan untuk mengaggregasi informasi dan memperbaiki prediksi dari simpel inisialisasi
         self.dec_embedding = DataEmbedding(self.name, configs.dec_in, configs.d_model, configs.kernel_size, configs.embed, configs.freq,
-                                           configs.dropout, configs.n_windows)
+                                           configs.dropout, configs.n_windows, decode=True)
         # Encoder digunakan untuk mengekstrak informasi pada observasi sebelumnya
         self.encoder = Encoder(
             [
@@ -103,12 +103,12 @@ class Model(nn.Module):
         tau = self.tau_learner(x_raw, std_enc).exp()  # B x S x E, B x 1 x E -> B x 1, positive scalar
         delta = self.delta_learner(x_raw, means) # B x S x E, B x 1 x E -> B x S
 
-        seasonal_init, trend_init = self.decomp(x_enc) #input dari decoder
         
         # embedding
         enc_out = self.enc_embedding(x_enc, None)
         enc_out, attns = self.encoder(enc_out, tau=tau, delta=delta)
 
+        seasonal_init, trend_init = self.decomp(x_enc) #input dari decoder
         dec_out = self.dec_embedding(seasonal_init, None)
         # dec_out = self.decoder(x=dec_out, cross=enc_out, tau=tau, delta=delta)
         seasonal_part, trend_part = self.decoder(x=dec_out, cross=enc_out, tau=tau, delta=None, trend=trend_init)

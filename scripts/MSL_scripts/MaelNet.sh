@@ -1,7 +1,7 @@
 py -u run.py \
   --is_training 1 \
   --root_path ./dataset/MSL/ \
-  --model_id MaelNet_MSL \
+  --model_id MaelNet_MSL_TCNEmbeddingEnc_TokenEmbedDec \
   --model MaelNet \
   --data MSL \
   --e_layers 2 \
@@ -11,7 +11,7 @@ py -u run.py \
   --enc_in 55 \
   --dec_in 55 \
   --c_out 55 \
-  --d_model 55 \
+  --d_model 512 \
   --moving_avg 100 \
   --gpu 0 \
   --des 'Exp_h256_l2' \

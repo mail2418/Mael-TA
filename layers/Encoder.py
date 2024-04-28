@@ -10,8 +10,10 @@ class EncoderLayer(nn.Module):
         self.conv1 = nn.Conv1d(in_channels=d_model, out_channels=d_ff, kernel_size=1)
         self.activation = F.relu if activation == "relu" else F.gelu
         self.conv2 = nn.Conv1d(in_channels=d_ff, out_channels=d_model, kernel_size=1)
-        self.decomp1 = series_decomp(moving_avg)
-        self.decomp2 = series_decomp(moving_avg)
+        # self.decomp1 = series_decomp(moving_avg)
+        # self.decomp2 = series_decomp(moving_avg)
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x, attn_mask=None, tau=None, delta=None):
@@ -23,14 +25,18 @@ class EncoderLayer(nn.Module):
         )
         x = x + self.dropout(new_x)
 
-        x, _ = self.decomp1(x)
-        y = x
+        # x, _ = self.decomp1(x)
+        # y = x
+        # y = self.dropout(self.activation(self.conv1(y.transpose(-1, 1))))
+        # y = self.dropout(self.conv2(y).transpose(-1, 1))
+
+        # output, _= self.decomp2(x + y)
+        # return output, attn
+        y = x = self.norm1(x)
         y = self.dropout(self.activation(self.conv1(y.transpose(-1, 1))))
         y = self.dropout(self.conv2(y).transpose(-1, 1))
 
-        output, _= self.decomp2(x + y)
-
-        return output, attn
+        return self.norm2(x + y), attn
 
 
 class Encoder(nn.Module):

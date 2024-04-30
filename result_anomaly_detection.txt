@@ -346,3 +346,6 @@ Accuracy : 0.9837, Precision : 0.9897, Recall : 0.9511, F-score : 0.9700
 NSTransformer_MSL_NSTransformer_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
 Accuracy : 0.9595, Precision : 0.8895, Recall : 0.7037, F-score : 0.7857 
 
+FEDFormer_FEDFormer_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9040, Precision : 0.6444, Recall : 0.1994, F-score : 0.3046 
+

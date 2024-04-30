@@ -4,12 +4,12 @@ from exp.exp_main import Exp_Anomaly_Detection
 import random
 import numpy as np
 
-parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection')
+parser = argparse.ArgumentParser(description='FEDFormer for Time Series Anomaly Detection')
 
 # basic config
 parser.add_argument('--is_training', type=int, default=1, help='status')
-parser.add_argument('--model_id', type=str, default='MaelNet_testing_decout', help='model id')
-parser.add_argument('--model', type=str, default='MaelNet',
+parser.add_argument('--model_id', type=str, default='FEDFormer', help='model id')
+parser.add_argument('--model', type=str, default='FEDFormer',
                     help='model name, options: [MaelNet]')
 
 # # # data loader

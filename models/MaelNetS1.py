@@ -90,6 +90,7 @@ class Model(nn.Module):
         # Projector digunakan untuk mempelajari faktor de-stationary
         self.tau_learner   = Projector(enc_in=configs.enc_in, win_size=configs.win_size, hidden_dims=configs.p_hidden_dims, hidden_layers=configs.p_hidden_layers, output_dim=1)
         self.delta_learner = Projector(enc_in=configs.enc_in, win_size=configs.win_size, hidden_dims=configs.p_hidden_dims, hidden_layers=configs.p_hidden_layers, output_dim=configs.win_size)
+        self.projector = nn.Linear(configs.dec_in, configs.c_out, bias=True)
             
     def forward(self, x_enc):
         x_raw = x_enc.clone().detach()
@@ -109,12 +110,7 @@ class Model(nn.Module):
         enc_out = self.enc_embedding(x_enc, None)
         enc_out, attns = self.encoder(enc_out, tau=tau, delta=delta)
 
-        dec_out = self.dec_embedding(seasonal_init, None)
-        # dec_out = self.decoder(x=dec_out, cross=enc_out, tau=tau, delta=delta)
-        seasonal_part, trend_part = self.decoder(x=dec_out, cross=enc_out, tau=tau, delta=None, trend=trend_init)
-
-        dec_out = seasonal_part + trend_part
-        #Denormalization dari NS_Transformer
+        dec_out = self.projector(enc_out)
         dec_out = dec_out * std_enc 
         dec_out = dec_out + means
 

@@ -32,8 +32,9 @@ class DSAttention(nn.Module):
                 attn_mask = TriangularCausalMask(B, L, device=queries.device)
 
             scores.masked_fill_(attn_mask.mask, -np.inf)
+        attn = scale * scores
 
-        A = self.dropout(torch.softmax(scale * scores, dim=-1))
+        A = self.dropout(torch.softmax(attn, dim=-1))
         V = torch.einsum("bhls,bshd->blhd", A, values)# (A = 32x 8 x100x100 values = 32x100x 8 x 64 )32 x 100 x 8 x 64
                                                        #      B x H x L x S           B x S x H x D    B  x  L  x H x D
 
@@ -41,6 +42,44 @@ class DSAttention(nn.Module):
             return (V.contiguous(), A)
         else:
             return (V.contiguous(), None)
+
+class MaelAttention(nn.Module):
+    '''De-stationary Attention'''
+    def __init__(self, mask_flag=True, factor=5, scale=None, attention_dropout=0.1, output_attention=False):
+        super(DSAttention, self).__init__()
+        self.scale = scale
+        self.mask_flag = mask_flag
+        self.output_attention = output_attention
+        self.dropout = nn.Dropout(attention_dropout)
+
+    def forward(self, queries, keys, values, attn_mask, tau=None, delta=None):
+        B, L, H, E = queries.shape #Batch Size x Length Size x Hidden Size x Embedding Size
+        _, S, _, D = values.shape
+        scale = self.scale or 1. / sqrt(E)
+
+        tau = 1.0 if tau is None else tau.unsqueeze(1).unsqueeze(1)  # B x 1 x 1 x 1
+        delta = 0.0 if delta is None else delta.unsqueeze(1).unsqueeze(1)  # B x 1 x 1 x S
+        
+        # De-stationary Attention, rescaling pre-softmax score with learned de-stationary factors
+        scores = torch.einsum("blhe,bshe->bhls", queries, keys) * tau + delta
+
+        if self.mask_flag:
+            if attn_mask is None:
+                attn_mask = TriangularCausalMask(B, L, device=queries.device)
+
+            scores.masked_fill_(attn_mask.mask, -np.inf)
+        attn = scale * scores
+
+        A = self.dropout(torch.softmax(attn, dim=-1))
+        V = torch.einsum("bhls,bshd->blhd", A, values)# (A = 32x 8 x100x100 values = 32x100x 8 x 64 )32 x 100 x 8 x 64
+                                                       #      B x H x L x S           B x S x H x D    B  x  L  x H x D
+
+        if self.output_attention:
+            return (V.contiguous(), A)
+        else:
+            return (V.contiguous(), None)
+
+
 
 class AttentionLayer(nn.Module):
     def __init__(self, attention, d_model, n_heads, d_keys=None,
@@ -76,8 +115,6 @@ class AttentionLayer(nn.Module):
         out = out.view(B, L, -1)
 
         return self.out_projection(out), attn
-
-
  
 #DCDetector
 

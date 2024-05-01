@@ -32,8 +32,9 @@ class DSAttention(nn.Module):
                 attn_mask = TriangularCausalMask(B, L, device=queries.device)
 
             scores.masked_fill_(attn_mask.mask, -np.inf)
+        attn = scale * scores
 
-        A = self.dropout(torch.softmax(scale * scores, dim=-1))
+        A = self.dropout(torch.softmax(attn, dim=-1))
         V = torch.einsum("bhls,bshd->blhd", A, values)# (A = 32x 8 x100x100 values = 32x100x 8 x 64 )32 x 100 x 8 x 64
                                                        #      B x H x L x S           B x S x H x D    B  x  L  x H x D
 
@@ -41,6 +42,94 @@ class DSAttention(nn.Module):
             return (V.contiguous(), A)
         else:
             return (V.contiguous(), None)
+
+class MaelAttention(nn.Module):
+    '''De-stationary Attention'''
+    def __init__(self, window_size, mask_flag=True, factor=5, scale=None, attention_dropout=0.1, output_attention=False):
+        super(MaelAttention, self).__init__()
+        self.scale = scale
+        self.mask_flag = mask_flag
+        self.output_attention = output_attention
+        self.dropout = nn.Dropout(attention_dropout)
+        self.distances = torch.zeros((window_size, window_size)).cuda()
+        for i in range(window_size):
+            for j in range(window_size):
+                self.distances[i][j] = abs(i - j)
+
+    def forward(self, queries, keys, values, sigma, attn_mask, tau=None, delta=None):
+        B, L, H, E = queries.shape #Batch Size x Length Size x Hidden Size x Embedding Size
+        _, S, _, D = values.shape
+        scale = self.scale or 1. / sqrt(E)
+
+        tau = 1.0 if tau is None else tau.unsqueeze(1).unsqueeze(1)  # B x 1 x 1 x 1
+        delta = 0.0 if delta is None else delta.unsqueeze(1).unsqueeze(1)  # B x 1 x 1 x S
+        
+        # De-stationary Attention, rescaling pre-softmax score with learned de-stationary factors
+        scores = torch.einsum("blhe,bshe->bhls", queries, keys) * tau + delta
+
+        if self.mask_flag:
+            if attn_mask is None:
+                attn_mask = TriangularCausalMask(B, L, device=queries.device)
+
+            scores.masked_fill_(attn_mask.mask, -np.inf)
+        attn = scale * scores
+        A = self.dropout(torch.softmax(attn, dim=-1))
+        V = torch.einsum("bhls,bshd->blhd", A, values)# (A = 32x 8 x100x100 values = 32x100x 8 x 64 )32 x 100 x 8 x 64
+                                                       #      B x H x L x S           B x S x H x D    B  x  L  x H x D
+
+        sigma = sigma.transpose(1, 2)  # B L H ->  B H L
+        window_size = attn.shape[-1]
+        sigma = torch.sigmoid(sigma * 5) + 1e-5
+        sigma = torch.pow(3, sigma) - 1
+        sigma = sigma.unsqueeze(-1).repeat(1, 1, 1, window_size)  # B H L L
+        prior = self.distances.unsqueeze(0).unsqueeze(0).repeat(sigma.shape[0], sigma.shape[1], 1, 1).cuda()
+        prior = 1.0 / (math.sqrt(2 * math.pi) * sigma) * torch.exp(-prior ** 2 / 2 / (sigma ** 2))
+        
+        series = A
+
+        if self.output_attention:
+            return (V.contiguous(), series, prior)
+        else:
+            return (V.contiguous(), None)
+
+class MaelAttentionLayer(nn.Module):
+    def __init__(self, attention, d_model, n_heads, d_keys=None,
+                 d_values=None):
+        super(MaelAttentionLayer, self).__init__()
+
+        d_keys = d_keys or (d_model // n_heads)
+        d_values = d_values or (d_model // n_heads)
+
+        self.inner_attention = attention
+        self.query_projection = nn.Linear(d_model, d_keys * n_heads)
+        self.key_projection = nn.Linear(d_model, d_keys * n_heads)
+        self.value_projection = nn.Linear(d_model, d_values * n_heads)
+        self.sigma_projection = nn.Linear(d_model, n_heads)
+        self.out_projection = nn.Linear(d_values * n_heads, d_model)
+        self.n_heads = n_heads
+
+    def forward(self, queries, keys, values, attn_mask, tau=None, delta=None):
+        B, L, _ = queries.shape # Batch Size x Win Size x Label Length
+        _, S, _ = keys.shape
+        H = self.n_heads
+
+        x = queries
+        queries = self.query_projection(queries).view(B, L, H, -1)
+        keys = self.key_projection(keys).view(B, S, H, -1)
+        values = self.value_projection(values).view(B, S, H, -1)
+        sigmas = self.sigma_projection(x).view(B, L, H)
+
+        out, series, prior = self.inner_attention(
+            queries,
+            keys,
+            values,
+            sigmas,
+            attn_mask,
+            tau, delta
+        )
+        out = out.view(B, L, -1)
+
+        return self.out_projection(out), [series, prior]
 
 class AttentionLayer(nn.Module):
     def __init__(self, attention, d_model, n_heads, d_keys=None,
@@ -76,11 +165,8 @@ class AttentionLayer(nn.Module):
         out = out.view(B, L, -1)
 
         return self.out_projection(out), attn
-
-
  
 #DCDetector
-
 class AttentionLayerDCDetector(nn.Module):
     def __init__(self, attention, d_model, patch_size, channel, n_heads, win_size, d_keys=None, d_values=None):
         super(AttentionLayerDCDetector, self).__init__()

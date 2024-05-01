@@ -16,22 +16,22 @@ class PositionalEmbedding(nn.Module):
         pe.require_grad = False
 
         position = torch.arange(0, max_len).float().unsqueeze(1)
-        if self.model_name in ["MaelNet", "MaelNetS1", "MaelNetB1"]:
-            div_term = (torch.arange(0, d_model).float() * -(math.log(10000.0) / d_model)).exp()
-            pe = pe + torch.sin(position * div_term)
-            pe = pe + torch.cos(position * div_term)
-        else:
-            div_term = (torch.arange(0, d_model, 2).float() * -(math.log(10000.0) / d_model)).exp()
-            pe[:, 0::2] = torch.sin(position * div_term)
-            pe[:, 1::2] = torch.cos(position * div_term)
+        # if self.model_name in ["MaelNet", "MaelNetS1", "MaelNetB1"]:
+        #     div_term = (torch.arange(0, d_model).float() * -(math.log(10000.0) / d_model)).exp()
+        #     pe += torch.sin(position * div_term)
+        #     pe += torch.cos(position * div_term)
+        # else:
+        div_term = (torch.arange(0, d_model, 2).float() * -(math.log(10000.0) / d_model)).exp()
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
 
         pe = pe.unsqueeze(0)
         self.register_buffer('pe', pe)
 
     def forward(self, x):
-        output = x + self.pe[:, :x.size(1)] if self.model_name == "MaelNet" else self.pe[:, :x.size(1)]
+        # output = x + self.pe[:, :x.size(1)] if self.model_name == "MaelNet" else self.pe[:, :x.size(1)]
+        output = self.pe[:, :x.size(1)]
         return output 
-    
 class Chomp1d(nn.Module):
     def __init__(self, chomp_size):
         super(Chomp1d, self).__init__()
@@ -50,32 +50,35 @@ class Chomp1d(nn.Module):
         return x
 
 class TokenTCNEmbedding(nn.Module):
-    def __init__(self, c_in, d_model, kernel_size, dropout=0.2, n_windows=5):
+    def __init__(self, c_in, c_out, d_model, kernel_size, dropout=0.2, n_windows=5):
         super(TokenTCNEmbedding, self).__init__()
         # TCN
-        
-        # self.leakyrelu = nn.LeakyReLU(True)
         self.dropout = nn.Dropout(dropout)
         layers = []
         self.num_levels = math.ceil(math.log2((n_windows - 1) * (2 - 1) /kernel_size))
         self.leakyrelu = nn.LeakyReLU(True)
-        for i in range(self.num_levels):
-            dilation_size = 2**i
+        for i in range(self.num_levels-1):
+            dilation_size = 2 ** i
             padding = (kernel_size - 1) * dilation_size
             self.chomp = Chomp1d(padding)
-            self.tokenConv = weight_norm(nn.Conv1d(in_channels=c_in, out_channels=d_model,
+            self.tokenConv = weight_norm(nn.Conv1d(in_channels=c_in, out_channels=c_out,
                                     kernel_size=3, padding=padding, dilation=dilation_size, bias=False))
             self.net = nn.Sequential(self.tokenConv, self.chomp, self.leakyrelu, self.dropout)
-            layers = layers + [self.net]
-            self.init_weights()
+            layers += [self.net]
+        # Last Layer of TCN Embedding
+        dilation_size = 2 ** (self.num_levels - 1)
+        padding = (kernel_size - 1) * dilation_size
+        self.chomp = Chomp1d(padding)
+        self.tokenConv = weight_norm(nn.Conv1d(in_channels=c_out, out_channels=d_model,
+                                kernel_size=3, padding=padding, dilation=dilation_size, bias=False))
+        self.net = nn.Sequential(self.tokenConv, self.chomp, self.leakyrelu, self.dropout)
+        layers += [self.net]
+        self.init_weights()
         self.network = nn.Sequential(*layers)
-
     def init_weights(self):
         self.tokenConv.weight.data.normal_(0, 0.001)
 
     def forward(self, x):
-        #x.shape = 32x100x25 --> 25x512x3
-        # src2 = g_atts.permute(2, 0, 1) * math.sqrt(self.n_feats)
         x = x.permute(0, 2, 1) #permute, reshape, 
         x = self.network(x)
         x = x.transpose(1, 2)
@@ -90,7 +93,6 @@ class TokenEmbedding(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv1d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='leaky_relu')
-
     def forward(self, x):
         x = self.tokenConv(x.permute(0, 2, 1)).transpose(1, 2)
         return x
@@ -157,10 +159,10 @@ class TimeFeatureEmbedding(nn.Module):
         return output 
 
 class DataEmbedding(nn.Module):
-    def __init__(self, model_name, c_in, d_model, kernel_size=3, embed_type='fixed', freq='h', dropout=0.1, n_windows=5):
+    def __init__(self, model_name, c_in, d_model, kernel_size=3, embed_type='fixed', freq='h', dropout=0.1, n_windows=5, decode=False):
         super(DataEmbedding, self).__init__()
 
-        self.value_embedding = TokenTCNEmbedding(c_in=c_in, d_model=d_model, kernel_size=kernel_size, n_windows=n_windows) if model_name in ["MaelNet", "MaelNetS1", "MaelNetB1"] else TokenEmbedding(
+        self.value_embedding = TokenTCNEmbedding(c_in=c_in, c_out= c_in, d_model=d_model, kernel_size=kernel_size, n_windows=n_windows) if not decode else TokenEmbedding(
             c_in=c_in, d_model=d_model)
         self.position_embedding = PositionalEmbedding(model_name, d_model=d_model)
         self.temporal_embedding = TemporalEmbedding(d_model=d_model, embed_type=embed_type,
@@ -239,4 +241,57 @@ class Tcn_Global(nn.Module):
 
     def forward(self, x):
         x = self.network(x)
+        return x
+
+class RevIN(nn.Module):
+    def __init__(self, num_features: int, eps=1e-5, affine=True):
+        """
+        :param num_features: the number of features or channels
+        :param eps: a value added for numerical stability
+        :param affine: if True, RevIN has learnable affine parameters
+        """
+        super(RevIN, self).__init__()
+        self.num_features = num_features
+        self.eps = eps
+        self.affine = affine
+        if self.affine:
+            self._init_params()
+
+    def forward(self, x, mode:str):
+        if mode == 'norm':
+            self._get_statistics(x)
+            x = self._normalize(x)
+        elif mode == 'denorm':
+            x = self._denormalize(x)
+        else: raise NotImplementedError
+        return x
+
+    def _init_params(self):
+        # initialize RevIN params: (C,)
+        self.affine_weight = torch.ones(self.num_features)
+        self.affine_bias = torch.zeros(self.num_features)
+        self.affine_weight=self.affine_weight.to(device=torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'))
+        self.affine_bias=self.affine_bias.to(device=torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'))
+        
+
+    def _get_statistics(self, x):
+        dim2reduce = tuple(range(1, x.ndim-1))
+        self.mean = torch.mean(x, dim=dim2reduce, keepdim=True).detach()
+        self.stdev = torch.sqrt(torch.var(x, dim=dim2reduce, keepdim=True, unbiased=False) + self.eps).detach()
+            
+
+    def _normalize(self, x):
+        x = x - self.mean
+        x = x / self.stdev
+        if self.affine:
+            x = x * self.affine_weight
+            x = x + self.affine_bias
+        return x
+
+    def _denormalize(self, x):
+        if self.affine:
+            x = x - self.affine_bias
+            x = x / (self.affine_weight + self.eps*self.eps)
+        x = x * self.stdev
+        x = x + self.mean
         return x

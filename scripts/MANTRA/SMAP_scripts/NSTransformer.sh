@@ -1,10 +1,9 @@
-  py -u run_mantra.py \
+py -u run_mantra.py \
   --is_training 1 \
   --root_path ./dataset/SMAP/ \
-  --model_id MaelNetB1_MaelNetS1_SMAP_MSE_NO_SLOW_LEARNER \
-  --loss_type mse \
-  --model MaelNetB1 \
-  --slow_model MaelNetS1 \
+  --model_id NSTransformerB1_NSTransformerS1_SMAP_MSE_NO_SL \
+  --model NSTransformerB1 \
+  --slow_model NSTransformerS1 \
   --data SMAP \
   --e_layers 2 \
   --d_layers 1 \
@@ -13,8 +12,9 @@
   --enc_in 25 \
   --dec_in 25 \
   --c_out 25 \
-  --d_model 25 \
+  --d_model 512 \
   --gpu 0 \
+  --des 'Exp_h256_l2' \
   --p_hidden_dims 128 128 \
   --p_hidden_layers 2 \
   --itr 1 &

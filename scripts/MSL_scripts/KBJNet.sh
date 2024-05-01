@@ -11,6 +11,7 @@ py -u run.py \
   --enc_in 55 \
   --dec_in 55 \
   --c_out 55 \
+  --d_model 55 \
   --n_windows 100\
   --gpu 0 \
   --p_hidden_dims 128 128 \

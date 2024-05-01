@@ -1,22 +1,20 @@
 import argparse
 import torch
-from exp.exp_main_learner_MANTRA import Exp_Anomaly_Detection_Learner
-from exp.opt_rl_anomaly import OPT_RL_Mantra
+from exp.exp_main_learner_MANTRA_Anomaly2 import Exp_Anomaly_Detection
 import random
 import numpy as np
-from utils.datapredsrl import unify_input_data
 
-parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection with MANTRA AND REINFORCEMENT LEARNING')
+parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection with MANTRA')
 
-# basic confi1g
-parser.add_argument('--is_training', type=int, default=1, help='status')
-parser.add_argument('--model_id', type=str, default='MaelNetB1_MaelNetS1_SMD_Negative_Corr_RL_1_epoch10', help='model id')
+# basic config
+parser.add_argument('--is_training', type=int, default=0, help='status')
+parser.add_argument('--model_id', type=str, default='MaelNet_Mantra_Recons_Discrep', help='model id')
 parser.add_argument('--model', type=str, default='MaelNetB1',
                     help='model name, options: [MaelNet]')
 
 # # # data loader
-parser.add_argument('--data', type=str, default='SWaT', help='dataset type')
-parser.add_argument('--root_path', type=str, default='./dataset/SWaT/', help='root path of the data file')
+parser.add_argument('--data', type=str, default='SMD', help='dataset type')
+parser.add_argument('--root_path', type=str, default='./dataset/SMD/', help='root path of the data file')
 parser.add_argument('--win_size', type=int, default=100, help='window size')
 
 parser.add_argument('--features', type=str, default='M',
@@ -27,7 +25,7 @@ parser.add_argument('--freq', type=str, default='h',
                         help='freq for time features encoding, options:[s:secondly, t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly], you can also use more detailed freq like 15min or 3h')
 
 # anomaly task
-parser.add_argument('--anomaly_ratio', type=float, default=1, help="Anomaly ratio for threshold")
+parser.add_argument('--anomaly_ratio', type=float, default=0.6, help="Anomaly ratio for threshold")
 
 #KBJNet & DCDetector
 parser.add_argument('--n_windows', type=int, default=100, help="Sliding Windows KBJNet")
@@ -35,6 +33,9 @@ parser.add_argument('--n_windows', type=int, default=100, help="Sliding Windows 
 #DCDetector
 parser.add_argument('--channel', type=int, default=55, help="Channel DCDetector")
 parser.add_argument('--patch_size', type=list, default=[5,7], help="Sliding Windows KBJNet")
+
+#AnomalyTransformer
+parser.add_argument('--k', type=int, default=3, help="reconstruction loss")
 
 # FEDFormer task
 parser.add_argument('--seq_len', type=int, default=96, help='input sequence length')
@@ -52,35 +53,32 @@ parser.add_argument('--use_weight',   action='store_true', default=False)
 parser.add_argument('--use_td',       action='store_false', default=True)
 parser.add_argument('--use_extra',    action='store_false', default=True)
 parser.add_argument('--use_pretrain', action='store_false', default=True)
-parser.add_argument('--step_size', default=4)
 parser.add_argument('--epsilon', default=0.5, type=float)
 parser.add_argument('--exp_name', default='rlmc', type=str)
-parser.add_argument("--hidden_dim_rl",default=100, type=int)
-parser.add_argument("--train_epochs_rl",default=500, type=int)
 
 #TimesNet
 parser.add_argument('--top_k', type=int, default=5)
 
 #MANTRA
 parser.add_argument('--n_learner', type=int, default=3)
-parser.add_argument('--slow_model', type=str, default='MaelNetS1',
+parser.add_argument('--slow_model', type=str, default='MaelNetS2',
                     help='model name, options: [MaelNet]')
-parser.add_argument('--urt_heads', type=int, default=1, help='num of heads')
+
 #lOSS TYPE
 parser.add_argument('--loss_type', type=str, default="neg_corr", help='loss type')
 parser.add_argument('--correlation_penalty', type=float, default=0.5, help='correlation penalty')
 # model define
 parser.add_argument('--kernel_size', type=int, default=3, help='kernel input size')
-parser.add_argument('--enc_in', type=int, default=25, help='encoder input size')
-parser.add_argument('--dec_in', type=int, default=25, help='decoder input size')
-parser.add_argument('--c_out', type=int, default=25, help='output size')
-parser.add_argument('--d_model', type=int, default=25, help='dimension of model')
+parser.add_argument('--enc_in', type=int, default=38, help='encoder input size')
+parser.add_argument('--dec_in', type=int, default=38, help='decoder input size')
+parser.add_argument('--c_out', type=int, default=38, help='output size')
+parser.add_argument('--d_model', type=int, default=512, help='dimension of model')
 parser.add_argument('--n_heads', type=int, default=8, help='num of heads attention')
 parser.add_argument('--e_layers', type=int, default=2, help='num of encoder layers')
 parser.add_argument('--d_layers', type=int, default=1, help='num of decoder layers')
 parser.add_argument('--d_ff', type=int, default=2048, help='dimension of fcn')
 parser.add_argument('--moving_avg', type=int, default=100, help='window size of moving average')
-parser.add_argument('--factor', type=int, default=5, help='attn factor')
+parser.add_argument('--factor', type=int, default=3, help='attn factor')
 parser.add_argument('--distil', action='store_false',
                     help='whether to use distilling in encoder, using this argument means not using distilling',
                     default=True)
@@ -96,8 +94,6 @@ parser.add_argument('--do_predict', action='store_true', help='whether to predic
 # optimization
 parser.add_argument('--num_workers', type=int, default=10, help='data loader num workers')
 parser.add_argument('--itr', type=int, default=1, help='experiments times')
-parser.add_argument("--epoch_itr", type=int, default=1500, help="iterations per epoch")
-
 parser.add_argument('--train_epochs', type=int, default=10, help='train epochs')
 parser.add_argument('--batch_size', type=int, default=32, help='batch size of train input data')
 parser.add_argument('--patience', type=int, default=3, help='early stopping patience') # Apabila Counter >= patience, akan dilakukan early stop
@@ -138,8 +134,7 @@ if args.use_gpu:
 
 if __name__ == "__main__":
 
-    Exp = Exp_Anomaly_Detection_Learner
-    OptRLMantra= OPT_RL_Mantra
+    Exp = Exp_Anomaly_Detection
 
     print('Args in experiment:')
     print(args)
@@ -160,24 +155,12 @@ if __name__ == "__main__":
             args.distil,
             args.des,ii)
         exp = Exp(args)  # set experiments
-        opt = OptRLMantra(args)
         if args.is_training:
             print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
-            #exp main Mantra
             exp.train(setting)
-            print("TEST MODEL")
+            print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
             exp.test(setting)
-            print("UNIFY INPUT DATA")
-            unify_input_data(args, setting)
-            print("REINFORCEMENT LEARNING START")
-            opt.active_urt_reinforcment_learning(setting)
-            torch.cuda.empty_cache()
         else:
-            torch.cuda.empty_cache()
-            # print("TEST MODEL")
+            print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
             # exp.test(setting)
-            print("UNIFY INPUT DATA")
-            unify_input_data(args, setting)
-            print("REINFORCEMENT LEARNING START")
-            opt.active_urt_reinforcment_learning(setting)
-            # torch.cuda.empty_cache()
+            torch.cuda.empty_cache()

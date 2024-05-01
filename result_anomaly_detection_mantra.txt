@@ -1,0 +1,21 @@
+MaelNetB1_MaelNetS1_SMD_Negative_Corr_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9826, Precision : 0.8044, Recall : 0.7665, F-score : 0.7850 
+
+MaelNetB1_MaelNetS1_SMD_MSE_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9826, Precision : 0.8045, Recall : 0.7665, F-score : 0.7850 
+
+MaelNetB1_MaelNetS1_SMD_MSE_NO_SL_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9861, Precision : 0.8499, Recall : 0.8090, F-score : 0.8290 
+
+MaelNetB1_MaelNetS1_SMAP_MSE_MaelNetB1_SMAP_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9338, Precision : 0.9136, Recall : 0.5327, F-score : 0.6730 
+
+MaelNetB1_MaelNetS1_SMAP_MSE_NO_SLOW_LEARNER_MaelNetB1_SMAP_ftM_dm25_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9361, Precision : 0.9182, Recall : 0.5498, F-score : 0.6878 
+
+NSTransformerB1_NSTransformerS1_SMD_MSE_NO_SL_NSTransformerB1_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9859, Precision : 0.8545, Recall : 0.7969, F-score : 0.8247 
+
+NSTransformerB1_NSTransformerS1_SMAP_MSE_NO_SL_NSTransformerB1_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9441, Precision : 0.9210, Recall : 0.6160, F-score : 0.7382 
+

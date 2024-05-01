@@ -29,13 +29,11 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
 
     def _build_model(self):
         model = self.model_dict[self.args.model].Model(self.args).float()
-        self.slow_model = self.model_dict[self.args.slow_model].Model(self.args).float().to(self.device)
-        
         if self.args.use_multi_gpu and self.args.use_gpu:
             model = nn.DataParallel(model, device_ids=self.args.device_ids)
         return model
     def _build_slow_model(self):
-        slow_model = self.model_dict[self.args.slow_model].Model(self.args).float().to(self.device)
+        slow_model = self.model_dict[self.args.slow_model].Model(self.args).float()
         if self.args.use_multi_gpu and self.args.use_gpu:
             slow_model = nn.DataParallel(slow_model, device_ids=self.args.device_ids)
         return slow_model
@@ -70,9 +68,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 iter_count = iter_count + 1
                 if epoch == 0:
                     valid_X.extend(batch_x.detach().cpu().numpy())
-
                 batch_x = batch_x.float().to(self.device)
-
                 list_of_bm_valid_test = [[] for _ in range(self.args.n_learner)]
                 dec_out = []
                 f_dim = -1 if self.args.features == 'MS' else 0
@@ -96,23 +92,10 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 outputs = torch.mean(outputs,axis=0) 
                 outputs = outputs[:, :, f_dim:]
 
-
-                s0,s1,s2 = batch_x.shape
-                randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
-                m_ones = torch.ones(s0,s1,s2)
-                slow_mark = torch.bernoulli(randuniform)
-                batch_x_slow = batch_x.clone()
-                batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
-
-                if self.slow_model.name not in ["KBJNet"]:
-                    slow_out = self.slow_model.forward(batch_x_slow)
-                else:
-                    slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
-
                 pred = outputs.detach().cpu()
                 true = batch_x.detach().cpu()
 
-                loss = criterion(pred, true) + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
+                loss = criterion(pred, true)
                 total_loss.append(loss.item())
                 if (i + 1) % 100 == 0:
                     print("\titers valid: {0}, epoch : {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
@@ -124,7 +107,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 
         dict_learner_valid = {}
         for learner_idx in range(self.args.n_learner):
-            dict_learner_valid[header_bmnpzreader[learner_idx]] = np.array(all_bm_valid_test_outputs[learner_idx], dtype=np.float16)
+            dict_learner_valid[header_bmnpzreader[learner_idx]] = np.array(all_bm_valid_test_outputs[learner_idx], dtype=np.float32)
         if epoch == 0:
             np_input_valid_X = np.array(valid_X, dtype="object")
             np.save(f"{path_ds}/valid_X.npy",np_input_valid_X)
@@ -175,22 +158,10 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 outputs = torch.mean(outputs,axis=0) 
                 outputs = outputs[:, :, f_dim:]
 
-                s0,s1,s2 = batch_x.shape
-                randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
-                m_ones = torch.ones(s0,s1,s2)
-                slow_mark = torch.bernoulli(randuniform)
-                batch_x_slow = batch_x.clone()
-                batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
-
-                if self.slow_model.name not in ["KBJNet"]:
-                    slow_out = self.slow_model.forward(batch_x_slow)
-                else:
-                    slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
-
                 pred = outputs.detach().cpu()
                 true = batch_x.detach().cpu()
 
-                loss = criterion(pred, true) + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
+                loss = criterion(pred, true)
                 total_loss.append(loss.item())
                 if (i + 1) % 100 == 0:
                     print("\titers test: {0}, epoch : {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
@@ -204,7 +175,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         # dict_test_energy = {}
         for learner_idx in range(self.args.n_learner):
             # dict_test_energy[header_bmnpzreader[learner_idx]] = np.array(attens_energy[idx].reshape(-1))
-            dict_learner_test[header_bmnpzreader[learner_idx]] = np.array(all_bm_valid_test_outputs[learner_idx], dtype=np.float16)
+            dict_learner_test[header_bmnpzreader[learner_idx]] = np.array(all_bm_valid_test_outputs[learner_idx], dtype=np.float32)
         if epoch == 0 :
             np_input_test_X = np.array(test_X,dtype="object")
             np_input_test_y = np.array(test_y, dtype="object")
@@ -244,7 +215,6 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         early_stopping = EarlyStopping(patience=self.args.patience, verbose=True)
 
         model_optim = self._select_optimizer()
-        slow_model_optim = self._select_slow_optimizer()
         criterion = self._select_criterion()
 
         f = open("training_mantra_anomaly_detection.txt", 'a')
@@ -294,24 +264,6 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                 train_loss.append(loss.item())           
                 # loss.backward()
                 # model_optim.step()
-                # Slow Learner
-                # loss = 0
-                # s0,s1,s2 = batch_x.shape
-                # randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
-                # m_ones = torch.ones(s0,s1,s2)
-                # slow_mark = torch.bernoulli(randuniform)
-                # batch_x_slow = batch_x.clone()
-                # batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
-
-                # if self.slow_model.name not in ["KBJNet"]:
-                #     slow_out = self.slow_model.forward(batch_x_slow)
-                # else:
-                #     slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
-
-                # f_dim = -1 if self.args.features == 'MS' else 0
-                # outputs = outputs[:, :, f_dim:]
-                # loss = loss + ssl_loss_v2(slow_out, batch_x, slow_mark, s1, s2, self.device)
-
                 if (i + 1) % 100 == 0:
                     print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
                     speed = (time.time() - time_now) / iter_count
@@ -319,9 +271,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
                     print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
                     iter_count = 0
                     time_now = time.time()
-                slow_model_optim.zero_grad()    
                 loss.backward()
-                slow_model_optim.step()
                 model_optim.step()
 
             if epoch == 0:
@@ -355,12 +305,10 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
         np.save(f"{path_ds}/train_X.npy",np_input_train_X)
         dict_learner = {}
         for learner_idx in range(self.args.n_learner):
-            dict_learner[header_bmnpzreader[learner_idx]] = np.array(all_bm_train_outputs[learner_idx], dtype=np.float16)
+            dict_learner[header_bmnpzreader[learner_idx]] = np.array(all_bm_train_outputs[learner_idx], dtype=np.float32)
         np.savez(f"{path_ds}/bm_train_preds.npz", **dict_learner)
         np.savez(f"{path_ds}/bm_valid_preds.npz", **dict_learner_valid)
         np.savez(f"{path_ds}/bm_test_preds.npz", **dict_learner_test)
-        # best_model_path = path + '/' + 'checkpoint.pth'
-        # self.model.load_state_dict(torch.load(best_model_path)) # load_state_dict
         f.write("\n")
         csvreader.writerow([])
         f.close()

@@ -349,3 +349,57 @@ Accuracy : 0.9595, Precision : 0.8895, Recall : 0.7037, F-score : 0.7857
 FEDFormer_FEDFormer_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_test_0  
 Accuracy : 0.9040, Precision : 0.6444, Recall : 0.1994, F-score : 0.3046 
 
+KBJNet_SMAP_KBJNet_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9338, Precision : 0.9088, Recall : 0.5362, F-score : 0.6744 
+
+KBJNet_100_96_KBJNet_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9797, Precision : 0.7741, Recall : 0.7214, F-score : 0.7468 
+
+KBJNet_100_96_KBJNet_SWaT_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9581, Precision : 0.9996, Recall : 0.6555, F-score : 0.7918 
+
+KBJNet_100_96_KBJNet_PSM_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9329, Precision : 0.9779, Recall : 0.7758, F-score : 0.8652 
+
+KBJNet_MSL_KBJNet_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9648, Precision : 0.9161, Recall : 0.7334, F-score : 0.8146 
+
+MaelNet_SMD_MaelNet_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9864, Precision : 0.8465, Recall : 0.8209, F-score : 0.8335 
+
+MaelNet_SMAP_MaelNet_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9338, Precision : 0.9109, Recall : 0.5352, F-score : 0.6743 
+
+MaelNet_SMAP_SeriesDecompDecoder_MaelNet_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9339, Precision : 0.9105, Recall : 0.5356, F-score : 0.6745 
+
+MaelNet_SMD_NoDecoder_MaelNet_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9858, Precision : 0.8426, Recall : 0.8105, F-score : 0.8262 
+
+MaelNet_SMAP_NoDecoder_MaelNet_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9334, Precision : 0.9045, Recall : 0.5361, F-score : 0.6732 
+
+MaelNet_SMAP_TokenEmbeeding_MaelNet_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9447, Precision : 0.9278, Recall : 0.6160, F-score : 0.7404 
+
+MaelNet_SMAP_TokenEmbeeding_NoDecoder_MaelNet_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9365, Precision : 0.9187, Recall : 0.5521, F-score : 0.6898 
+
+MaelNet_SMAP_TokenEmbeeding_MaelNet_SMAP_ftM_dm128_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9360, Precision : 0.9190, Recall : 0.5477, F-score : 0.6864 
+
+MaelNet_SMD_TCNEmbeddingEnc_TokenEmbedDec_MaelNet_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9872, Precision : 0.8591, Recall : 0.8286, F-score : 0.8436 
+
+MaelNet_SMAP_TCNEmbeddingEnc_TokenEmbedDec_MaelNet_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9450, Precision : 0.9292, Recall : 0.6170, F-score : 0.7415 
+
+MaelNet_SWaT_SMAP_TCNEmbeddingEnc_TokenEmbedDec_MaelNet_SWaT_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9825, Precision : 0.9287, Recall : 0.9272, F-score : 0.9280 
+
+MaelNet_PSM_TCNEmbeddingEnc_TokenEmbedDec_MaelNet_PSM_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9797, Precision : 0.9840, Recall : 0.9422, F-score : 0.9627 
+
+MaelNet_MSL_TCNEmbeddingEnc_TokenEmbedDec_MaelNet_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
+Accuracy : 0.9492, Precision : 0.8701, Recall : 0.6089, F-score : 0.7164 
+

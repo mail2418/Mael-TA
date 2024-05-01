@@ -103,14 +103,12 @@ class Model(nn.Module):
         tau = self.tau_learner(x_raw, std_enc).exp()  # B x S x E, B x 1 x E -> B x 1, positive scalar
         delta = self.delta_learner(x_raw, means) # B x S x E, B x 1 x E -> B x S
 
-        
         # embedding
         enc_out = self.enc_embedding(x_enc, None)
         enc_out, attns = self.encoder(enc_out, tau=tau, delta=delta)
 
         seasonal_init, trend_init = self.decomp(x_enc) #input dari decoder
         dec_out = self.dec_embedding(seasonal_init, None)
-        # dec_out = self.decoder(x=dec_out, cross=enc_out, tau=tau, delta=delta)
         seasonal_part, trend_part = self.decoder(x=dec_out, cross=enc_out, tau=tau, delta=None, trend=trend_init)
 
         dec_out = seasonal_part + trend_part

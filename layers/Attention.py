@@ -129,7 +129,7 @@ class MaelAttentionLayer(nn.Module):
         )
         out = out.view(B, L, -1)
 
-        return self.out_projection(out), [series, prior]
+        return self.out_projection(out), series, prior
 
 class AttentionLayer(nn.Module):
     def __init__(self, attention, d_model, n_heads, d_keys=None,

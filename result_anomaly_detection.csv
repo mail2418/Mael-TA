@@ -103,3 +103,6 @@ Accuracy,Precision,Recall,F-score
 MaelNet_Mantra_Recons_Discrep_MaelNetB1_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0
 Accuracy,Precision,Recall,F-score
 0.9584,0.0,0.0,0.0
+MaelNet_Mantra_Recons_Discrep_MaelNetB1_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0
+Accuracy,Precision,Recall,F-score
+0.9593,0.8783,0.7132,0.7872

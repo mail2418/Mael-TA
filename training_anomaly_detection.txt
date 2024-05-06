@@ -98,3 +98,18 @@ FAST LEARNER Epoch: 10, Steps: 222 | Train Loss: 0.0710181 Vali Loss: 0.0181722 
 FAST LEARNER Epoch: 1, Steps: 4222 | Train Loss: 0.1246824 Vali Loss: 0.0150404 Test Loss: 0.2431289
 SLOW LEARNER Epoch: 1, Steps: 4222 | Train Loss: 1.8844612 Vali Loss: 0.8841063 Test Loss: 0.1481539
 MaelNet_Mantra_Recons_Discrep_MaelNetB1_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+FAST LEARNER Epoch: 1, Steps: 1820 | Train Loss: 0.0908395 Vali Loss: 0.0062993 Test Loss: 0.1714492
+SLOW LEARNER Epoch: 1, Steps: 1820 | Train Loss: 2.5666255 Vali Loss: 0.9413819 Test Loss: -0.2519607
+MaelNet_Mantra_Recons_Discrep_MaelNetB1_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+FAST LEARNER Epoch: 2, Steps: 1820 | Train Loss: 0.0157599 Vali Loss: 0.0028679 Test Loss: 0.1044101
+SLOW LEARNER Epoch: 2, Steps: 1820 | Train Loss: 1.2918310 Vali Loss: 1.0062193 Test Loss: -0.2191859
+FAST LEARNER Epoch: 3, Steps: 1820 | Train Loss: 0.0067517 Vali Loss: 0.0016260 Test Loss: 0.0916292
+SLOW LEARNER Epoch: 3, Steps: 1820 | Train Loss: 1.2454322 Vali Loss: 1.0185812 Test Loss: -0.1921018
+FAST LEARNER Epoch: 4, Steps: 1820 | Train Loss: 0.0043946 Vali Loss: 0.0013385 Test Loss: 0.0991696
+SLOW LEARNER Epoch: 4, Steps: 1820 | Train Loss: 1.2287376 Vali Loss: 1.0265302 Test Loss: -0.1657278
+FAST LEARNER Epoch: 5, Steps: 1820 | Train Loss: 0.0031994 Vali Loss: 0.0010926 Test Loss: 0.0935032
+FAST LEARNER Epoch: 6, Steps: 1820 | Train Loss: 0.0028233 Vali Loss: 0.0010346 Test Loss: 0.0928990
+FAST LEARNER Epoch: 7, Steps: 1820 | Train Loss: 0.0026129 Vali Loss: 0.0009658 Test Loss: 0.0907380
+FAST LEARNER Epoch: 8, Steps: 1820 | Train Loss: 0.0025323 Vali Loss: 0.0009216 Test Loss: 0.0898968
+FAST LEARNER Epoch: 9, Steps: 1820 | Train Loss: 0.0024755 Vali Loss: 0.0009038 Test Loss: 0.0895770
+FAST LEARNER Epoch: 10, Steps: 1820 | Train Loss: 0.0024642 Vali Loss: 0.0008980 Test Loss: 0.0894466

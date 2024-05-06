@@ -13,8 +13,8 @@ parser.add_argument('--model', type=str, default='MaelNetB1',
                     help='model name, options: [MaelNet]')
 
 # # # data loader
-parser.add_argument('--data', type=str, default='SMAP', help='dataset type')
-parser.add_argument('--root_path', type=str, default='./dataset/SMAP/', help='root path of the data file')
+parser.add_argument('--data', type=str, default='MSL', help='dataset type')
+parser.add_argument('--root_path', type=str, default='./dataset/MSL/', help='root path of the data file')
 parser.add_argument('--win_size', type=int, default=100, help='window size')
 
 parser.add_argument('--features', type=str, default='M',
@@ -69,9 +69,9 @@ parser.add_argument('--loss_type', type=str, default="neg_corr", help='loss type
 parser.add_argument('--correlation_penalty', type=float, default=0.5, help='correlation penalty')
 # model define
 parser.add_argument('--kernel_size', type=int, default=3, help='kernel input size')
-parser.add_argument('--enc_in', type=int, default=25, help='encoder input size')
-parser.add_argument('--dec_in', type=int, default=25, help='decoder input size')
-parser.add_argument('--c_out', type=int, default=25, help='output size')
+parser.add_argument('--enc_in', type=int, default=55, help='encoder input size')
+parser.add_argument('--dec_in', type=int, default=55, help='decoder input size')
+parser.add_argument('--c_out', type=int, default=55, help='output size')
 parser.add_argument('--d_model', type=int, default=512, help='dimension of model')
 parser.add_argument('--n_heads', type=int, default=8, help='num of heads attention')
 parser.add_argument('--e_layers', type=int, default=2, help='num of encoder layers')

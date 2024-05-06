@@ -3,7 +3,7 @@ py -u run_anomaly.py \
   --is_training 1 \
   --root_path ./dataset/SMAP/ \
   --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
-  --model MaelNetS1 \
+  --model MaelNetS2 \
   --is_slow_learner true \
   --data SMAP \
   --e_layers 2 \
@@ -27,7 +27,7 @@ py -u run_anomaly.py \
   --root_path ./dataset/SMAP/ \
   --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
   --model DCDetector \
-  --patch_size 357 \
+  --patch_size 25 \
   --train_epochs 3 \
   --data SMAP \
   --e_layers 2 \

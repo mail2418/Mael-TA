@@ -1,6 +1,8 @@
 import argparse
 import torch
-from exp.exp_main_learner_MANTRA_Anomaly2 import Exp_Anomaly_Detection
+from exp.exp_main_learner_Anomaly_Normal import Exp_Anomaly_Detection_Normal
+from exp.exp_main_learner_Anomaly_SL import Exp_Anomaly_Detection_SL
+from exp.opt_rl2_anomaly import OPT_RL_Anomaly
 import random
 import numpy as np
 
@@ -63,6 +65,7 @@ parser.add_argument('--top_k', type=int, default=5)
 parser.add_argument('--n_learner', type=int, default=3)
 parser.add_argument('--slow_model', type=str, default='MaelNetS2',
                     help='model name, options: [MaelNet]')
+parser.add_argument('--is_slow_learner', type=bool, default=False)
 
 #lOSS TYPE
 parser.add_argument('--loss_type', type=str, default="neg_corr", help='loss type')
@@ -134,33 +137,36 @@ if args.use_gpu:
 
 if __name__ == "__main__":
 
-    Exp = Exp_Anomaly_Detection
+    Exp_Normal = Exp_Anomaly_Detection_Normal
+    Exp_SL = Exp_Anomaly_Detection_SL
+    OPT_RL = OPT_RL_Anomaly
 
+    args.patch_size = [int(patch_index) for patch_index in args.patch_size]
     print('Args in experiment:')
     print(args)
-    for ii in range(args.itr):
-        # setting record of experiments
-        setting = '{}_{}_{}_ft{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
-            args.model_id,
-            args.model,
-            args.data,
-            args.features,
-            args.d_model,
-            args.n_heads,
-            args.e_layers,
-            args.d_layers,
-            args.d_ff,
-            args.factor,
-            args.embed,
-            args.distil,
-            args.des,ii)
-        exp = Exp(args)  # set experiments
-        if args.is_training:
-            print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
-            exp.train(setting)
-            print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-            exp.test(setting)
+    # setting record of experiments
+    setting = '{}_{}_ft{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}'.format(
+        args.model_id,
+        args.data,
+        args.features,
+        args.d_model,
+        args.n_heads,
+        args.e_layers,
+        args.d_layers,
+        args.d_ff,
+        args.factor,
+        args.embed,
+        args.distil)
+    exp_normal = Exp_Normal(args)  # set experiments
+    exp_sl = Exp_SL(args)
+    opt_rl = OPT_RL(args)
+    if args.is_training:
+        print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
+        if args.is_slow_learner:
+            exp_sl.train(setting)
         else:
-            print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-            exp.test(setting)
-            torch.cuda.empty_cache()
+            exp_normal.train(setting)
+    else:
+        print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+        opt_rl.opt_anomaly(setting)
+        torch.cuda.empty_cache()

@@ -209,21 +209,13 @@ class TrainEnvOffline_dist_conf(EnvOffline_dist_conf):
             observation: the current state of the environment;
             reward: the reward of the action;
             done: whether the episode is over;'''
-
         # Get the current state
         observation = self._get_state(action)
-
         # Get the reward
         reward=self._get_reward(observation)
-
-        self.pointer = self.pointer + 1
-
         # Check whether the episode is over
-        if self.pointer >= self.len_data:
-            self.done = True
-        else:
-            self.done = False
-
+        self.pointer = self.pointer + 1
+        self.done = self.pointer >= self.len_data
         return observation, reward, self.done, {}
 
     def _get_state(self,action=None):
@@ -294,4 +286,4 @@ def eval_model(model,env):
     f1=f1_score(gtruth,preds,pos_label=1)
     conf_matrix=confusion_matrix(gtruth,preds,labels=[0,1])
 
-    return prec,rec,f1,conf_matrix, preds
+    return prec,rec,f1,conf_matrix, preds, reward

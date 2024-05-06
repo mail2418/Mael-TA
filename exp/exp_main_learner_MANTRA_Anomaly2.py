@@ -419,16 +419,18 @@ class Exp_Anomaly_Detection(Exp_Basic):
         test_labels = np.array(test_labels)
 
         gt = test_labels.astype(int)
-        print("pred:   ", pred.shape)
-        print("gt:     ", gt.shape)
+        # print("pred:   ", pred.shape)
+        # print("gt:     ", gt.shape)
 
-        # (4) detection adjustment
-        gt, pred = adjustment(gt, pred) #gt == label
+        # # (4) detection adjustment
+        # gt, pred = adjustment(gt, pred) #gt == label
 
-        pred = np.array(pred)
-        gt = np.array(gt)
-        print("pred: ", pred.shape)
-        print("gt:   ", gt.shape)
+        # pred = np.array(pred)
+        # gt = np.array(gt)
+        # print("pred: ", pred.shape)
+        # print("gt:   ", gt.shape)
+
+        # REINFORCEMENT LEARNING
 
         accuracy = accuracy_score(gt, pred)
         precision, recall, f_score, support = precision_recall_fscore_support(gt, pred, average='binary')

@@ -165,7 +165,7 @@ class AttentionLayer(nn.Module):
         out = out.view(B, L, -1)
 
         return self.out_projection(out), attn
- 
+
 #DCDetector
 class AttentionLayerDCDetector(nn.Module):
     def __init__(self, attention, d_model, patch_size, channel, n_heads, win_size, d_keys=None, d_values=None):
@@ -212,6 +212,7 @@ class AttentionLayerDCDetector(nn.Module):
         )
         
         return series, prior
+
 class DAC_structure(nn.Module):
     def __init__(self, win_size, patch_size, channel, mask_flag=True, scale=None, attention_dropout=0.05, output_attention=False):
         super(DAC_structure, self).__init__()
@@ -250,6 +251,47 @@ class DAC_structure(nn.Module):
             return series_patch_size, series_patch_num
         else:
             return (None)
+
+class AnomalyAttention(nn.Module):
+    def __init__(self, win_size, mask_flag=True, scale=None, attention_dropout=0.0, output_attention=False):
+        super(AnomalyAttention, self).__init__()
+        self.scale = scale
+        self.mask_flag = mask_flag
+        self.output_attention = output_attention
+        self.dropout = nn.Dropout(attention_dropout)
+        window_size = win_size
+        self.distances = torch.zeros((window_size, window_size)).cuda()
+        for i in range(window_size):
+            for j in range(window_size):
+                self.distances[i][j] = abs(i - j)
+
+    def forward(self, queries, keys, values, sigma, attn_mask):
+        B, L, H, E = queries.shape
+        _, S, _, D = values.shape
+        scale = self.scale or 1. / sqrt(E)
+
+        scores = torch.einsum("blhe,bshe->bhls", queries, keys)
+        if self.mask_flag:
+            if attn_mask is None:
+                attn_mask = TriangularCausalMask(B, L, device=queries.device)
+            scores.masked_fill_(attn_mask.mask, -np.inf)
+        attn = scale * scores
+
+        sigma = sigma.transpose(1, 2)  # B L H ->  B H L
+        window_size = attn.shape[-1]
+        sigma = torch.sigmoid(sigma * 5) + 1e-5
+        sigma = torch.pow(3, sigma) - 1
+        sigma = sigma.unsqueeze(-1).repeat(1, 1, 1, window_size)  # B H L L
+        prior = self.distances.unsqueeze(0).unsqueeze(0).repeat(sigma.shape[0], sigma.shape[1], 1, 1).cuda()
+        prior = 1.0 / (math.sqrt(2 * math.pi) * sigma) * torch.exp(-prior ** 2 / 2 / (sigma ** 2))
+
+        series = self.dropout(torch.softmax(attn, dim=-1))
+        V = torch.einsum("bhls,bshd->blhd", series, values)
+
+        if self.output_attention:
+            return (V.contiguous(), series, prior, sigma)
+        else:
+            return (V.contiguous(), None)
 
 class AutoCorrelation(nn.Module):
     """

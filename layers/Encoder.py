@@ -83,7 +83,6 @@ class Encoder(nn.Module):
                     series_list.append(series)
                     prior_list.append(prior)
                     continue
-
                 x, attn = attn_layer(x, attn_mask=attn_mask, tau=tau, delta=delta)
                 attns.append(attn)
 

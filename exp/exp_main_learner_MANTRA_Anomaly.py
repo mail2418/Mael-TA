@@ -269,18 +269,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
             test_labels = np.concatenate(test_labels, axis=0).reshape(-1)
             test_labels = np.array(test_labels)
             list_gtruth = test_labels.astype(int)
-            # print("pred:   ", pred.shape)
-            # print("gt:     ", gt.shape)
-
-            # # (4) detection adjustment
-            # gt, pred = adjustment(gt, pred) #gt == label
-
-            # pred = np.array(pred)
-            # gt = np.array(gt)
-            # print(f"Ground Truth and Prediction of Learner {learner_idx + 1}")
-            # print("pred: ", pred.shape)
-            # print("gt:   ", gt.shape)
-
+            
         EXP_TIMES=10 # How many runs to average the results
         # Store the precision, recall, F1-score
         store_prec=np.zeros(EXP_TIMES)
@@ -289,10 +278,7 @@ class Exp_Anomaly_Detection_Learner(Exp_Basic):
 
         for times in range(EXP_TIMES):
             # Set up the training environment on all the dataset
-            # env_off=TrainEnvOffline(list_pred_sc=list_pred_sc, list_thresholds=list_thresholds, list_gtruth=list_gtruth)
-            # env_off=TrainEnvOffline_consensus_conf(list_pred_sc=list_pred_sc, list_thresholds=list_thresholds, list_gtruth=list_gtruth)
             env_off=TrainEnvOffline_dist_conf(list_pred_sc=list_predsrc, list_thresholds=list_thresholds, list_gtruth=list_gtruth)
-
             # Train the model on all the dataset  
             model = DQN('MlpPolicy', env_off, verbose=0)
             model.learn(total_timesteps=len(list_predsrc[0])) 

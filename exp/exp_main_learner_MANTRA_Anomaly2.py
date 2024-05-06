@@ -9,6 +9,7 @@ import torch.multiprocessing
 from tqdm import tqdm
 from pprint import pprint
 
+torch.autograd.set_detect_anomaly(True)
 torch.multiprocessing.set_sharing_strategy('file_system')
 import torch
 import torch.nn as nn
@@ -25,6 +26,7 @@ warnings.filterwarnings('ignore')
 class Exp_Anomaly_Detection(Exp_Basic):
     def __init__(self, args):
         super(Exp_Anomaly_Detection, self).__init__(args)
+        self.win_size = self.args.win_size
 
     def _build_model(self):
         model = self.model_dict[self.args.model].Model(self.args).float()
@@ -55,7 +57,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
 
     def vali_fast_learner(self, vali_data, vali_loader, criterion):
         total_loss = []
-        # loss1
+        outputs_fl_vali = []
         self.model.eval()
         with torch.no_grad():
             for i, (batch_x, _) in enumerate(vali_loader):
@@ -74,29 +76,27 @@ class Exp_Anomaly_Detection(Exp_Basic):
 
                 loss = criterion(pred, true)
                 total_loss.append(loss)
+                outputs_fl_vali.append(outputs_fast_learner_vali)
                 
         total_loss = np.average(total_loss)
         self.model.train()
-        return total_loss, outputs_fast_learner_vali
-    def vali_slow_learner(self, valid_data, vali_loader, outputs_fast_learner):
+        return total_loss, outputs_fl_vali
+    def vali_slow_learner(self, valid_data, vali_loader, criterion, outputs_fast_learner):
         self.slow_model.eval()
         loss_1 = []
         loss_2 = []
         # Anomaly Transformer doesnt use NO GRAD in vali
         with torch.no_grad():
             for i, (batch_x, _) in enumerate(vali_loader):
-                s0,s1,s2 = batch_x.shape
-                randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
-                m_ones = torch.ones(s0,s1,s2)
-                slow_mark = torch.bernoulli(randuniform)
-                batch_x_slow = batch_x.clone()
-                batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
-                if self.slow_model.name  == "KBJNet":
-                    _ = self.slow_model.forward(batch_x_slow)
-                elif self.slow_model.name == "MaelNetS2":
-                    _ , [series,prior] = self.slow_model.forward(batch_x_slow.permute(0,2,1))
-                else:
-                    _ = self.slow_model.forward(batch_x_slow.permute(0,2,1))
+                batch_x = batch_x.float().to(self.device)
+                # s0,s1,s2 = batch_x.shape
+                # # randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
+                # slow_mark = torch.empty(s0,s1,s2).uniform_(0, 0.5)
+                # m_ones = torch.ones(s0,s1,s2)
+                # # slow_mark = torch.bernoulli(randuniform)
+                # batch_x_slow = batch_x.clone()
+                # batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
+                _ , series,prior = self.slow_model.forward(batch_x)
                 series_loss = 0.0
                 prior_loss = 0.0
                 for u in range(len(prior)):
@@ -117,7 +117,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
                 series_loss = series_loss / len(prior)
                 prior_loss = prior_loss / len(prior)
 
-                rec_loss = self.criterion(outputs_fast_learner, batch_x.float().to(self.device))
+                rec_loss = criterion(outputs_fast_learner[i], batch_x)
                 loss_1.append((rec_loss - self.args.k * series_loss).item())
                 loss_2.append((rec_loss + self.args.k * prior_loss).item())
 
@@ -184,30 +184,26 @@ class Exp_Anomaly_Detection(Exp_Basic):
                         print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
                         iter_count = 0
                         time_now = time.time()
-                    rec_loss.backward()
-                    model_optim.step()
 
                 # ========== SLOW LEARNER ============
                 if not early_stopping_slow_learner.early_stop:
+                    # if i >= 134:
+                    #     print("pivot breakpoint")
                     iter_count_slow = iter_count_slow + 1
                     slow_model_optim.zero_grad() 
-                    s0,s1,s2 = batch_x.shape
-                    randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
-                    m_ones = torch.ones(s0,s1,s2)
-                    slow_mark = torch.bernoulli(randuniform)
-                    batch_x_slow = batch_x.clone()
-                    batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
-
-                    if self.slow_model.name  == "KBJNet":
-                        _ = self.slow_model.forward(batch_x_slow)
-                    elif self.slow_model.name == "MaelNetS2":
-                        _ , [series,prior] = self.slow_model.forward(batch_x_slow.permute(0,2,1))
-                    else:
-                        _ = self.slow_model.forward(batch_x_slow.permute(0,2,1))
+                    # s0,s1,s2 = batch_x.shape
+                    # # randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
+                    # slow_mark = torch.empty(s0,s1,s2).uniform_(0, 0.5)
+                    # m_ones = torch.ones(s0,s1,s2)
+                    # # slow_mark = torch.bernoulli(randuniform)
+                    # batch_x_slow = batch_x.clone()
+                    # batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
+                    _, series, prior = self.slow_model.forward(batch_x)
 
                     series_loss = 0.0
                     prior_loss = 0.0
                     for u in range(len(prior)):
+
                         series_loss += (torch.mean(my_kl_loss(series[u], (
                                 prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
                                                                                                     self.win_size)).detach())) + torch.mean(
@@ -224,21 +220,25 @@ class Exp_Anomaly_Detection(Exp_Basic):
                     series_loss = series_loss / len(prior)
                     prior_loss = prior_loss / len(prior)
 
-                    train_slow_learner_loss.append((rec_loss - self.args.k * series_loss).item())
-                    loss1 = rec_loss - self.args.k * series_loss # minimise phase
-                    loss2 = rec_loss + self.args.k * prior_loss # maximise phase
-                
+                    # i 134 sampe seterusnya error nan
+                    train_slow_learner_loss.append((self.args.k * series_loss).item())
+                    loss1 = self.args.k * series_loss # minimise phase
+                    loss2 = self.args.k * prior_loss # maximise phase
+        
                     if (i + 1) % 100 == 0:
                         print("\titers SLOW LEARNER: {0}, epoch: {1} | loss minimise phase: {2:.7f} | loss maximise phase: {2:.7f}".format(i + 1, epoch + 1, loss1.item(), loss2.item()))
-                        speed = (time.time() - time_now) / iter_count
+                        speed = (time.time() - time_now) / iter_count_slow
                         left_time = speed * ((self.args.train_epochs - epoch) * train_steps - i)
                         print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
-                        iter_count = 0
+                        iter_count_slow = 0
                         time_now = time.time()
-
-                    loss1.backward(retrain_graph=True)
+                if not early_stopping_fast_learner.early_stop:
+                    rec_loss.backward(retain_graph=True)
+                    model_optim.step()
+                if not early_stopping_slow_learner.early_stop:
+                    loss1.backward(retain_graph=True)
                     loss2.backward()
-                    self.slow_model.step()
+                    slow_model_optim.step()
             #  ========== FAST LEARNER ============
             if not early_stopping_fast_learner.early_stop:
                 train_fast_learner_loss = np.average(train_fast_learner_loss)
@@ -255,8 +255,8 @@ class Exp_Anomaly_Detection(Exp_Basic):
             #  ========== SLOW LEARNER ============
             if not early_stopping_slow_learner.early_stop:
                 train_slow_loss = np.average(train_slow_learner_loss)
-                vali_slow_loss1, vali_slow_loss2 = self.vali_slow_learner(vali_data, vali_loader, outputs_fast_learner_vali)
-                test_slow_loss1, test_slow_loss2 = self.vali_slow_learner(test_data, test_loader, outputs_fast_learner_test)
+                vali_slow_loss1, vali_slow_loss2 = self.vali_slow_learner(vali_data, vali_loader, criterion, outputs_fast_learner_vali)
+                test_slow_loss1, test_slow_loss2 = self.vali_slow_learner(test_data, test_loader, criterion, outputs_fast_learner_test)
                 data_for_csv = [[epoch + 1, time.time() - epoch_time, train_steps, round(train_slow_loss,7), round(vali_slow_loss1,7), round(test_slow_loss1,7)],[]]
                 print("SLOW LEARNER Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                     epoch + 1, train_steps, train_slow_loss, vali_slow_loss1, test_slow_loss1))
@@ -316,20 +316,15 @@ class Exp_Anomaly_Detection(Exp_Basic):
                 score = torch.mean(loss, dim=-1)
 
         #  ========== SLOW LEARNER ============
-                s0,s1,s2 = batch_x.shape
-                randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
-                m_ones = torch.ones(s0,s1,s2)
-                slow_mark = torch.bernoulli(randuniform)
-                batch_x_slow = batch_x.clone()
-                batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
+                # s0,s1,s2 = batch_x.shape
+                # # randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
+                # slow_mark = torch.empty(s0,s1,s2).uniform_(0, 0.5)
+                # m_ones = torch.ones(s0,s1,s2)
+                # # slow_mark = torch.bernoulli(randuniform)
+                # batch_x_slow = batch_x.clone()
+                # batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
 
-                if self.slow_model.name  == "KBJNet":
-                    _ = self.slow_model.forward(batch_x_slow)
-                elif self.slow_model.name == "MaelNetS2":
-                    _ , [series,prior] = self.slow_model.forward(batch_x_slow.permute(0,2,1))
-                else:
-                    _ = self.slow_model.forward(batch_x_slow.permute(0,2,1))
-
+                _ , series,prior = self.slow_model.forward(batch_x)
                 series_loss = 0.0
                 prior_loss = 0.0
                 for u in range(len(prior)):
@@ -360,7 +355,6 @@ class Exp_Anomaly_Detection(Exp_Basic):
         # (2) find the threshold TEST SET
         attens_energy = []
         test_labels = []
-        # (1) stastic on the TRAIN SET
         #  ========== FAST LEARNER ============
         with torch.no_grad():
             for i, (batch_x, labels) in enumerate(test_loader):
@@ -377,19 +371,14 @@ class Exp_Anomaly_Detection(Exp_Basic):
                 score = torch.mean(loss, dim=-1)
 
         #  ========== SLOW LEARNER ============
-                s0,s1,s2 = batch_x.shape
-                randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
-                m_ones = torch.ones(s0,s1,s2)
-                slow_mark = torch.bernoulli(randuniform)
-                batch_x_slow = batch_x.clone()
-                batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
-
-                if self.slow_model.name  == "KBJNet":
-                    _ = self.slow_model.forward(batch_x_slow)
-                elif self.slow_model.name == "MaelNetS2":
-                    _ , [series,prior] = self.slow_model.forward(batch_x_slow.permute(0,2,1))
-                else:
-                    _ = self.slow_model.forward(batch_x_slow.permute(0,2,1))
+                # s0,s1,s2 = batch_x.shape
+                # # randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
+                # slow_mark = torch.empty(s0,s1,s2).uniform_(0, 0.5)
+                # m_ones = torch.ones(s0,s1,s2)
+                # # slow_mark = torch.bernoulli(randuniform)
+                # batch_x_slow = batch_x.clone()
+                # batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
+                _ , series,prior = self.slow_model.forward(batch_x)
 
                 series_loss = 0.0
                 prior_loss = 0.0
@@ -430,16 +419,18 @@ class Exp_Anomaly_Detection(Exp_Basic):
         test_labels = np.array(test_labels)
 
         gt = test_labels.astype(int)
-        print("pred:   ", pred.shape)
-        print("gt:     ", gt.shape)
+        # print("pred:   ", pred.shape)
+        # print("gt:     ", gt.shape)
 
-        # (4) detection adjustment
-        gt, pred = adjustment(gt, pred) #gt == label
+        # # (4) detection adjustment
+        # gt, pred = adjustment(gt, pred) #gt == label
 
-        pred = np.array(pred)
-        gt = np.array(gt)
-        print("pred: ", pred.shape)
-        print("gt:   ", gt.shape)
+        # pred = np.array(pred)
+        # gt = np.array(gt)
+        # print("pred: ", pred.shape)
+        # print("gt:   ", gt.shape)
+
+        # REINFORCEMENT LEARNING
 
         accuracy = accuracy_score(gt, pred)
         precision, recall, f_score, support = precision_recall_fscore_support(gt, pred, average='binary')

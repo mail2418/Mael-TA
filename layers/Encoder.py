@@ -16,14 +16,8 @@ class EncoderLayer(nn.Module):
         self.norm2 = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, x, attn_mask=None, tau=None, delta=None):
+    def forward(self, x, attn_mask=None, tau=None, delta=None, asso_dispatch=False):
         # self.attention(queries, keys, values)
-        new_x, attn = self.attention(
-            x, x, x,
-            attn_mask=attn_mask,
-            tau=tau, delta=delta
-        )
-        x = x + self.dropout(new_x)
 
         # x, _ = self.decomp1(x)
         # y = x
@@ -32,11 +26,29 @@ class EncoderLayer(nn.Module):
 
         # output, _= self.decomp2(x + y)
         # return output, attn
+        if asso_dispatch:
+            new_x, series, prior = self.attention(
+                x, x, x,
+                attn_mask=attn_mask,
+                tau=tau, delta=delta
+            )
+            x = x + self.dropout(new_x)
+            y = x = self.norm1(x)
+            y = self.dropout(self.activation(self.conv1(y.transpose(-1, 1))))
+            y = self.dropout(self.conv2(y).transpose(-1, 1))
+            return self.norm2(x + y), series, prior 
+        
+        new_x, attn = self.attention(
+            x, x, x,
+            attn_mask=attn_mask,
+            tau=tau, delta=delta
+        )
+        x = x + self.dropout(new_x)
         y = x = self.norm1(x)
         y = self.dropout(self.activation(self.conv1(y.transpose(-1, 1))))
         y = self.dropout(self.conv2(y).transpose(-1, 1))
 
-        return self.norm2(x + y), attn
+        return self.norm2(x + y), attn 
 
 
 class Encoder(nn.Module):
@@ -46,9 +58,11 @@ class Encoder(nn.Module):
         self.conv_layers = nn.ModuleList(conv_layers) if conv_layers is not None else None
         self.norm = norm_layer
 
-    def forward(self, x, attn_mask=None, tau=None, delta=None):
+    def forward(self, x, attn_mask=None, tau=None, delta=None, asso_dispatch=False):
         # x [B, L, D]
         attns = []
+        series_list = []
+        prior_list = []
         if self.conv_layers is not None:
             # The reason why we only import delta for the first attn_block of Encoder
             # is to integrate Informer into our framework, where row size of attention of Informer is changing each layer
@@ -64,13 +78,21 @@ class Encoder(nn.Module):
             attns.append(attn)
         else:
             for attn_layer in self.attn_layers:
+                if asso_dispatch:
+                    x, series, prior = attn_layer(x, attn_mask=attn_mask, tau=tau, delta=delta, asso_dispatch=True)
+                    series_list.append(series)
+                    prior_list.append(prior)
+                    continue
                 x, attn = attn_layer(x, attn_mask=attn_mask, tau=tau, delta=delta)
                 attns.append(attn)
 
         if self.norm is not None:
             x = self.norm(x)
 
-        return x, attns
+        if not asso_dispatch:
+            return x, attns
+        else:
+            return x, series_list, prior_list
 
 
 # Buat KBJNet

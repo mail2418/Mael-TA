@@ -1,6 +1,8 @@
 import argparse
 import torch
-from exp.exp_main_learner_MANTRA_Anomaly2 import Exp_Anomaly_Detection
+from exp.exp_main_learner_Anomaly_Normal import Exp_Anomaly_Detection_Normal
+from exp.exp_main_learner_Anomaly_SL import Exp_Anomaly_Detection_SL
+from exp.opt_rl2_anomaly import OPT_RL_Anomaly
 import random
 import numpy as np
 
@@ -13,8 +15,8 @@ parser.add_argument('--model', type=str, default='MaelNetB1',
                     help='model name, options: [MaelNet]')
 
 # # # data loader
-parser.add_argument('--data', type=str, default='SMD', help='dataset type')
-parser.add_argument('--root_path', type=str, default='./dataset/SMD/', help='root path of the data file')
+parser.add_argument('--data', type=str, default='MSL', help='dataset type')
+parser.add_argument('--root_path', type=str, default='./dataset/MSL/', help='root path of the data file')
 parser.add_argument('--win_size', type=int, default=100, help='window size')
 
 parser.add_argument('--features', type=str, default='M',
@@ -25,7 +27,7 @@ parser.add_argument('--freq', type=str, default='h',
                         help='freq for time features encoding, options:[s:secondly, t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly], you can also use more detailed freq like 15min or 3h')
 
 # anomaly task
-parser.add_argument('--anomaly_ratio', type=float, default=0.6, help="Anomaly ratio for threshold")
+parser.add_argument('--anomaly_ratio', type=float, default=0.85, help="Anomaly ratio for threshold")
 
 #KBJNet & DCDetector
 parser.add_argument('--n_windows', type=int, default=100, help="Sliding Windows KBJNet")
@@ -63,15 +65,16 @@ parser.add_argument('--top_k', type=int, default=5)
 parser.add_argument('--n_learner', type=int, default=3)
 parser.add_argument('--slow_model', type=str, default='MaelNetS2',
                     help='model name, options: [MaelNet]')
+parser.add_argument('--is_slow_learner', type=bool, default=False)
 
 #lOSS TYPE
 parser.add_argument('--loss_type', type=str, default="neg_corr", help='loss type')
 parser.add_argument('--correlation_penalty', type=float, default=0.5, help='correlation penalty')
 # model define
 parser.add_argument('--kernel_size', type=int, default=3, help='kernel input size')
-parser.add_argument('--enc_in', type=int, default=38, help='encoder input size')
-parser.add_argument('--dec_in', type=int, default=38, help='decoder input size')
-parser.add_argument('--c_out', type=int, default=38, help='output size')
+parser.add_argument('--enc_in', type=int, default=55, help='encoder input size')
+parser.add_argument('--dec_in', type=int, default=55, help='decoder input size')
+parser.add_argument('--c_out', type=int, default=55, help='output size')
 parser.add_argument('--d_model', type=int, default=512, help='dimension of model')
 parser.add_argument('--n_heads', type=int, default=8, help='num of heads attention')
 parser.add_argument('--e_layers', type=int, default=2, help='num of encoder layers')
@@ -134,33 +137,36 @@ if args.use_gpu:
 
 if __name__ == "__main__":
 
-    Exp = Exp_Anomaly_Detection
+    Exp_Normal = Exp_Anomaly_Detection_Normal
+    Exp_SL = Exp_Anomaly_Detection_SL
+    OPT_RL = OPT_RL_Anomaly
 
+    args.patch_size = [int(patch_index) for patch_index in args.patch_size]
     print('Args in experiment:')
     print(args)
-    for ii in range(args.itr):
-        # setting record of experiments
-        setting = '{}_{}_{}_ft{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
-            args.model_id,
-            args.model,
-            args.data,
-            args.features,
-            args.d_model,
-            args.n_heads,
-            args.e_layers,
-            args.d_layers,
-            args.d_ff,
-            args.factor,
-            args.embed,
-            args.distil,
-            args.des,ii)
-        exp = Exp(args)  # set experiments
-        if args.is_training:
-            print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
-            exp.train(setting)
-            print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-            exp.test(setting)
+    # setting record of experiments
+    setting = '{}_{}_ft{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}'.format(
+        args.model_id,
+        args.data,
+        args.features,
+        args.d_model,
+        args.n_heads,
+        args.e_layers,
+        args.d_layers,
+        args.d_ff,
+        args.factor,
+        args.embed,
+        args.distil)
+    exp_normal = Exp_Normal(args)  # set experiments
+    exp_sl = Exp_SL(args)
+    opt_rl = OPT_RL(args)
+    if args.is_training:
+        print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
+        if args.is_slow_learner:
+            exp_sl.train(setting)
         else:
-            print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-            # exp.test(setting)
-            torch.cuda.empty_cache()
+            exp_normal.train(setting)
+    else:
+        print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+        opt_rl.opt_anomaly(setting)
+        torch.cuda.empty_cache()

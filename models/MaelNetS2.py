@@ -71,17 +71,16 @@ class Model(nn.Module):
         means = x_enc.mean(1, keepdim=True).detach()  # B x 1 x E
         x_enc = x_enc - means
         std_enc = torch.sqrt(torch.var(x_enc, dim=1, keepdim=True, unbiased=False) + 1e-5).detach()  # B x 1 x E
-        x_enc = x_enc / std_enc
 
         tau = self.tau_learner(x_raw, std_enc).exp()  # B x S x E, B x 1 x E -> B x 1, positive scalar
         delta = self.delta_learner(x_raw, means) # B x S x E, B x 1 x E -> B x S
         
         # embedding
-        enc_out = self.enc_embedding(x_enc, None)
-        enc_out, attns = self.encoder(enc_out, tau=tau, delta=delta)
+        enc_out = self.enc_embedding(x_raw, None)
+        enc_out, series, prior = self.encoder(enc_out, tau=tau, delta=delta, asso_dispatch=True)
 
         dec_out = self.projector(enc_out)
         dec_out = dec_out * std_enc 
         dec_out = dec_out + means
 
-        return dec_out, attns  # [B, L, D]
+        return dec_out, series, prior

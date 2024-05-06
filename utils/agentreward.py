@@ -276,7 +276,7 @@ def eval_model(model,env):
     preds = []
     while True:
         action = model.predict(observation)
-        observation, _, done, _ = env.step(action[0]) # action[0] is the index of the action, action is a tuple
+        observation, reward, done, _ = env.step(action[0]) # action[0] is the index of the action, action is a tuple
         preds.append(observation[2])
         if done:
             break
@@ -286,4 +286,4 @@ def eval_model(model,env):
     f1=f1_score(gtruth,preds,pos_label=1)
     conf_matrix=confusion_matrix(gtruth,preds,labels=[0,1])
 
-    return prec,rec,f1,conf_matrix, preds
+    return prec,rec,f1,conf_matrix, preds, reward

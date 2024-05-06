@@ -133,7 +133,7 @@ class EarlyStopping:
             torch.save(model.state_dict(), path + '/' + 'checkpoint.pth')
         self.val_loss_min = val_loss
 
-class EarlyStopping_Slow_Learner:
+class EarlyStopping_Asso_Discrep:
     def __init__(self, patience=7, verbose=False, slow_learner=False, delta=0):
         self.patience = patience
         self.verbose = verbose
@@ -168,9 +168,9 @@ class EarlyStopping_Slow_Learner:
         if self.verbose:
             print(f'Validation loss in Slow Learner decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
         if self.slow_learner:
-            torch.save(model.state_dict(), path + '/' + 'checkpoint_slow_learner.pth')
+            torch.save(model.state_dict(), f"{path}/checkpoint_slow_learner_{model.name}.pth")
         else:
-            torch.save(model.state_dict(), path + '/' + 'checkpoint.pth')
+            torch.save(model.state_dict(), f"{path}/checkpoint_{model.name}.pth")
         self.val_loss_min = val_loss
         self.val_loss2_min = val_loss2
 def visual(true, preds=None, name='./pic/test.pdf'):

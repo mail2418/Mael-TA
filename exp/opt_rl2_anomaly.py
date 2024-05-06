@@ -1,170 +1,36 @@
-from utils.datapredsrl import load_data_rl
-from utils.agentreward import sparse_explore, get_batch_rewards, get_state_weight,evaluate_agent, evaluate_agent_test
-from sktime.performance_metrics.forecasting import mean_absolute_error, mean_absolute_percentage_error
-from models import DQN
-import numpy as np
+import os
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from scipy.special import softmax
-import tqdm
-import os
-import time
-import pandas as pd
-import csv
-import warnings
-import matplotlib.pyplot as plt
+from exp.exp_basic import Exp_Basic
+from data_provider.data_factory import data_provider
+from utils.tools import my_kl_loss
+from utils.slowloss import ssl_loss_v2
 import numpy as np
-warnings.filterwarnings('ignore')
+from tqdm import trange
+from utils.agentreward import TrainEnvOffline_dist_conf, eval_model
+from stable_baselines3 import DQN
+from models import MaelNet, KBJNet, DCDetector, ns_Transformer, FEDFormer, TimesNet, MaelNetB1, MaelNetS1, ns_TransformerB1, ns_TransformerS1,AutoFormer,MaelNetS2
 
-class ReplayBuffer:
-    def __init__(self, action_dim, device, max_size=int(1e5)):
-        self.max_size = max_size
-        self.device = device
-        self.ptr = 0
-        self.size = 0
-
-        # In TS data, `next_state` is just the S[i+1]
-        self.states = np.zeros((max_size, 1), dtype=np.int8)
-        self.actions = np.zeros((max_size, action_dim), dtype=np.float16)
-        self.rewards = np.zeros((max_size, 1), dtype=np.float16)
-
-    def add(self, state, action, reward):
-        self.states[self.ptr] = state
-        self.actions[self.ptr] = action
-        self.rewards[self.ptr] = reward
-        self.ptr = (self.ptr + 1) % self.max_size
-        self.size = min(self.size + 1, self.max_size)
-    def sample(self, batch_size=256):
-        ind = np.random.randint(self.size, size=batch_size)
-        states = self.states[ind].squeeze()
-        actions = torch.FloatTensor(self.actions[ind]).to(self.device)
-        rewards = torch.FloatTensor(self.rewards[ind]).to(self.device)
-        return (states, actions, rewards.squeeze())
-    
-class Env:
-    def __init__(self, train_preds, train_error, train_y):
-        self.error = train_error
-        self.bm_preds = train_preds
-        self.y = train_y
-    
-    def reward_func(self, idx, action):
-        if isinstance(action, int):
-            tmp = np.zeros(self.bm_preds.shape[1])
-            tmp[action] = 1.
-            action = tmp
-        weighted_y = np.multiply(action.reshape(-1, 1), self.bm_preds[idx])
-        weighted_y = weighted_y.sum(axis=0)
-        # new_mape = mean_absolute_percentage_error(inv_trans(self.y[idx]), inv_trans(weighted_y))
-        new_mae = mean_absolute_error(self.y[idx], weighted_y)
-        new_error = np.array([*self.error[idx], new_mae])
-        rank = np.where(np.argsort(new_error) == len(new_error) - 1)[0][0]
-        # return rank, new_mape, new_mae 
-        return rank, new_mae
-    
-class DQNAgent:
-    def __init__(self, args, device, lr=3e-4, gamma=0.99, tau=0.005):
-        self.args = args
-        self.device = device
-        self.obs_dim = None
-        self.act_dim = None
-        self.states = None
-        self.lr = lr
-        self.gamma  = gamma
-        self.tau    = tau
-        self.use_td = args.use_td
-    def _set_obs_dim(self, obs_dim):
-        self.obs_dim = obs_dim
-    def _set_act_dim(self, act_dim):
-        self.act_dim = act_dim
-    def _set_states(self, states):
-        self.states = states
-    def _init_actor(self):
-        self.actor = DQN.DQN(self.args, self.act_dim, self.obs_dim).to(self.device)
-        self.target_actor = DQN.DQN(self.args, self.act_dim, self.obs_dim).to(self.device)
-        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=self.lr)
-    def _init_critic(self):
-        self.critic = DDPG.Critic(self.args, self.act_dim, self.obs_dim).to(self.device)
-        self.target_critic = DDPG.Critic(self.args, self.act_dim, self.obs_dim).to(self.device)
-        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=self.lr)
-    def _update_network(self):
-        for param, target_param in zip(
-                self.critic.parameters(), self.target_critic.parameters()):
-            target_param.data.copy_(param.data)
-        for param, target_param in zip(
-                self.actor.parameters(), self.target_actor.parameters()):
-            target_param.data.copy_(param.data)
-
-    def select_action(self, obs):
-        with torch.no_grad():
-            action = self.actor(obs).cpu().numpy()
-        return softmax(action, axis=1)
-
-    def update(self,sampled_obs_idxes,sampled_actions,sampled_rewards,sampled_weights=None):
-        batch_obs = self.states[sampled_obs_idxes]  # (512, 7, 20)
-        with torch.no_grad():
-            if self.use_td:
-                # update w.r.t the TD target
-                batch_next_obs = self.states[sampled_obs_idxes + 1]
-                target_actor_output = self.target_actor(batch_next_obs)
-
-                target_critic_output = self.target_critic(batch_next_obs, target_actor_output)  # (B,)
-                target_critic_output = sampled_rewards + self.gamma * target_critic_output  # (B,)
-            else:
-                # without TD learning, just is supervised learning
-                target_critic_output = sampled_rewards
-            
-        current_q = self.critic(batch_obs, sampled_actions)     # (B,)
-        # critic loss
-        if sampled_weights is None:
-            q_loss = F.mse_loss(current_q, target_critic_output)
-        else:
-            # weighted mse loss
-            q_loss = (sampled_weights * (current_q - target_critic_output)**2).sum() /\
-                sampled_weights.sum()
-
-        self.critic_optimizer.zero_grad()
-        q_loss.backward()
-        self.critic_optimizer.step()
-
-        # actor loss ==> convert actor output to softmax weights
-        if sampled_weights is None:
-            actor_loss = -self.critic(
-                batch_obs, F.softmax(self.actor(batch_obs), dim=1)).mean()
-        else:
-            # weighted actor loss
-            actor_loss = -self.critic(batch_obs, F.softmax(self.actor(batch_obs), dim=1))
-            actor_loss = (sampled_weights * actor_loss).sum() / sampled_weights.sum()
-        self.actor_optimizer.zero_grad()
-        actor_loss.backward()
-        self.actor_optimizer.step()
-
-        # Update the frozen target models
-        if self.use_td:
-            for param, target_param in zip(
-                    self.critic.parameters(), self.target_critic.parameters()):
-                target_param.data.copy_(
-                    self.tau * param.data + (1 - self.tau) * target_param.data)
-        for param, target_param in zip(
-                self.actor.parameters(), self.target_actor.parameters()):
-            target_param.data.copy_(
-                self.tau * param.data + (1 - self.tau) * target_param.data)
-        
-        return {
-            'q_loss': q_loss.item(),
-            'pi_loss': actor_loss.item(),
-            'current_q': current_q.mean().item(),
-            'target_q': target_critic_output.mean().item()
-        }
-
-class OPT_RL_Mantra:
+class OPT_RL_Anomaly():
     def __init__(self,args):
+        self.model_dict = {
+            "MaelNet"    : MaelNet,
+            "MaelNetB1":MaelNetB1,
+            "MaelNetS1":MaelNetS1,
+            "MaelNetS2":MaelNetS2,
+            "KBJNet"     : KBJNet,
+            "DCDetector" : DCDetector,
+            "NSTransformer": ns_Transformer,
+            "NSTransformerB1": ns_TransformerB1,
+            "NSTransformerS1": ns_TransformerS1,
+            "FEDFormer" : FEDFormer,
+            "TimesNet": TimesNet,
+            "AutoFormer": AutoFormer,
+        }
         self.args = args
         self.device = self._acquire_device()
-        self.agent = self._build_model()
-        self.replay_buffer = None
-        self.extra_buffer = None
-
+        self.model = None
+        self.anomaly_criterion = nn.MSELoss(reduce=False)
     def _acquire_device(self):
         if self.args.use_gpu:
             os.environ["CUDA_VISIBLE_DEVICES"] = str(
@@ -175,257 +41,191 @@ class OPT_RL_Mantra:
             device = torch.device('cpu')
             print('Use CPU')
         return device
+    def _get_data(self, flag):
+        data_set, data_loader = data_provider(self.args, flag)
+        return data_set, data_loader
     
-    def _build_model(self):
-        agent = DQNAgent(self.args, self.device)
-        return agent
-    
-    def _initiate_buffer(self, act_dim):
-        self.replay_buffer = ReplayBuffer(act_dim, self.device, max_size=int(1e5))
-        self.extra_buffer = ReplayBuffer(act_dim, self.device, max_size=int(1e5))
-    
-    def pretrain_actor(self, obs_dim:int, act_dim:int, states, train_error:np, cls_weights, 
-                   valid_states, valid_error:np):
-        best_train_model = torch.LongTensor(train_error.argmin(1)).to(self.device)
-        best_valid_model = torch.LongTensor(valid_error.argmin(1)).to(self.device)
-        
-        actor = DDPG.Actor(self.args, act_dim, obs_dim).to(self.device)
-        best_actor = DDPG.Actor(self.args, act_dim, obs_dim).to(self.device)
-        cls_weights = torch.FloatTensor([1/cls_weights[w] for w in range(act_dim)]).to(self.device)
+    def calculate_train_energy(self,train_loader,temperature,slow_learner=False):
+        attens_energy_train = []
+        for i, (batch_x, _) in enumerate(train_loader):
+            batch_x = batch_x.float().to(self.device)
+            if slow_learner:
+                s0,s1,s2 = batch_x.shape
+                randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
+                m_ones = torch.ones(s0,s1,s2)
+                slow_mark = torch.bernoulli(randuniform)
+                batch_x_slow = batch_x.clone()
+                batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
 
-        L = len(states)
-        batch_size = 512
-        batch_num  = int(np.ceil(L / batch_size))
-        optimizer  = torch.optim.Adam(actor.parameters(), lr=3e-4)
-        loss_fn    = nn.CrossEntropyLoss(weight=cls_weights)  # weighted CE loss
-        best_acc   = 0
-        patience   = 0
-        max_patience = 5
-        for epoch in tqdm.trange(200, desc='[Pretrain Agent]'):
-            epoch_loss = []
-            shuffle_idx = np.random.permutation(np.arange(L))
-            for i in range(batch_num):
-                batch_idx = shuffle_idx[i*batch_size: (i+1)*batch_size]
-                optimizer.zero_grad()
-                batch_out = actor(states[batch_idx])
-                loss = loss_fn(batch_out, best_train_model[batch_idx])
-                loss.backward()
-                optimizer.step()
-                epoch_loss.append(loss.item())
-            with torch.no_grad():
-                pred = actor(valid_states)
-                pred_idx = pred.argmax(1)
-                acc = (pred_idx == best_valid_model).sum() / len(pred)
-            print(f'# epoch {epoch+1}: loss = {np.average(epoch_loss):.5f}\tacc = {acc:.3f}')
-
-            # early stop w.r.t. validation acc
-            if acc > best_acc:
-                best_acc = acc
-                patience = 0
-                # update best model
-                for param, target_param in zip(actor.parameters(), best_actor.parameters()):
-                    target_param.data.copy_(param.data)
+                output, series, prior = self.model(batch_x)
+                loss = torch.mean(ssl_loss_v2(input, output), dim=-1)
             else:
-                patience += 1
-            
-            if patience == max_patience:
-                break
-
-        with torch.no_grad():
-            pred = best_actor(valid_states)
-            pred_idx = pred.argmax(1)
-            acc = (pred_idx == best_valid_model).sum() / len(pred)    
-        print(f'valid acc for pretrained actor: {acc:.3f}') 
-        return best_actor
- 
-    def active_urt_reinforcment_learning(self, setting):
-        epsilon = self.args.epsilon
-        path_ds = os.path.join(self.args.root_path, setting)
-        train_X, valid_X, test_X, train_y, valid_y, test_labels, train_error, valid_error, _ = load_data_rl(self.args.root_path, setting)
-        train_preds, valid_preds, test_preds = np.load(f'{path_ds}/bm_train_preds_new.npy', allow_pickle=True),np.load(f'{path_ds}/bm_valid_preds_new.npy', allow_pickle=True),np.load(f'{path_ds}/bm_test_preds_new.npy', allow_pickle=True)
-
-        train_X = np.swapaxes(train_X, 2, 1).astype(np.float16)
-        valid_X = np.swapaxes(valid_X, 2, 1).astype(np.float16)
-        test_X  = np.swapaxes(test_X,  2, 1).astype(np.float16)
-        train_y = train_y.astype(np.float16)
-        valid_y = valid_y.astype(np.float16)
-
-        train_error = train_error.astype(np.float16)
-        valid_error = valid_error.astype(np.float16)
-
-        train_preds = train_preds.astype(np.float16)
-        valid_preds = valid_preds.astype(np.float16)
-        test_preds = test_preds.astype(np.float16)
-
-        L = len(train_X) - 1 if self.args.use_td else len(train_X)
-        states = torch.FloatTensor(train_X).to(self.device)
-        valid_states = torch.FloatTensor(valid_X).to(self.device)
-        test_states = torch.FloatTensor(test_X).to(self.device)
-
-        obs_dim = states.shape[1] # Mengambil Feature
-        act_dim = train_error.shape[-1]
-        
-        env = Env(train_preds,train_error, train_y)
-        best_model_weight = get_state_weight(train_error)
-
-        state_weights = [1/best_model_weight[i] for i in train_error.argmin(1)]
-        if self.args.use_weight:
-            state_weights = torch.FloatTensor(state_weights).to(self.device)
-        else:
-            state_weights = None
-        
-        if not os.path.exists(f'{path_ds}/batch_buffer.csv'):
-            batch_buffer = []
-            for state_idx in tqdm.trange(L, desc='[Create buffer]'):
-                best_model_idx = train_error[state_idx].argmin()
-                for action_idx in range(act_dim):
-                    rank, mae = env.reward_func(state_idx, action_idx)
-                    batch_buffer.append((state_idx, action_idx, rank, mae, best_model_weight[best_model_idx]))
-            batch_buffer_df = pd.DataFrame(
-                batch_buffer,
-                columns=['state_idx', 'action_idx', 'rank', 'mae', 'weight']) 
-            batch_buffer_df.to_csv(f'{path_ds}/batch_buffer.csv')
-        else:
-            batch_buffer_df = pd.read_csv(f'{path_ds}/batch_buffer.csv', index_col=0)
-
-        q_mae = [batch_buffer_df['mae'].quantile(0.1*i) for i in range(1, 10)] 
-        
-        # INIT AGENT AND REPLAY EXTRA BUFFERS
-        self._initiate_buffer(act_dim)
-        self.agent._set_states(states)
-        self.agent._set_obs_dim(states.shape[1])
-        self.agent._set_act_dim(act_dim)
-        self.agent._init_actor()
-        self.agent._init_critic()
-        self.agent._update_network()
-        
-        #Error dari pretrain apabila pakai dataset besar
-        # mengcopy parameter dari pretrain_actor ke agent actor
-        if self.args.use_pretrain:
-            pretrained_actor = self.pretrain_actor(obs_dim,
-                                            act_dim,
-                                            states=states,
-                                            train_error=train_error, 
-                                            cls_weights=best_model_weight,
-                                            valid_states=valid_states, 
-                                            valid_error=valid_error
-                                            )
-            # copy the pretrianed actor 
-            for param, target_param in zip(
-                    pretrained_actor.parameters(), self.agent.actor.parameters()):
-                target_param.data.copy_(param.data)
-            for param, target_param in zip(
-                    pretrained_actor.parameters(), self.agent.target_actor.parameters()):
-                target_param.data.copy_(param.data)
-        
-        # to save the best model
-        best_actor = DDPG.Actor(self.args, act_dim, obs_dim).to(self.device)
-        for param, target_param in zip(self.agent.actor.parameters(), best_actor.parameters()):
-            target_param.data.copy_(param.data)
-        
-        # warm up
-        for _ in tqdm.trange(200, desc='[Warm Up]'):
-            shuffle_idxes   = np.random.randint(0, L, 300)
-            sampled_states  = states[shuffle_idxes] 
-            sampled_actions = self.agent.select_action(sampled_states)
-            #sampled_rewards ===> mae_reward + rank_reward
-            sampled_rewards = get_batch_rewards(env, shuffle_idxes, sampled_actions, q_mae) 
-            for i in range(len(sampled_states)):
-                self.replay_buffer.add(shuffle_idxes[i], sampled_actions[i], sampled_rewards[i])
-
-                if self.args.use_extra and sampled_rewards[i] <= -1.:
-                    self.extra_buffer.add(shuffle_idxes[i], sampled_actions[i], sampled_rewards[i])
-        
-        best_mae_loss = np.inf
-        patience, max_patience = 0, 5
-
-        #TRAINING
-        for epoch in tqdm.trange(1000):
-            q_loss_lst, pi_loss_lst, q_lst, target_q_lst  = [], [], [], []
-            t1 = time.time()
-            shuffle_idx = np.random.permutation(np.arange(L))
-            for i in range(10):
-                batch_idx = shuffle_idx[i*self.args.step_size : (i+1)*self.args.step_size]        # (512,)
-                batch_states = states[batch_idx]
-                if np.random.random() < epsilon:
-                    # membuat matriks tindakan (action matrix) yang memiliki struktur yang cukup berserakan (sparse) dengan mempertimbangkan observasi (obs) dan dimensi tindakan (act_dim) yang diberikan
-                    batch_actions = sparse_explore(batch_states, act_dim)
+                if self.model.name == "DCDetector":
+                    series, prior = self.model(batch_x)
                 else:
-                    batch_actions = self.agent.select_action(batch_states)
-
-                batch_rewards = get_batch_rewards(env, batch_idx, batch_actions, q_mae)
-                for j in range(len(batch_idx)):
-                    self.replay_buffer.add(batch_idx[j], batch_actions[j], batch_rewards[j])
-                    if self.args.use_extra and batch_rewards[j] <= -1.:
-                        self.extra_buffer.add(batch_idx[j], batch_actions[j], batch_rewards[j])
-
-                sampled_obs_idxes, sampled_actions, sampled_rewards = self.replay_buffer.sample(512)
-                if self.args.use_weight:
-                    sampled_weights = state_weights[sampled_obs_idxes]
+                    output, series, prior = self.model(batch_x)
+                    loss = torch.mean(self.anomaly_criterion(output, batch_x), dim=-1)
+            series_loss = 0.0
+            prior_loss = 0.0
+            for u in range(len(prior)):
+                if u == 0:
+                    series_loss = my_kl_loss(series[u], (
+                            prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
+                                                                                                self.win_size)).detach()) * temperature
+                    prior_loss = my_kl_loss(
+                        (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
+                                                                                                self.win_size)),
+                        series[u].detach()) * temperature
                 else:
-                    sampled_weights = None
+                    series_loss += my_kl_loss(series[u], (
+                            prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
+                                                                                                self.win_size)).detach()) * temperature
+                    prior_loss += my_kl_loss(
+                        (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
+                                                                                                self.win_size)),
+                        series[u].detach()) * temperature
+            metric = torch.softmax((-series_loss - prior_loss), dim=-1)
+            if self.model.name != "DCDetector":
+                cri = metric * loss 
+            cri = cri.detach().cpu().numpy()
+            attens_energy_train.append(cri)
+        attens_energy_train = np.concatenate(attens_energy_train, axis=0).reshape(-1)
+        train_energy = np.array(attens_energy_train)
+        return train_energy
+
+    def calculate_test_energy(self,test_loader,temperature,slow_learner=False):
+        attens_energy_test = []
+        test_labels = []
+        for i, (batch_x, labels) in enumerate(test_loader):
+            test_labels.append(labels)
+            batch_x = batch_x.float().to(self.device)
+            if slow_learner:
+                s0,s1,s2 = batch_x.shape
+                randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
+                m_ones = torch.ones(s0,s1,s2)
+                slow_mark = torch.bernoulli(randuniform)
+                batch_x_slow = batch_x.clone()
+                batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
+
+                output, series, prior = self.model(batch_x)
+                loss = torch.mean(ssl_loss_v2(input, output), dim=-1)
+            else:
+                if self.model.name == "DCDetector":
+                    series, prior = self.model(batch_x)
+                else:
+                    output, series, prior = self.model(batch_x)
+                    loss = torch.mean(self.anomaly_criterion(output, batch_x), dim=-1)
+            series_loss = 0.0
+            prior_loss = 0.0
+            for u in range(len(prior)):
+                if u == 0:
+                    series_loss = my_kl_loss(series[u], (
+                            prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
+                                                                                                self.win_size)).detach()) * temperature
+                    prior_loss = my_kl_loss(
+                        (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
+                                                                                                self.win_size)),
+                        series[u].detach()) * temperature
+                else:
+                    series_loss += my_kl_loss(series[u], (
+                            prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
+                                                                                                self.win_size)).detach()) * temperature
+                    prior_loss += my_kl_loss(
+                        (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
+                                                                                                self.win_size)),
+                        series[u].detach()) * temperature
+            metric = torch.softmax((-series_loss - prior_loss), dim=-1)
+            if self.model.name != "DCDetector":
+                cri = metric * loss 
+            cri = cri.detach().cpu().numpy()
+            attens_energy_test.append(cri)
+        attens_energy_test = np.concatenate(attens_energy_test, axis=0).reshape(-1)
+        test_energy = np.array(attens_energy_test)
+        test_labels = np.concatenate(test_labels, axis=0).reshape(-1)
+        return test_energy, test_labels
+    def opt_anomaly(self, setting):
+        _,test_loader = self._get_data("test")
+        _,train_loader = self._get_data("train")
+        list_pred_models = []
+        list_thresholds = []
+
+        model_path = os.path.join("./checkpoints/",setting)
+        model_list = [checkpoint for checkpoint in sorted(os.listdir(model_path))]
+
+        for index in trange(len(model_list), desc=f'[Opt Anomaly]'):
+            if model_list[index].split("checkpoint_")[1].split(".")[0].find("slow_learner"):
+                model_name = model_list[index].split("checkpoint_")[1].split(".")[0].split("slow_learner")[1]
+                self.model = self.model_dict[model_name].Model(self.args).to(self.device)
+
+                model_load_state = torch.load(os.path.join("./checkpoints/",setting,model_list[index]))
+                self.model.load_state_dict(model_load_state)
+                temperature = 50 #For Association discrepancy
+
+                self.model.eval()
+                # (1) stastic on the TRAIN SET
+                train_energy = self.calculate_train_energy(train_loader,temperature,slow_learner=True)
+                # (2) stastic on the TEST SET
+                test_energy, test_labels = self.calculate_test_energy(test_loader,temperature,slow_learner=True)
+                combined_energy = np.concatenate([train_energy, test_energy], axis=0)
+                threshold = np.percentile(combined_energy, 100 - self.anomaly_ratio)
+                print(f"Threshold SLOW LEARNER {model_name}: {threshold}")
+
+                list_pred_models.append(test_energy)
+                list_thresholds.append(threshold)
+            else:
+                model_name = model_list[index].split("checkpoint_")[1].split(".")[0]
+                self.model = self.model_dict[model_name].Model(self.args).float()
+
+                model_load_state = torch.load(os.path.join("./checkpoints/",setting,model_list[index]))
+                self.model.load_state_dict(model_load_state)
+                temperature = 50 #For Association discrepancy
+
+                self.model.eval()
+                # (1) stastic on the TRAIN SET
+                train_energy = self.calculate_train_energy(train_loader,temperature)
+                # (2) stastic on the TEST SET
+                test_energy, test_labels = self.calculate_test_energy(test_loader,temperature)
+                combined_energy = np.concatenate([train_energy, test_energy], axis=0)
+                threshold = np.percentile(combined_energy, 100 - self.anomaly_ratio)
+                print(f"Threshold NORMAL LEARNER {model_name}: {threshold}")
+
+                list_pred_models.append(test_energy)
+                list_thresholds.append(threshold)
                 
-                # LOSS BACKWARD
-                info = self.agent.update(sampled_obs_idxes, sampled_actions, sampled_rewards, sampled_weights)
-                pi_loss_lst.append(info['pi_loss'])
-                q_loss_lst.append(info['q_loss'])
-                q_lst.append(info['current_q'])
-                target_q_lst.append(info['target_q'])
+        EXP_TIMES=10 # How many runs to average the results
+        # Store the precision, recall, F1-score
+        store_prec=np.zeros(EXP_TIMES)
+        store_rec=np.zeros(EXP_TIMES)
+        store_f1=np.zeros(EXP_TIMES)
 
-                if self.args.use_extra and self.extra_buffer.ptr > 512:
-                    sampled_obs_idxes, sampled_actions, sampled_rewards = self.extra_buffer.sample(512)
-                    if self.args.use_weight:
-                        sampled_weights = state_weights[sampled_obs_idxes]
-                    else:
-                        sampled_weights = None
-                    # LOSS BACKWARD
-                    info = self.agent.update(sampled_obs_idxes, sampled_actions, sampled_rewards, sampled_weights)
-                    pi_loss_lst.append(info['pi_loss'])
-                    q_loss_lst.append(info['q_loss'])
-                    q_lst.append(info['current_q'])
-                    target_q_lst.append(info['target_q'])
+        total_reward = 0
+        for times in range(EXP_TIMES):
+            # Set up the training environment on all the dataset
+            env_off=TrainEnvOffline_dist_conf(list_pred_sc=list_pred_models, list_thresholds=list_thresholds, list_gtruth=test_labels)
+            # Train the model on all the dataset  
+            model = DQN('MlpPolicy', env_off, verbose=0)
+            model.learn(total_timesteps=len(list_pred_models[0])) 
+            prec, rec, f1, _, list_preds, reward =eval_model(model, env_off)  #masuk ke step di env
+            store_prec[times]=prec
+            store_rec[times]=rec
+            store_f1[times]=f1
+            total_reward = total_reward + reward
 
-            # VALIDATION
-            valid_mae_loss, _, count_lst = evaluate_agent(self.agent, valid_states, valid_preds, valid_y) #ERROR
-            print(f'\n# Epoch {epoch + 1} ({(time.time() - t1)/60:.2f} min): '
-                f'valid_mae_loss: {valid_mae_loss:.3f}\t'
-                f'q_loss: {np.average(q_loss_lst):.5f}\t'
-                f'current_q: {np.average(q_lst):.5f}\t'
-                f'target_q: {np.average(target_q_lst):.5f}\n')
+        # Compute the mean and standard deviation of the results
+        average_prec=np.mean(store_prec)
+        average_rec=np.mean(store_rec)
+        average_f1=np.mean(store_f1)
 
-            if valid_mae_loss < best_mae_loss:
-                best_mae_loss = valid_mae_loss
-                patience = 0
-                # save best model
-                for param, target_param in zip(self.agent.actor.parameters(), best_actor.parameters()):
-                    target_param.data.copy_(param.data)
-            else:
-                patience += 1
-            if patience == max_patience:
-                break
-            epsilon = max(epsilon-0.2, 0.1)
+        std_prec=np.std(store_prec)
+        std_rec=np.std(store_rec)
+        std_f1=np.std(store_f1)
 
-        for param, target_param in zip(self.agent.actor.parameters(), best_actor.parameters()):
-            param.data.copy_(target_param)
+        print("Total number of reported anomalies: ",sum(list_preds))
+        print("Total number of true anomalies: ",sum(test_labels))
+        print("Total Rewards of Reinforcement Learning: ",total_reward)
 
-        # Testing
-        accuracy, precision, recall, f_score = evaluate_agent_test(self.agent, states, train_preds, test_states, test_preds, test_labels, self.args.anomaly_ratio)
-        print("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
-            accuracy, precision,
-            recall, f_score))
-        # CSV
-        f_csv = open("training_mantra_anomaly_detection_rl.csv","a")
-        csvreader = csv.writer(f_csv)
-        datas = [[setting],["Accuracy","Precision","Recall","F-score"],[round(accuracy,4),round(precision,4),round(recall,4),round(f_score,4)]]
-        csvreader.writerows(datas)
-        
-        #Text
-        f = open("result_anomaly_detection_mantra_rl.txt", 'a')
-        f.write(setting + "  \n")
-        f.write("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
-            accuracy, precision,
-            recall, f_score))
-        f.write('\n')
-        f.write('\n')
-        f.close()
+        print("Average precision: %.4f, std: %.4f" % (average_prec, std_prec))
+        print("Average recall: %.4f, std: %.4f" % (average_rec, std_rec))
+        print("Average F1-score: %.4f, std: %.4f" % (average_f1, std_f1))
+        return
     

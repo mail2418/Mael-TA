@@ -400,3 +400,15 @@ Accuracy : 0.9797, Precision : 0.9840, Recall : 0.9422, F-score : 0.9627
 MaelNet_MSL_TCNEmbeddingEnc_TokenEmbedDec_MaelNet_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
 Accuracy : 0.9492, Precision : 0.8701, Recall : 0.6089, F-score : 0.7164 
 
+MaelNet_Mantra_Recons_Discrep_MaelNetB1_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9584, Precision : 0.0000, Recall : 0.0000, F-score : 0.0000 
+
+MaelNet_Mantra_Recons_Discrep_MaelNetB1_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9584, Precision : 0.0000, Recall : 0.0000, F-score : 0.0000 
+
+MaelNet_Mantra_Recons_Discrep_MaelNetB1_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9856, Precision : 0.8387, Recall : 0.8087, F-score : 0.8234 
+
+MaelNet_Mantra_Recons_Discrep_MaelNetB1_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9593, Precision : 0.8783, Recall : 0.7132, F-score : 0.7872 
+

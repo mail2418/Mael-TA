@@ -164,6 +164,7 @@ if __name__ == "__main__":
         if args.is_training:
             print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
             #exp main Mantra
+            torch.cuda.empty_cache()
             exp.train(setting)
             print("TEST MODEL")
             exp.test(setting)

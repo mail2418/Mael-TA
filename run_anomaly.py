@@ -7,7 +7,7 @@ import numpy as np
 parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection with MANTRA')
 
 # basic config
-parser.add_argument('--is_training', type=int, default=0, help='status')
+parser.add_argument('--is_training', type=int, default=1, help='status')
 parser.add_argument('--model_id', type=str, default='MaelNet_Mantra_Recons_Discrep', help='model id')
 parser.add_argument('--model', type=str, default='MaelNetB1',
                     help='model name, options: [MaelNet]')

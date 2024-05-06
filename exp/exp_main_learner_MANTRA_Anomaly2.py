@@ -176,7 +176,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
                     outputs = outputs[:, :, f_dim:]
 
                     rec_loss = criterion(outputs, batch_x)
-                    train_fast_learner_loss.append((rec_loss - self.args.k * series_loss).item())
+                    train_fast_learner_loss.append(rec_loss.item())
                     if (i + 1) % 100 == 0:
                         print("\titers FAST LEARNER : {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, rec_loss.item()))
                         speed = (time.time() - time_now) / iter_count

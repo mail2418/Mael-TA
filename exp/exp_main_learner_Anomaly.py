@@ -186,7 +186,6 @@ class Exp_Anomaly_Detection(Exp_Basic):
                         time_now = time.time()
                     rec_loss.backward()
                     model_optim.step()
-
                 # ========== SLOW LEARNER ============
                 if not early_stopping_slow_learner.early_stop:
                     iter_count_slow = iter_count_slow + 1
@@ -284,183 +283,43 @@ class Exp_Anomaly_Detection(Exp_Basic):
         _, test_loader = self._get_data(flag='test')
         _, train_loader = self._get_data(flag='train')
 
-        if test:
-            print('loading model')
-            self.model.load_state_dict(torch.load(os.path.join('./checkpoints/' + setting, 'checkpoint.pth')))
-            self.slow_model.load_state_dict(torch.load(os.path.join('./checkpoints/' + setting, 'checkpoint_slow_learner.pth')))
+        # EXP_TIMES=10 # How many runs to average the results
+        # # Store the precision, recall, F1-score
+        # store_prec=np.zeros(EXP_TIMES)
+        # store_rec=np.zeros(EXP_TIMES)
+        # store_f1=np.zeros(EXP_TIMES)
 
-        attens_energy = []
-        folder_path = './test_results/' + setting + '/'
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
+        # for times in range(EXP_TIMES):
+        #     # Set up the training environment on all the dataset
+        #     env_off=TrainEnvOffline_dist_conf(list_pred_sc=list_predsrc, list_thresholds=list_thresholds, list_gtruth=list_gtruth)
+        #     # Train the model on all the dataset  
+        #     model = DQN('MlpPolicy', env_off, verbose=0)
+        #     model.learn(total_timesteps=len(list_predsrc[0])) 
+        #     # model.save("DQN_offline_model")
+        #     # model.save("A2C_offline_model")
+            
+        #     # Evaluate the model on all the dataset
+        #     # model = DQN.load("DQN_offline_model")
+        #     # model=A2C.load("A2C_offline_model")
+        #     prec, rec, f1, _, list_preds=eval_model(model, env_off)  #masuk ke step di env
 
-        self.model.eval()
-        self.slow_model.eval()
+        #     store_prec[times]=prec
+        #     store_rec[times]=rec
+        #     store_f1[times]=f1
 
-        self.anomaly_criterion = nn.MSELoss(reduce=False)
-        temperature = 50
-        # (1) stastic on the TRAIN SET
-        #  ========== FAST LEARNER ============
-        with torch.no_grad():
-            for i, (batch_x, _) in enumerate(train_loader):
-                batch_x = batch_x.float().to(self.device)
-                # reconstruction
-                if self.model.name not in ["KBJNet"]:
-                    outputs = self.model(batch_x)
-                else:
-                    outputs = self.model(batch_x.permute(0,2,1)) 
-                f_dim = -1 if self.args.features == 'MS' else 0
-                outputs = outputs[:, :, f_dim:]
-                # criterion
-                loss = self.anomaly_criterion(batch_x, outputs)
-                score = torch.mean(loss, dim=-1)
+        # # Compute the mean and standard deviation of the results
+        # average_prec=np.mean(store_prec)
+        # average_rec=np.mean(store_rec)
+        # average_f1=np.mean(store_f1)
 
-        #  ========== SLOW LEARNER ============
-                s0,s1,s2 = batch_x.shape
-                randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
-                m_ones = torch.ones(s0,s1,s2)
-                slow_mark = torch.bernoulli(randuniform)
-                batch_x_slow = batch_x.clone()
-                batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
+        # std_prec=np.std(store_prec)
+        # std_rec=np.std(store_rec)
+        # std_f1=np.std(store_f1)
 
-                if self.slow_model.name  == "KBJNet":
-                    _ = self.slow_model.forward(batch_x_slow)
-                elif self.slow_model.name == "MaelNetS2":
-                    _ , [series,prior] = self.slow_model.forward(batch_x_slow.permute(0,2,1))
-                else:
-                    _ = self.slow_model.forward(batch_x_slow.permute(0,2,1))
+        # print("Total number of reported anomalies: ",sum(list_preds))
+        # print("Total number of true anomalies: ",sum(list_gtruth))
 
-                series_loss = 0.0
-                prior_loss = 0.0
-                for u in range(len(prior)):
-                    if u == 0:
-                        series_loss = my_kl_loss(series[u], (
-                                prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                    self.win_size)).detach()) * temperature
-                        prior_loss = my_kl_loss(
-                            (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                    self.win_size)),
-                            series[u].detach()) * temperature
-                    else:
-                        series_loss += my_kl_loss(series[u], (
-                                prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                    self.win_size)).detach()) * temperature
-                        prior_loss += my_kl_loss(
-                            (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                    self.win_size)),
-                            series[u].detach()) * temperature
-                metric = torch.softmax((-series_loss - prior_loss), dim=-1)
-                cri = metric * score
-                cri = cri.detach().cpu().numpy()
-                attens_energy.append(cri)
-
-        attens_energy = np.concatenate(attens_energy, axis=0).reshape(-1)
-        train_energy = np.array(attens_energy)
-
-        # (2) find the threshold TEST SET
-        attens_energy = []
-        test_labels = []
-        # (1) stastic on the TRAIN SET
-        #  ========== FAST LEARNER ============
-        with torch.no_grad():
-            for i, (batch_x, labels) in enumerate(test_loader):
-                batch_x = batch_x.float().to(self.device)
-                # reconstruction
-                if self.model.name not in ["KBJNet"]:
-                    outputs = self.model(batch_x)
-                else:
-                    outputs = self.model(batch_x.permute(0,2,1)) 
-                f_dim = -1 if self.args.features == 'MS' else 0
-                outputs = outputs[:, :, f_dim:]
-                # criterion
-                loss = self.anomaly_criterion(batch_x, outputs)
-                score = torch.mean(loss, dim=-1)
-
-        #  ========== SLOW LEARNER ============
-                s0,s1,s2 = batch_x.shape
-                randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
-                m_ones = torch.ones(s0,s1,s2)
-                slow_mark = torch.bernoulli(randuniform)
-                batch_x_slow = batch_x.clone()
-                batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
-
-                if self.slow_model.name  == "KBJNet":
-                    _ = self.slow_model.forward(batch_x_slow)
-                elif self.slow_model.name == "MaelNetS2":
-                    _ , [series,prior] = self.slow_model.forward(batch_x_slow.permute(0,2,1))
-                else:
-                    _ = self.slow_model.forward(batch_x_slow.permute(0,2,1))
-
-                series_loss = 0.0
-                prior_loss = 0.0
-                for u in range(len(prior)):
-                    if u == 0:
-                        series_loss = my_kl_loss(series[u], (
-                                prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                    self.win_size)).detach()) * temperature
-                        prior_loss = my_kl_loss(
-                            (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                    self.win_size)),
-                            series[u].detach()) * temperature
-                    else:
-                        series_loss += my_kl_loss(series[u], (
-                                prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                    self.win_size)).detach()) * temperature
-                        prior_loss += my_kl_loss(
-                            (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                    self.win_size)),
-                            series[u].detach()) * temperature
-                metric = torch.softmax((-series_loss - prior_loss), dim=-1)
-                cri = metric * score
-                cri = cri.detach().cpu().numpy()
-                attens_energy.append(cri)
-                test_labels.append(labels)
-
-        attens_energy = np.concatenate(attens_energy, axis=0).reshape(-1)
-        test_energy = np.array(attens_energy)
-        combined_energy = np.concatenate([train_energy, test_energy], axis=0)
-
-        threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio)
-
-        print("Threshold :", threshold)
-
-        # (3) evaluation on the test set
-        pred = (test_energy > threshold).astype(int)
-        test_labels = np.concatenate(test_labels, axis=0).reshape(-1)
-        test_labels = np.array(test_labels)
-
-        gt = test_labels.astype(int)
-        # print("pred:   ", pred.shape)
-        # print("gt:     ", gt.shape)
-
-        # # (4) detection adjustment
-        # gt, pred = adjustment(gt, pred) #gt == label
-
-        # pred = np.array(pred)
-        # gt = np.array(gt)
-        # print("pred: ", pred.shape)
-        # print("gt:   ", gt.shape)
-
-        # REINFORCEMENT LEARNING
-
-        accuracy = accuracy_score(gt, pred)
-        precision, recall, f_score, support = precision_recall_fscore_support(gt, pred, average='binary')
-        print("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
-            accuracy, precision,
-            recall, f_score))
-
-        # result_anomaly_detection.txt
-        f = open("result_anomaly_detection.txt", 'a')
-        f.write(setting + "  \n")
-        f.write("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
-            accuracy, precision,
-            recall, f_score))
-        f.write('\n')
-        f.write('\n')
-        f.close()
-        #result_anomaly_detection.csv
-        f_csv = open("result_anomaly_detection.csv","a")
-        csvreader = csv.writer(f_csv)
-        datas = [[setting],["Accuracy","Precision","Recall","F-score"],[round(accuracy,4),round(precision,4),round(recall,4),round(f_score,4)]]
-        csvreader.writerows(datas)
-        return
+        # print("Average precision: %.4f, std: %.4f" % (average_prec, std_prec))
+        # print("Average recall: %.4f, std: %.4f" % (average_rec, std_rec))
+        # print("Average F1-score: %.4f, std: %.4f" % (average_f1, std_f1))
+        # return

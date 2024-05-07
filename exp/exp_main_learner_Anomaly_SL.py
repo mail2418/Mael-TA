@@ -50,18 +50,18 @@ class Exp_Anomaly_Detection_SL(Exp_Basic):
                 for u in range(len(prior)):
                     series_loss += (torch.mean(my_kl_loss(series[u], (
                             prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.win_size)).detach())) + torch.mean(
+                                                                                                self.args.win_size)).detach())) + torch.mean(
                         my_kl_loss(
                             (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                    self.win_size)).detach(),
+                                                                                                    self.args.win_size)).detach(),
                             series[u])))
                     prior_loss += (torch.mean(
                         my_kl_loss((prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                        self.win_size)),
+                                                                                                        self.args.win_size)),
                                 series[u].detach())) + torch.mean(
                         my_kl_loss(series[u].detach(),
                                 (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                       self.win_size)))))
+                                                                                                       self.args.win_size)))))
                 series_loss = series_loss / len(prior)
                 prior_loss = prior_loss / len(prior)
                 rec_loss = ssl_loss_v2(outputs, batch_x_slow, slow_mark, s1, s2, self.device)
@@ -112,17 +112,17 @@ class Exp_Anomaly_Detection_SL(Exp_Basic):
                 for u in range(len(prior)):
                     series_loss += (torch.mean(my_kl_loss(series[u], (
                             prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.win_size)).detach())) + torch.mean(
+                                                                                                self.args.win_size)).detach())) + torch.mean(
                         my_kl_loss((prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                        self.win_size)).detach(),
+                                                                                                        self.args.win_size)).detach(),
                                 series[u])))
                     prior_loss += (torch.mean(my_kl_loss(
                         (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.win_size)),
+                                                                                                self.args.win_size)),
                         series[u].detach())) + torch.mean(
                         my_kl_loss(series[u].detach(), (
                                 prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                    self.win_size)))))
+                                                                                                    self.args.win_size)))))
                 series_loss = series_loss / len(prior)
                 prior_loss = prior_loss / len(prior)
 
@@ -139,9 +139,9 @@ class Exp_Anomaly_Detection_SL(Exp_Basic):
                     iter_count = 0
                     time_now = time.time()
 
-                loss1.backward(retrain_graph=True)
+                loss1.backward(retain_graph=True)
                 loss2.backward()
-                self.model.step()
+                model_optim.step()
             train_slow_loss = np.average(train_loss)
             vali_slow_loss1, vali_slow_loss2 = self.vali(vali_loader)
             test_slow_loss1, test_slow_loss2 = self.vali(test_loader)

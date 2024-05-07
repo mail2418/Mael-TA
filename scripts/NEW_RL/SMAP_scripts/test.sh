@@ -3,6 +3,9 @@ py -u run_anomaly.py \
   --root_path ./dataset/SMAP/ \
   --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
   --data SMAP \
+  --win_size 105 \
+  --channel 25 \
+  --patch_size 7 \
   --e_layers 2 \
   --d_layers 1 \
   --anomaly_ratio 0.85 \

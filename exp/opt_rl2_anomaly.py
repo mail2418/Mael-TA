@@ -86,9 +86,7 @@ class OPT_RL_Anomaly():
                                                                                                 self.args.win_size)),
                         series[u].detach()) * temperature
             metric = torch.softmax((-series_loss - prior_loss), dim=-1)
-            if self.model.name != "DCDetector":
-                cri = metric * loss 
-            cri = cri.detach().cpu().numpy()
+            cri = metric.detach().cpu().numpy() if self.model.name == "DCDetector" else (metric*loss).detach().cpu().numpy()
             attens_energy_train.append(cri)
         attens_energy_train = np.concatenate(attens_energy_train, axis=0).reshape(-1)
         train_energy = np.array(attens_energy_train)
@@ -136,9 +134,7 @@ class OPT_RL_Anomaly():
                                                                                                 self.args.win_size)),
                         series[u].detach()) * temperature
             metric = torch.softmax((-series_loss - prior_loss), dim=-1)
-            if self.model.name != "DCDetector":
-                cri = metric * loss 
-            cri = cri.detach().cpu().numpy()
+            cri = metric.detach().cpu().numpy() if self.model.name == "DCDetector" else (metric*loss).detach().cpu().numpy()
             attens_energy_test.append(cri)
         attens_energy_test = np.concatenate(attens_energy_test, axis=0).reshape(-1)
         test_energy = np.array(attens_energy_test)
@@ -168,7 +164,7 @@ class OPT_RL_Anomaly():
                 # (2) stastic on the TEST SET
                 test_energy, test_labels = self.calculate_test_energy(test_loader,temperature,slow_learner=True)
                 combined_energy = np.concatenate([train_energy, test_energy], axis=0)
-                threshold = np.percentile(combined_energy, 100 - self.anomaly_ratio)
+                threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio)
                 print(f"Threshold SLOW LEARNER {model_name}: {threshold}")
 
                 list_pred_models.append(test_energy)
@@ -187,7 +183,7 @@ class OPT_RL_Anomaly():
                 # (2) stastic on the TEST SET
                 test_energy, test_labels = self.calculate_test_energy(test_loader,temperature)
                 combined_energy = np.concatenate([train_energy, test_energy], axis=0)
-                threshold = np.percentile(combined_energy, 100 - self.anomaly_ratio)
+                threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio)
                 print(f"Threshold NORMAL LEARNER {model_name}: {threshold}")
 
                 list_pred_models.append(test_energy)

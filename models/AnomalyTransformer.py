@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from layers.Attention import AnomalyAttention, MaelAttentionLayer
+from layers.Attention import MaelAttention, MaelAttentionLayer
 from layers.Embed import DataEmbedding
 
 
@@ -19,7 +19,7 @@ class EncoderLayer(nn.Module):
         self.activation = F.relu if activation == "relu" else F.gelu
 
     def forward(self, x, attn_mask=None):
-        new_x, attn, mask, sigma = self.attention(
+        new_x, attn, mask = self.attention(
             x, x, x,
             attn_mask=attn_mask
         )
@@ -28,7 +28,7 @@ class EncoderLayer(nn.Module):
         y = self.dropout(self.activation(self.conv1(y.transpose(-1, 1))))
         y = self.dropout(self.conv2(y).transpose(-1, 1))
 
-        return self.norm2(x + y), attn, mask, sigma
+        return self.norm2(x + y), attn, mask
 
 
 class Encoder(nn.Module):
@@ -41,17 +41,14 @@ class Encoder(nn.Module):
         # x [B, L, D]
         series_list = []
         prior_list = []
-        sigma_list = []
         for attn_layer in self.attn_layers:
-            x, series, prior, sigma = attn_layer(x, attn_mask=attn_mask)
+            x, series, prior = attn_layer(x, attn_mask=attn_mask)
             series_list.append(series)
             prior_list.append(prior)
-            sigma_list.append(sigma)
-
         if self.norm is not None:
             x = self.norm(x)
 
-        return x, series_list, prior_list, sigma_list
+        return x, series_list, prior_list
 
 
 class Model(nn.Module):
@@ -76,7 +73,7 @@ class Model(nn.Module):
             [
                 EncoderLayer(
                     MaelAttentionLayer(
-                        AnomalyAttention(self.win_size, False, attention_dropout=self.dropout, output_attention=output_attention),
+                        MaelAttention(self.win_size, False, attention_dropout=self.dropout, output_attention=output_attention),
                         self.d_model, self.n_heads),
                     self.d_model,
                     self.d_ff,
@@ -91,7 +88,7 @@ class Model(nn.Module):
 
     def forward(self, x):
         enc_out = self.embedding(x,None)
-        enc_out, series, prior, _ = self.encoder(enc_out)
+        enc_out, series, prior = self.encoder(enc_out)
         enc_out = self.projection(enc_out)
 
         if self.output_attention:

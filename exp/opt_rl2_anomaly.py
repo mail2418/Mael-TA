@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import trange
 from utils.agentreward import TrainEnvOffline_dist_conf, eval_model
 from stable_baselines3 import DQN
-from models import MaelNet, KBJNet, DCDetector, ns_Transformer, FEDFormer, TimesNet, MaelNetB1, MaelNetS1, ns_TransformerB1, ns_TransformerS1,AutoFormer,MaelNetS2
+from models import MaelNet, KBJNet, DCDetector, ns_Transformer, FEDFormer, TimesNet, MaelNetB1, MaelNetS1, ns_TransformerB1, ns_TransformerS1,AutoFormer,MaelNetS2, AnomalyTransformer
 
 class OPT_RL_Anomaly():
     def __init__(self,args):
@@ -26,6 +26,7 @@ class OPT_RL_Anomaly():
             "FEDFormer" : FEDFormer,
             "TimesNet": TimesNet,
             "AutoFormer": AutoFormer,
+            "AnomalyTransformer": AnomalyTransformer
         }
         self.args = args
         self.device = self._acquire_device()
@@ -71,23 +72,21 @@ class OPT_RL_Anomaly():
                 if u == 0:
                     series_loss = my_kl_loss(series[u], (
                             prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.win_size)).detach()) * temperature
+                                                                                                self.args.win_size)).detach()) * temperature
                     prior_loss = my_kl_loss(
                         (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.win_size)),
+                                                                                                self.args.win_size)),
                         series[u].detach()) * temperature
                 else:
                     series_loss += my_kl_loss(series[u], (
                             prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.win_size)).detach()) * temperature
+                                                                                                self.args.win_size)).detach()) * temperature
                     prior_loss += my_kl_loss(
                         (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.win_size)),
+                                                                                                self.args.win_size)),
                         series[u].detach()) * temperature
             metric = torch.softmax((-series_loss - prior_loss), dim=-1)
-            if self.model.name != "DCDetector":
-                cri = metric * loss 
-            cri = cri.detach().cpu().numpy()
+            cri = metric.detach().cpu().numpy() if self.model.name == "DCDetector" else (metric*loss).detach().cpu().numpy()
             attens_energy_train.append(cri)
         attens_energy_train = np.concatenate(attens_energy_train, axis=0).reshape(-1)
         train_energy = np.array(attens_energy_train)
@@ -121,23 +120,21 @@ class OPT_RL_Anomaly():
                 if u == 0:
                     series_loss = my_kl_loss(series[u], (
                             prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.win_size)).detach()) * temperature
+                                                                                                self.args.win_size)).detach()) * temperature
                     prior_loss = my_kl_loss(
                         (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.win_size)),
+                                                                                                self.args.win_size)),
                         series[u].detach()) * temperature
                 else:
                     series_loss += my_kl_loss(series[u], (
                             prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.win_size)).detach()) * temperature
+                                                                                                self.args.win_size)).detach()) * temperature
                     prior_loss += my_kl_loss(
                         (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.win_size)),
+                                                                                                self.args.win_size)),
                         series[u].detach()) * temperature
             metric = torch.softmax((-series_loss - prior_loss), dim=-1)
-            if self.model.name != "DCDetector":
-                cri = metric * loss 
-            cri = cri.detach().cpu().numpy()
+            cri = metric.detach().cpu().numpy() if self.model.name == "DCDetector" else (metric*loss).detach().cpu().numpy()
             attens_energy_test.append(cri)
         attens_energy_test = np.concatenate(attens_energy_test, axis=0).reshape(-1)
         test_energy = np.array(attens_energy_test)
@@ -153,9 +150,9 @@ class OPT_RL_Anomaly():
         model_list = [checkpoint for checkpoint in sorted(os.listdir(model_path))]
 
         for index in trange(len(model_list), desc=f'[Opt Anomaly]'):
-            if model_list[index].split("checkpoint_")[1].split(".")[0].find("slow_learner"):
+            if model_list[index].split("checkpoint_")[1].split(".")[0].find("slow_learner") != -1:
                 model_name = model_list[index].split("checkpoint_")[1].split(".")[0].split("slow_learner")[1]
-                self.model = self.model_dict[model_name].Model(self.args).to(self.device)
+                self.model = self.model_dict[model_name].Model(self.args).float().to(self.device)
 
                 model_load_state = torch.load(os.path.join("./checkpoints/",setting,model_list[index]))
                 self.model.load_state_dict(model_load_state)
@@ -167,14 +164,14 @@ class OPT_RL_Anomaly():
                 # (2) stastic on the TEST SET
                 test_energy, test_labels = self.calculate_test_energy(test_loader,temperature,slow_learner=True)
                 combined_energy = np.concatenate([train_energy, test_energy], axis=0)
-                threshold = np.percentile(combined_energy, 100 - self.anomaly_ratio)
+                threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio)
                 print(f"Threshold SLOW LEARNER {model_name}: {threshold}")
 
                 list_pred_models.append(test_energy)
                 list_thresholds.append(threshold)
             else:
                 model_name = model_list[index].split("checkpoint_")[1].split(".")[0]
-                self.model = self.model_dict[model_name].Model(self.args).float()
+                self.model = self.model_dict[model_name].Model(self.args).float().to(self.device)
 
                 model_load_state = torch.load(os.path.join("./checkpoints/",setting,model_list[index]))
                 self.model.load_state_dict(model_load_state)
@@ -186,7 +183,7 @@ class OPT_RL_Anomaly():
                 # (2) stastic on the TEST SET
                 test_energy, test_labels = self.calculate_test_energy(test_loader,temperature)
                 combined_energy = np.concatenate([train_energy, test_energy], axis=0)
-                threshold = np.percentile(combined_energy, 100 - self.anomaly_ratio)
+                threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio)
                 print(f"Threshold NORMAL LEARNER {model_name}: {threshold}")
 
                 list_pred_models.append(test_energy)

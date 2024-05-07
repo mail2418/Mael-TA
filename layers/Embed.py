@@ -16,11 +16,6 @@ class PositionalEmbedding(nn.Module):
         pe.require_grad = False
 
         position = torch.arange(0, max_len).float().unsqueeze(1)
-        # if self.model_name in ["MaelNet", "MaelNetS1", "MaelNetB1"]:
-        #     div_term = (torch.arange(0, d_model).float() * -(math.log(10000.0) / d_model)).exp()
-        #     pe += torch.sin(position * div_term)
-        #     pe += torch.cos(position * div_term)
-        # else:
         div_term = (torch.arange(0, d_model, 2).float() * -(math.log(10000.0) / d_model)).exp()
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)

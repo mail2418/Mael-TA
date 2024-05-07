@@ -1,5 +1,5 @@
 # MaelNet
-py -u run_anomaly.py \
+python -u run_anomaly.py \
   --is_training 1 \
   --root_path ./dataset/SMAP/ \
   --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
@@ -22,7 +22,7 @@ py -u run_anomaly.py \
   --itr 1 &
 
 # DCDetector
-py -u run_anomaly.py \
+python -u run_anomaly.py \
   --is_training 1 \
   --root_path ./dataset/SMAP/ \
   --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
@@ -46,7 +46,7 @@ py -u run_anomaly.py \
   --itr 1 &
 
 # Anomaly Transformer
-py -u run_anomaly.py \
+python -u run_anomaly.py \
   --is_training 1 \
   --root_path ./dataset/SMAP/ \
   --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\

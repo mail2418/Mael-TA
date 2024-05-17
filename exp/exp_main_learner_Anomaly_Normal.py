@@ -41,24 +41,27 @@ class Exp_Anomaly_Detection_Normal(Exp_Basic):
         with torch.no_grad():
             for i, (batch_x, _) in enumerate(vali_loader):
                 batch_x = batch_x.float().to(self.device)
-                outputs, series, prior= self.model(batch_x)
+                if model_name == "DCDetector":
+                    series, prior= self.model(batch_x)
+                else:
+                    outputs, series, prior= self.model(batch_x)
                 series_loss = 0.0
                 prior_loss = 0.0
                 for u in range(len(prior)):
                     series_loss += (torch.mean(my_kl_loss(series[u], (
                             prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.win_size)).detach())) + torch.mean(
+                                                                                                self.args.win_size)).detach())) + torch.mean(
                         my_kl_loss(
                             (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                    self.win_size)).detach(),
+                                                                                                    self.args.win_size)).detach(),
                             series[u])))
                     prior_loss += (torch.mean(
                         my_kl_loss((prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                        self.win_size)),
+                                                                                                        self.args.win_size)),
                                 series[u].detach())) + torch.mean(
                         my_kl_loss(series[u].detach(),
                                 (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                       self.win_size)))))
+                                                                                                       self.args.win_size)))))
                 series_loss = series_loss / len(prior)
                 prior_loss = prior_loss / len(prior)
 
@@ -115,17 +118,17 @@ class Exp_Anomaly_Detection_Normal(Exp_Basic):
                 for u in range(len(prior)):
                     series_loss += (torch.mean(my_kl_loss(series[u], (
                             prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.win_size)).detach())) + torch.mean(
+                                                                                                self.args.win_size)).detach())) + torch.mean(
                         my_kl_loss((prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                        self.win_size)).detach(),
+                                                                                                        self.args.win_size)).detach(),
                                 series[u])))
                     prior_loss += (torch.mean(my_kl_loss(
                         (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.win_size)),
+                                                                                                self.args.win_size)),
                         series[u].detach())) + torch.mean(
                         my_kl_loss(series[u].detach(), (
                                 prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                    self.win_size)))))
+                                                                                                    self.args.win_size)))))
                 series_loss = series_loss / len(prior)
                 prior_loss = prior_loss / len(prior)
 
@@ -133,7 +136,7 @@ class Exp_Anomaly_Detection_Normal(Exp_Basic):
                     loss = prior_loss - series_loss 
                     if (i + 1) % 100 == 0:
                         speed = (time.time() - time_now) / iter_count
-                        left_time = speed * ((self.num_epochs - epoch) * train_steps - i)
+                        left_time = speed * ((self.args.train_epochs - epoch) * train_steps - i)
                         print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
                         iter_count = 0
                         time_now = time.time()
@@ -156,17 +159,17 @@ class Exp_Anomaly_Detection_Normal(Exp_Basic):
                     iter_count = 0
                     time_now = time.time()
 
-                loss1.backward(retrain_graph=True)
+                loss1.backward(retain_graph=True)
                 loss2.backward()
                 model_optim.step()
 
             train_slow_loss = np.average(train_loss)
             if self.model.name == "DCDetector":
-                vali_slow_loss1 = self.vali(vali_loader, self.model.name)
-                test_slow_loss1 = self.vali(test_loader, self.model.name)
+                vali_slow_loss1 = self.vali(vali_loader, criterion, self.model.name)
+                test_slow_loss1 = self.vali(test_loader, criterion, self.model.name)
             else:
-                vali_slow_loss1, vali_slow_loss2 = self.vali(vali_loader, self.model.name)
-                test_slow_loss1, test_slow_loss2 = self.vali(test_loader, self.model.name)
+                vali_slow_loss1, vali_slow_loss2 = self.vali(vali_loader, criterion, self.model.name)
+                test_slow_loss1, test_slow_loss2 = self.vali(test_loader, criterion, self.model.name)
 
             if epoch == 0:
                 f.write(setting + "  \n")
@@ -181,7 +184,7 @@ class Exp_Anomaly_Detection_Normal(Exp_Basic):
             csvreader.writerows(data_for_csv)
             # Saving Model
             if self.model.name == "DCDetector":
-                early_stopping(vali_slow_loss1, [], self.model, path)
+                early_stopping(vali_slow_loss1, 0, self.model, path)
             else:
                 early_stopping(vali_slow_loss1, vali_slow_loss2, self.model, path)
             if early_stopping.early_stop:

@@ -288,4 +288,5 @@ def eval_model(model,env):
     f1=f1_score(gtruth,preds,pos_label=1)
     conf_matrix=confusion_matrix(gtruth,preds,labels=[0,1])
 
+    print(f"EVALUATION PRECISION {prec} RECALL {rec} F1 {f1}\n")
     return prec,rec,f1,conf_matrix, preds, reward

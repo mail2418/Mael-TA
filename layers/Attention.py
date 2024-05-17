@@ -65,7 +65,7 @@ class MaelAttention(nn.Module):
         delta = 0.0 if delta is None else delta.unsqueeze(1).unsqueeze(1)  # B x 1 x 1 x S
         
         # De-stationary Attention, rescaling pre-softmax score with learned de-stationary factors
-        scores = torch.einsum("blhe,bshe->bhls", queries, keys) * tau + delta
+        scores = torch.einsum("blhe,bshe->bhls", queries, keys)
 
         if self.mask_flag:
             if attn_mask is None:
@@ -265,7 +265,7 @@ class AnomalyAttention(nn.Module):
             for j in range(window_size):
                 self.distances[i][j] = abs(i - j)
 
-    def forward(self, queries, keys, values, sigma, attn_mask):
+    def forward(self, queries, keys, values, sigma, attn_mask, tau=None, delta=None):
         B, L, H, E = queries.shape
         _, S, _, D = values.shape
         scale = self.scale or 1. / sqrt(E)

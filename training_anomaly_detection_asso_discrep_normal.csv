@@ -1,0 +1,40 @@
+1,531.4160771369934,4222,-48.0533403,-48.8028586,-48.5513741
+
+MaelNetS1_AnomalyTransformer_DCDetector_RL_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+2,529.3440637588501,4222,-48.9469093,-48.9561705,-48.7797236
+
+3,529.4670135974884,4222,-49.0241475,-48.975051,-48.8409772
+
+
+1,1620.2511558532715,4222,0.0,0.0,0.0
+
+MaelNetS1_AnomalyTransformer_DCDetector_RL_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+1,1606.756424188614,4222,0.0,0.0,0.0
+
+MaelNetS1_AnomalyTransformer_DCDetector_RL_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+2,1628.8451902866364,4222,0.0,0.0,0.0
+
+3,1622.5700006484985,4222,0.0,0.0,0.0
+
+
+1,1705.4818408489227,4222,0.0,0.0,0.0
+
+MaelNetS1_AnomalyTransformer_DCDetector_RL_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+2,1709.6536502838135,4222,0.0,0.0,0.0
+
+3,1717.1774864196777,4222,0.0,0.0,0.0
+
+
+1,1652.0428411960602,4222,0.0,0.0,0.0
+
+MaelNetS1_AnomalyTransformer_DCDetector_RL_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+2,1671.2877788543701,4222,0.0,0.0,0.0
+
+3,1670.0435168743134,4222,0.0,0.0,0.0
+
+

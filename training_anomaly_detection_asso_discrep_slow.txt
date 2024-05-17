@@ -1,0 +1,5 @@
+SLOW LEARNER Epoch: 1, Steps: 4222 | Train Loss: -46.0821812 Vali Loss: -47.8488339 Test Loss: -47.7769372
+MaelNetS1_AnomalyTransformer_DCDetector_RL_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue  
+SLOW LEARNER Epoch: 2, Steps: 4222 | Train Loss: -48.3583850 Vali Loss: -48.4598057 Test Loss: -48.4079307
+SLOW LEARNER Epoch: 3, Steps: 4222 | Train Loss: -48.7468887 Vali Loss: -48.6981497 Test Loss: -48.6519115
+SLOW LEARNER Epoch: 4, Steps: 4222 | Train Loss: -48.9002219 Vali Loss: -48.8237180 Test Loss: -48.7810108

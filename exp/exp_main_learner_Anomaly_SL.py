@@ -146,6 +146,10 @@ class Exp_Anomaly_Detection_SL(Exp_Basic):
             vali_slow_loss1, vali_slow_loss2 = self.vali(vali_loader)
             test_slow_loss1, test_slow_loss2 = self.vali(test_loader)
 
+            if epoch == 0:
+                f.write(setting + "  \n")
+                header = [[setting],["Epoch","Cost Time", "Steps", "Train Loss", "Vali Loss", "Test Loss"]]
+                csvreader.writerows(header)
             data_for_csv = [[epoch + 1, time.time() - epoch_time, train_steps, round(train_slow_loss,7), round(vali_slow_loss1,7), round(test_slow_loss1,7)],[]]
             print("SLOW LEARNER Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_slow_loss, vali_slow_loss1, test_slow_loss1))
@@ -153,10 +157,6 @@ class Exp_Anomaly_Detection_SL(Exp_Basic):
                 epoch + 1, train_steps, train_slow_loss, vali_slow_loss1, test_slow_loss1))
             f.write("\n")
             csvreader.writerows(data_for_csv)
-            if epoch == 0:
-                f.write(setting + "  \n")
-                header = [[setting],["Epoch","Cost Time", "Steps", "Train Loss", "Vali Loss", "Test Loss"]]
-                csvreader.writerows(header)
             # Saving Model
             early_stopping(vali_slow_loss1, vali_slow_loss2, self.model, path)
             if early_stopping.early_stop:

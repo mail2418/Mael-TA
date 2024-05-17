@@ -1,18 +1,18 @@
 # MaelNet
 py -u run_anomaly.py \
   --is_training 1 \
-  --root_path ./dataset/SMAP/ \
+  --root_path ./dataset/SWaT/ \
   --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
   --model MaelNetS1 \
   --is_slow_learner true \
-  --data SMAP \
+  --data SWaT \
   --e_layers 2 \
   --d_layers 1 \
   --anomaly_ratio 0.85 \
   --factor 5 \
-  --enc_in 25 \
-  --dec_in 25 \
-  --c_out 25 \
+  --enc_in 51 \
+  --dec_in 51 \
+  --c_out 51 \
   --d_model 512 \
   --moving_avg 100 \
   --gpu 0 \
@@ -24,19 +24,19 @@ py -u run_anomaly.py \
 # DCDetector
 py -u run_anomaly.py \
   --is_training 1 \
-  --root_path ./dataset/SMAP/ \
+  --root_path ./dataset/SWaT/ \
   --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
   --model DCDetector \
   --patch_size 5 \
   --train_epochs 3 \
-  --data SMAP \
+  --data SWaT \
   --e_layers 2 \
   --d_layers 1 \
   --anomaly_ratio 0.85 \
   --factor 5 \
-  --enc_in 25 \
-  --dec_in 25 \
-  --c_out 25 \
+  --enc_in 51 \
+  --dec_in 51 \
+  --c_out 51 \
   --d_model 512 \
   --moving_avg 100 \
   --gpu 0 \
@@ -48,18 +48,18 @@ py -u run_anomaly.py \
 # Anomaly Transformer
 py -u run_anomaly.py \
   --is_training 1 \
-  --root_path ./dataset/SMAP/ \
+  --root_path ./dataset/SWaT/ \
   --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
   --model AnomalyTransformer \
   --train_epochs 3 \
-  --data SMAP \
+  --data SWaT \
   --e_layers 2 \
   --d_layers 1 \
   --anomaly_ratio 0.85 \
   --factor 5 \
-  --enc_in 25 \
-  --dec_in 25 \
-  --c_out 25 \
+  --enc_in 51 \
+  --dec_in 51 \
+  --c_out 51 \
   --d_model 512 \
   --moving_avg 100 \
   --gpu 0 \

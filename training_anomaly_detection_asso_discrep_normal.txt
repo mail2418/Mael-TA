@@ -8,3 +8,11 @@ FAST LEARNER Epoch: 1, Steps: 4222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 
 MaelNetS1_AnomalyTransformer_DCDetector_RL_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue  
 FAST LEARNER Epoch: 2, Steps: 4222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000
 FAST LEARNER Epoch: 3, Steps: 4222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000
+FAST LEARNER Epoch: 1, Steps: 4222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000
+MaelNetS1_AnomalyTransformer_DCDetector_RL_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue  
+FAST LEARNER Epoch: 2, Steps: 4222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000
+FAST LEARNER Epoch: 3, Steps: 4222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000
+FAST LEARNER Epoch: 1, Steps: 4222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000
+MaelNetS1_AnomalyTransformer_DCDetector_RL_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue  
+FAST LEARNER Epoch: 2, Steps: 4222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000
+FAST LEARNER Epoch: 3, Steps: 4222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000

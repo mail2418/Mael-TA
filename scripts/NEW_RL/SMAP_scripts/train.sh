@@ -15,6 +15,7 @@
 #   --c_out 25 \
 #   --d_model 512 \
 #   --moving_avg 100 \
+#   --win_size 100 \
 #   --gpu 0 \
 #   --des 'Exp_h256_l2' \
 #   --p_hidden_dims 128 128 \
@@ -27,7 +28,7 @@ py -u run_anomaly.py \
   --root_path ./dataset/SMAP/ \
   --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
   --model DCDetector \
-  --patch_size 7 \
+  --patch_size 5 \
   --train_epochs 3 \
   --data SMAP \
   --e_layers 2 \
@@ -40,7 +41,7 @@ py -u run_anomaly.py \
   --c_out 25 \
   --d_model 512 \
   --moving_avg 100 \
-  --win_size 105 \
+  --win_size 100 \
   --gpu 0 \
   --des 'Exp_h256_l2' \
   --p_hidden_dims 128 128 \
@@ -63,6 +64,7 @@ py -u run_anomaly.py \
 #   --dec_in 25 \
 #   --c_out 25 \
 #   --d_model 512 \
+#   --win_size 100 \
 #   --moving_avg 100 \
 #   --gpu 0 \
 #   --des 'Exp_h256_l2' \

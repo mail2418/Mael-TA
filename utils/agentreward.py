@@ -10,7 +10,6 @@ from gym.utils import seeding
 from gym import spaces
 import gym
 import random
-import os
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 def get_mape_reward(q_mape, mape, R=1):
@@ -286,4 +285,5 @@ def eval_model(model,env):
     f1=f1_score(gtruth,preds,pos_label=1)
     conf_matrix=confusion_matrix(gtruth,preds,labels=[0,1])
 
+    print(f"EVALUATION PRECISION {prec} RECALL {rec} F1 {f1}\n")
     return prec,rec,f1,conf_matrix, preds, reward

@@ -34,7 +34,7 @@ parser.add_argument('--n_windows', type=int, default=100, help="Sliding Windows 
 
 #DCDetector
 parser.add_argument('--channel', type=int, default=25, help="Channel DCDetector")
-parser.add_argument('--patch_size', type=list, default=[7], help="Sliding Windows KBJNet")
+parser.add_argument('--patch_size', type=list, default=[5], help="Sliding Windows KBJNet")
 
 #AnomalyTransformer
 parser.add_argument('--k', type=int, default=3, help="reconstruction loss")

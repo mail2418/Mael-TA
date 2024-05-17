@@ -1,6 +1,7 @@
 import os
 import torch
 import torch.nn as nn
+import csv
 from exp.exp_basic import Exp_Basic
 from data_provider.data_factory import data_provider
 from utils.tools import my_kl_loss
@@ -183,12 +184,14 @@ class OPT_RL_Anomaly():
                 # (2) stastic on the TEST SET
                 test_energy, test_labels = self.calculate_test_energy(test_loader,temperature)
                 combined_energy = np.concatenate([train_energy, test_energy], axis=0)
-                threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio)
+                threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio).astype(int)
                 print(f"Threshold NORMAL LEARNER {model_name}: {threshold}")
 
                 list_pred_models.append(test_energy)
                 list_thresholds.append(threshold)
                 
+        f_csv = open("training_anomaly_detection_asso_discrep_rl.csv","a")
+        csvreader = csv.writer(f_csv)
         EXP_TIMES=10 # How many runs to average the results
         # Store the precision, recall, F1-score
         store_prec=np.zeros(EXP_TIMES)
@@ -197,12 +200,17 @@ class OPT_RL_Anomaly():
 
         total_reward = 0
         for times in range(EXP_TIMES):
+            if times == 0:
+                header = [[setting],["Epoch RL","Precision RL","Recall RL","F1-score RL","Reward RL"]]
+                csvreader.writerows(header)
             # Set up the training environment on all the dataset
             env_off=TrainEnvOffline_dist_conf(list_pred_sc=list_pred_models, list_thresholds=list_thresholds, list_gtruth=test_labels)
             # Train the model on all the dataset  
             model = DQN('MlpPolicy', env_off, verbose=0)
             model.learn(total_timesteps=len(list_pred_models[0])) 
             prec, rec, f1, _, list_preds, reward =eval_model(model, env_off)  #masuk ke step di env
+            print(f"Times-{times+1} RL: precision: {prec}, recall: {rec}, F1-score: {f1} reward: {reward}")
+            csvreader.writerows([[times+1,prec,rec,f1,reward]])
             store_prec[times]=prec
             store_rec[times]=rec
             store_f1[times]=f1

@@ -143,38 +143,36 @@ class EnvOffline_dist_conf(gym.Env):
         self.num_models = len(list_pred_sc)
 
         #List of ground truth labels
-        self.gtruth = list_gtruth
+        self.gtruth = np.array(list_gtruth).astype(int)
         
         # Raw scores and thresholds of the testing data
         self.list_pred_sc = list_pred_sc
         self.list_thresholds = list_thresholds
 
         # Scale the raw scores/thresholds and save each scaler
-        self.list_scaled_sc = []
-        self.list_scaled_thresholds = []
-        for i in range(self.num_models):
-            scaler_tmp = StandardScaler()
-            self.list_scaled_sc.append(scaler_tmp.fit_transform(self.list_pred_sc[i].reshape(-1,1)))
-            self.list_scaled_thresholds.append(scaler_tmp.transform(self.list_thresholds[i].reshape(-1,1)))
+        # self.list_scaled_sc = []
+        # self.list_scaled_thresholds = []
+        # for i in range(self.num_models):
+        #     scaler_tmp = StandardScaler()
+        #     self.list_scaled_sc.append(scaler_tmp.fit_transform(self.list_pred_sc[i].reshape(-1,1)))
+        #     self.list_scaled_thresholds.append(scaler_tmp.transform(self.list_thresholds[i].reshape(-1,1)))
 
         # Extract predictions
-        self.list_pred = []
+        self.list_pred = np.zeros(self.num_models)
         for i in range(self.num_models):
-            pred_tmp = np.zeros(self.len_data)
-            for length in range(self.len_data):
-                if self.list_scaled_sc[i][length] > self.list_scaled_thresholds[i]:
-                    pred_tmp[length] = 1
-            self.list_pred.append(pred_tmp)
+            pred_tmp = (self.list_pred_sc[i] > self.list_thresholds[i]).astype(int)
+            new_gt,new_pred = adjustment(self.gtruth, pred_tmp)
+            self.list_pred[i] = (new_pred)
+        self.gtruth = new_gt
 
         # Extract distance-to-threshold confidence
         self.dist_conf=[]
         for length in range(self.len_data):
             dist_tmp = []
             for i in range(self.num_models):
-                dist_tmp.append(self.list_scaled_sc[i][length] - self.list_scaled_thresholds[i])
+                dist_tmp.append(self.list_pred_sc[i][length] - self.list_thresholds[i])
             self.dist_conf.append(dist_tmp)
         
-
         # Gym settings
         self.action_space = spaces.Discrete(self.num_models) 
         # state_dim is 4 , each corresponds to scaled_sc, scaled_thresholds, pred, dist_conf 
@@ -227,8 +225,8 @@ class TrainEnvOffline_dist_conf(EnvOffline_dist_conf):
 
         # Get the current state
         observation = np.zeros(4) # 4 dims - scaled scores, scaled thresholds, labels, dist_conf
-        observation[0] = self.list_scaled_sc[action][self.pointer]
-        observation[1] = self.list_scaled_thresholds[action]
+        observation[0] = self.list_pred_sc[action][self.pointer]
+        observation[1] = self.list_thresholds[action]
         observation[2] = self.list_pred[action][self.pointer]
         observation[3] = self.dist_conf[self.pointer][action]
 
@@ -237,19 +235,24 @@ class TrainEnvOffline_dist_conf(EnvOffline_dist_conf):
     def _get_reward(self,observation):
         '''Return:
             reward: the reward of the action.'''
-
-        # Get the reward
+        reward = 0
+        # Get the reward confusion matrix
         if self.gtruth[self.pointer]==1: # If the ground truth is 1 anomaly
             if observation[2]==1: # If the model predicts 1 anomaly correctly - True Positive (TP)
-                reward = 1
+                reward = reward + 1
             else: # If the model predicts 0 normal incorrectly - False Negative (FN)
-                reward = -1.5
+                reward = reward + (-1.5)
         else: # If the ground truth is 0 normal
             if observation[2]==1: # If the model predicts 1 anomaly incorrectly - False Positive (FP)
-                reward = -0.4
+                reward = reward + (-0.6)
             else: # If the model predicts 0 normal correctly - True Negative (TN)
-                reward = 0.1
+                reward = reward + 0.01
 
+        # Get the reward distance threshold
+        distance = abs(1 - observation[3])
+        reward_distance_conf = 1 - (1 / abs((1 - observation[3]))) if distance > 0 else 1
+        
+        reward = reward + reward_distance_conf
         return reward
 
 def eval_model(model,env):

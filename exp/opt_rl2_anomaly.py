@@ -199,7 +199,7 @@ class OPT_RL_Anomaly():
         store_f1=np.zeros(EXP_TIMES)
 
         total_reward = 0
-        for times in range(EXP_TIMES):
+        for times in trange(EXP_TIMES, desc=f'[REINFORCEMENT LEARNING START]'):
             if times == 0:
                 header = [[setting],["Epoch RL","Precision RL","Recall RL","F1-score RL","Reward RL"]]
                 csvreader.writerows(header)

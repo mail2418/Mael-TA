@@ -1,4 +1,6 @@
-py -u run_anomaly.py \
+export CUDA_VISIBLE_DEVICES=0
+
+python -u run_anomaly.py \
   --is_training 0 \
   --root_path ./dataset/SMAP/ \
   --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\

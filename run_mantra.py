@@ -35,9 +35,6 @@ parser.add_argument('--n_windows', type=int, default=100, help="Sliding Windows 
 parser.add_argument('--channel', type=int, default=55, help="Channel DCDetector")
 parser.add_argument('--patch_size', type=list, default=[5,7], help="Sliding Windows KBJNet")
 
-#AnomalyTransformer
-parser.add_argument('--k', type=int, default=3, help="reconstruction loss")
-
 # FEDFormer task
 parser.add_argument('--seq_len', type=int, default=96, help='input sequence length')
 parser.add_argument('--label_len', type=int, default=48, help='start token length')
@@ -161,12 +158,9 @@ if __name__ == "__main__":
         if args.is_training:
             print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
             exp.train(setting)
-            opt.train_urt(setting)
-            print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-            # exp.test(setting)
-            opt.test2(setting)
+            # opt.train_urt(setting)
         else:
             print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-            # exp.test(setting)
+            exp.test(setting)
             opt.test2(setting)
             torch.cuda.empty_cache()

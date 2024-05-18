@@ -4,7 +4,7 @@ from exp.exp_main import Exp_Anomaly_Detection
 import random
 import numpy as np
 
-parser = argparse.ArgumentParser(description='MaelNet for Time Series Anomaly Detection')
+parser = argparse.ArgumentParser(description='FEDFormer for Time Series Anomaly Detection')
 
 # basic config
 parser.add_argument('--is_training', type=int, default=1, help='status')

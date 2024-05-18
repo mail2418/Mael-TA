@@ -1,0 +1,5 @@
+Total number of reported anomalies: 427.0
+Total number of true anomalies: 29444
+Average precision: 0.8566, std: 0.0233
+Average recall: 0.0108, std: 0.0018
+Average F1-score: 0.0213, std: 0.0036

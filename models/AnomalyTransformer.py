@@ -66,7 +66,7 @@ class Model(nn.Module):
         self.output_attention = output_attention
         self.name = "AnomalyTransformer"
         # Encoding
-        self.embedding = DataEmbedding(self.name,self.enc_in, self.d_model, dropout=self.dropout)
+        self.embedding = DataEmbedding(self.name,self.enc_in, self.d_model, dropout=self.dropout,decode=True)
 
         # Encoder
         self.encoder = Encoder(

@@ -58,8 +58,8 @@ class OPT_RL_Anomaly():
                 batch_x_slow = batch_x.clone()
                 batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
 
-                output, series, prior = self.model(batch_x)
-                loss = torch.mean(ssl_loss_v2(input, output), dim=-1)
+                output, series, prior = self.model(batch_x_slow)
+                loss = torch.mean(ssl_loss_v2(output, batch_x_slow, slow_mark, s1, s2, self.device), dim=-1)
             else:
                 if self.model.name == "DCDetector":
                     series, prior = self.model(batch_x)
@@ -106,8 +106,8 @@ class OPT_RL_Anomaly():
                 batch_x_slow = batch_x.clone()
                 batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
 
-                output, series, prior = self.model(batch_x)
-                loss = torch.mean(ssl_loss_v2(input, output), dim=-1)
+                output, series, prior = self.model(batch_x_slow)
+                loss = torch.mean(ssl_loss_v2(output, batch_x_slow, slow_mark, s1, s2, self.device), dim=-1)
             else:
                 if self.model.name == "DCDetector":
                     series, prior = self.model(batch_x)
@@ -151,7 +151,7 @@ class OPT_RL_Anomaly():
 
         for index in trange(len(model_list), desc=f'[Opt Anomaly]'):
             if model_list[index].split("checkpoint_")[1].split(".")[0].find("slow_learner") != -1:
-                model_name = model_list[index].split("checkpoint_")[1].split(".")[0].split("slow_learner")[1]
+                model_name = model_list[index].split("checkpoint_")[1].split(".")[0].split("slow_learner_")[1]
                 self.model = self.model_dict[model_name].Model(self.args).float().to(self.device)
 
                 model_load_state = torch.load(os.path.join("./checkpoints/",setting,model_list[index]))
@@ -196,7 +196,7 @@ class OPT_RL_Anomaly():
         store_f1=np.zeros(EXP_TIMES)
 
         total_reward = 0
-        for times in range(EXP_TIMES):
+        for times in trange(EXP_TIMES, desc=f'[REINFORCEMENT LEARNING START]'):
             # Set up the training environment on all the dataset
             env_off=TrainEnvOffline_dist_conf(list_pred_sc=list_pred_models, list_thresholds=list_thresholds, list_gtruth=test_labels)
             # Train the model on all the dataset  

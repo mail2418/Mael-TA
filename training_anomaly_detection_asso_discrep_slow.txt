@@ -8,3 +8,13 @@ MaelNetS1_AnomalyTransformer_DCDetector_RL_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5
 SLOW LEARNER Epoch: 2, Steps: 4222 | Train Loss: -48.3965009 Vali Loss: -48.5009215 Test Loss: -48.4657232
 SLOW LEARNER Epoch: 3, Steps: 4222 | Train Loss: -48.8282010 Vali Loss: -48.8113704 Test Loss: -48.7710086
 SLOW LEARNER Epoch: 4, Steps: 4222 | Train Loss: -48.9592309 Vali Loss: -48.8506188 Test Loss: -48.8111849
+MaelNetS1_AnomalyTransformer_DCDetector_RL_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue  
+SLOW LEARNER Epoch: 1, Steps: 222 | Train Loss: -31.3813142 Vali Loss: -38.2784182 Test Loss: -37.1414903
+SLOW LEARNER Epoch: 2, Steps: 222 | Train Loss: -41.4710473 Vali Loss: -44.1445079 Test Loss: -41.0779539
+SLOW LEARNER Epoch: 3, Steps: 222 | Train Loss: -44.3708085 Vali Loss: -44.9321783 Test Loss: -41.9233031
+SLOW LEARNER Epoch: 4, Steps: 222 | Train Loss: -44.8360927 Vali Loss: -45.2391675 Test Loss: -44.4918157
+MaelNetS1_AnomalyTransformer_DCDetector_RL2_SMAP_ftM_dm256_nh8_el3_dl1_df2048_fc5_ebtimeF_dtTrue  
+SLOW LEARNER Epoch: 1, Steps: 4222 | Train Loss: -45.9581827 Vali Loss: -47.8499762 Test Loss: -47.7787635
+SLOW LEARNER Epoch: 2, Steps: 4222 | Train Loss: -48.2828138 Vali Loss: -48.2278315 Test Loss: -48.1939058
+SLOW LEARNER Epoch: 3, Steps: 4222 | Train Loss: -48.5224612 Vali Loss: -48.3122491 Test Loss: -48.2895189
+SLOW LEARNER Epoch: 4, Steps: 4222 | Train Loss: -48.5883204 Vali Loss: -48.3456329 Test Loss: -48.3199150

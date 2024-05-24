@@ -9,6 +9,7 @@ import math
 from gym.utils import seeding
 from gym import spaces
 import gym
+import time
 import random
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
@@ -158,11 +159,11 @@ class EnvOffline_dist_conf(gym.Env):
         #     self.list_scaled_thresholds.append(scaler_tmp.transform(self.list_thresholds[i].reshape(-1,1)))
 
         # Extract predictions
-        self.list_pred = np.zeros(self.num_models)
+        self.list_pred = []
         for i in range(self.num_models):
             pred_tmp = (self.list_pred_sc[i] > self.list_thresholds[i]).astype(int)
             new_gt,new_pred = adjustment(self.gtruth, pred_tmp)
-            self.list_pred[i] = (new_pred)
+            self.list_pred.append(new_pred)
         self.gtruth = new_gt
 
         # Extract distance-to-threshold confidence
@@ -198,6 +199,7 @@ class TrainEnvOffline_dist_conf(EnvOffline_dist_conf):
     
     def reset(self):
         self.pointer = 0 # Reset the pointer to the beginning of the testing data
+        self.time_now = time.time()
         self.done = False
         return self._get_state()
 
@@ -211,6 +213,9 @@ class TrainEnvOffline_dist_conf(EnvOffline_dist_conf):
         # Get the reward
         reward=self._get_reward(observation)
         # Check whether the episode is over
+        if(self.pointer > 9998):
+            self.done = True
+            return observation, reward, self.done, {}
         self.pointer = self.pointer + 1
         self.done = self.pointer >= self.len_data
         return observation, reward, self.done, {}
@@ -270,7 +275,6 @@ def eval_model(model,env):
 
     # The ground truth labels
     gtruth = env.gtruth
-
     # Reset the environment
     observation = env.reset()
 
@@ -282,11 +286,9 @@ def eval_model(model,env):
         preds.append(observation[2])
         if done:
             break
-    
-    prec=precision_score(gtruth,preds,pos_label=1)
-    rec=recall_score(gtruth,preds,pos_label=1)
-    f1=f1_score(gtruth,preds,pos_label=1)
-    conf_matrix=confusion_matrix(gtruth,preds,labels=[0,1])
 
-    print(f"EVALUATION PRECISION {prec} RECALL {rec} F1 {f1}\n")
+    prec=precision_score(gtruth[:10000],preds,pos_label=1)
+    rec=recall_score(gtruth[:10000],preds,pos_label=1)
+    f1=f1_score(gtruth[:10000],preds,pos_label=1)
+    conf_matrix=confusion_matrix(gtruth[:10000],preds,labels=[0,1])
     return prec,rec,f1,conf_matrix, preds, reward

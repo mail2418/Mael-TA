@@ -1,18 +1,18 @@
 py -u run_anomaly.py \
   --is_training 0 \
-  --root_path ./dataset/SMAP/ \
+  --root_path ./dataset/SMD/ \
   --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
   --data SMD \
   --win_size 100 \
-  --channel 25 \
+  --channel 38 \
   --patch_size 5 \
   --e_layers 2 \
   --d_layers 1 \
   --anomaly_ratio 0.6 \
   --factor 5 \
-  --enc_in 25 \
-  --dec_in 25 \
-  --c_out 25 \
+  --enc_in 38 \
+  --dec_in 38 \
+  --c_out 38 \
   --d_model 512 \
   --moving_avg 100 \
   --gpu 0 \

@@ -4,13 +4,14 @@ import torch.nn as nn
 import csv
 from exp.exp_basic import Exp_Basic
 from data_provider.data_factory import data_provider
-from utils.tools import my_kl_loss
+from utils.tools import my_kl_loss,adjustment
 from utils.slowloss import ssl_loss_v2
 import numpy as np
 from tqdm import trange
 from utils.agentreward import TrainEnvOffline_dist_conf, eval_model
 from stable_baselines3 import DQN
 from models import MaelNet, KBJNet, DCDetector, ns_Transformer, FEDFormer, TimesNet, MaelNetB1, MaelNetS1, ns_TransformerB1, ns_TransformerS1,AutoFormer,MaelNetS2, AnomalyTransformer
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
 class OPT_RL_Anomaly():
     def __init__(self,args):
@@ -168,6 +169,16 @@ class OPT_RL_Anomaly():
                 threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio)
                 print(f"Threshold SLOW LEARNER {model_name}: {threshold}")
 
+                pred = (test_energy > threshold).astype(int)
+                gt = test_labels.astype(int)
+                gt, pred = adjustment(gt, pred)
+                accuracy = accuracy_score(gt, pred)
+                precision, recall, f_score, support = precision_recall_fscore_support(gt, pred,
+                                                                                    average='binary')
+                print("Model Name:{}, Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
+                        model_name, accuracy, precision,
+                        recall, f_score))
+                
                 list_pred_models.append(test_energy)
                 list_thresholds.append(threshold)
             else:
@@ -187,12 +198,24 @@ class OPT_RL_Anomaly():
                 threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio).astype(int)
                 print(f"Threshold NORMAL LEARNER {model_name}: {threshold}")
 
+                pred = (test_energy > threshold).astype(int)
+                gt = test_labels.astype(int)
+                gt, pred = adjustment(gt, pred)
+                accuracy = accuracy_score(gt, pred)
+                precision, recall, f_score, support = precision_recall_fscore_support(gt, pred,
+                                                                       average='binary')
+                print("Model Name:{}, Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
+                        model_name, accuracy, precision,
+                        recall, f_score))
+
                 list_pred_models.append(test_energy)
                 list_thresholds.append(threshold)
-                
+        for i in range(len(list_pred_models)):
+            print("Total number of reported anomalies before RL: ",sum(list_pred_models[i]))
+            print("Total number of true anomalies: ",sum(test_labels))          
         f_csv = open("training_anomaly_detection_asso_discrep_rl.csv","a")
         csvreader = csv.writer(f_csv)
-        EXP_TIMES=10 # How many runs to average the results
+        EXP_TIMES=3 # How many runs to average the results
         # Store the precision, recall, F1-score
         store_prec=np.zeros(EXP_TIMES)
         store_rec=np.zeros(EXP_TIMES)

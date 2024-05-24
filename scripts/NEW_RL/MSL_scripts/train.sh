@@ -3,7 +3,7 @@ py -u run_anomaly.py \
   --is_training 1 \
   --root_path ./dataset/MSL/ \
   --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
-  --model MaelNetS1 \
+  --model MaelNetS2 \
   --is_slow_learner true \
   --data MSL \
   --e_layers 2 \

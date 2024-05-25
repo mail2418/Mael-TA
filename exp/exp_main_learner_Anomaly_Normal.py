@@ -130,8 +130,9 @@ class Exp_Anomaly_Detection_Normal(Exp_Basic):
                 prior_loss = prior_loss / len(prior)
 
                 if(self.model.name == "DCDetector"):
-                    loss = prior_loss - series_loss 
+                    loss = prior_loss - series_loss #loss 0 
                     if (i + 1) % 100 == 0:
+                        print("\titers FAST LEARNER {0}: {1}, epoch: {2} | loss phase: {3:.7f}".format(self.model.name,i + 1, epoch + 1, loss.item()))
                         speed = (time.time() - time_now) / iter_count
                         left_time = speed * ((self.args.train_epochs - epoch) * train_steps - i)
                         print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
@@ -149,7 +150,7 @@ class Exp_Anomaly_Detection_Normal(Exp_Basic):
                 loss2 = rec_loss + self.args.k * prior_loss # maximise phase
 
                 if (i + 1) % 100 == 0:
-                    print("\titers FAST LEARNER: {0}, epoch: {1} | loss minimise phase: {2:.7f} | loss maximise phase: {2:.7f}".format(i + 1, epoch + 1, loss1.item(), loss2.item()))
+                    print("\titers FAST LEARNER {0}: {1}, epoch: {2} | loss minimise phase: {3:.7f} | loss maximise phase: {4:.7f}".format(self.model.name,i + 1, epoch + 1, loss1.item(), loss2.item()))
                     speed = (time.time() - time_now) / iter_count
                     left_time = speed * ((self.args.train_epochs - epoch) * train_steps - i)
                     print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))

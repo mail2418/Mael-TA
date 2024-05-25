@@ -144,6 +144,7 @@ class OPT_RL_Anomaly():
         return test_energy, test_labels
     def opt_anomaly(self, setting):
         _,test_loader = self._get_data("test")
+        _,thre_loader = self._get_data("threshold")
         _,train_loader = self._get_data("train")
         list_pred_models = []
         list_thresholds = []
@@ -165,7 +166,9 @@ class OPT_RL_Anomaly():
                 train_energy = self.calculate_train_energy(train_loader,temperature,slow_learner=True)
                 # (2) stastic on the TEST SET
                 test_energy, test_labels = self.calculate_test_energy(test_loader,temperature,slow_learner=True)
-                combined_energy = np.concatenate([train_energy, test_energy], axis=0)
+                # (3) stastic on the THRESHOLD SET
+                threshold_energy, _ = self.calculate_test_energy(thre_loader,temperature,slow_learner=True)
+                combined_energy = np.concatenate([train_energy, threshold_energy], axis=0)
                 threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio)
                 print(f"Threshold SLOW LEARNER {model_name}: {threshold}")
 
@@ -194,7 +197,10 @@ class OPT_RL_Anomaly():
                 train_energy = self.calculate_train_energy(train_loader,temperature)
                 # (2) stastic on the TEST SET
                 test_energy, test_labels = self.calculate_test_energy(test_loader,temperature)
-                combined_energy = np.concatenate([train_energy, test_energy], axis=0)
+                # (3) stastic on the THRESHOLD SET
+                threshold_energy, _ = self.calculate_test_energy(thre_loader,temperature)
+
+                combined_energy = np.concatenate([train_energy, threshold_energy], axis=0)
                 threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio).astype(int)
                 print(f"Threshold NORMAL LEARNER {model_name}: {threshold}")
 

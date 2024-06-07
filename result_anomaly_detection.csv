@@ -202,3 +202,18 @@ Accuracy,Precision,Recall,F-score
 
 0.9492,0.8701,0.6089,0.7164
 
+MaelNet_SMD_TCNEmbeddingEnc_TokenEmbedDec_MaelNet_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0
+Accuracy,Precision,Recall,F-score
+0.9872,0.8591,0.8286,0.8436
+MaelNet_SMD_TCNEmbeddingEnc_TokenEmbedDec_MaelNet_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0
+Accuracy,Precision,Recall,F-score
+0.9872,0.8591,0.8286,0.8436
+MaelNet_SMD_TCNEmbeddingEnc_TokenEmbedDec_MaelNet_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0
+Accuracy,Precision,Recall,F-score
+0.9872,0.8591,0.8286,0.8436
+MaelNet_SMD_TCNEmbeddingEnc_TokenEmbedDec_MaelNet_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0
+Accuracy,Precision,Recall,F-score
+0.9872,0.8591,0.8286,0.8436
+MaelNet_SMD_TCNEmbeddingEnc_TokenEmbedDec_MaelNet_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0
+Accuracy,Precision,Recall,F-score
+0.9872,0.8591,0.8286,0.8436

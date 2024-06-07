@@ -1,10 +1,10 @@
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
-from utils.tools import EarlyStopping, adjustment, visual
+from utils.tools import EarlyStopping, adjustment,smooth
 from utils.metrics import NegativeCorr
 from models.PropPrototype import MultiHeadURT
-from sklearn.metrics import precision_recall_fscore_support
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_recall_fscore_support, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
 import torch
 import torch.nn as nn
@@ -84,19 +84,19 @@ class Opt_URT_Anomaly(Exp_Basic):
                         fin_out[:,:,k] = fin_out[:,:,k] + (dec_out[l,:,:,k] * urt_out[l,k])
                 
                 # SLOW LEARNER
-                s0,s1,s2 = batch_x.shape
-                randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
-                m_ones = torch.ones(s0,s1,s2)
-                slow_mark = torch.bernoulli(randuniform)
-                batch_x_slow = batch_x.clone()
-                batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
+                # s0,s1,s2 = batch_x.shape
+                # randuniform = torch.empty(s0,s1,s2).uniform_(0, 1)
+                # m_ones = torch.ones(s0,s1,s2)
+                # slow_mark = torch.bernoulli(randuniform)
+                # batch_x_slow = batch_x.clone()
+                # batch_x_slow = batch_x_slow * (m_ones-slow_mark).to(self.device)
 
-                if self.slow_model.name not in ["KBJNet"]:
-                    slow_out = self.slow_model.forward(batch_x_slow)
-                else:
-                    slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
+                # if self.slow_model.name not in ["KBJNet"]:
+                #     slow_out = self.slow_model.forward(batch_x_slow)
+                # else:
+                #     slow_out = self.slow_model.forward(batch_x_slow.permute(0,2,1))
 
-                outputs = fin_out + slow_out
+                # outputs = fin_out + slow_out
 
                 f_dim = -1 if self.args.features == 'MS' else 0
                 outputs = outputs[:, :, f_dim:]
@@ -334,7 +334,7 @@ class Opt_URT_Anomaly(Exp_Basic):
             dec_out2 = dec_out2.reshape(dec_out2.shape[0],dec_out2.shape[2],dec_out2.shape[1])
             # Test URT
             urt_out = self.URT(dec_out2)
-            a,b,c,d = dec_out.shape
+            a,b,c,d = dec_out.shape # n_learner x batch x win_size x features
             fin_out = torch.zeros([b,c,d]).cuda() if self.args.use_gpu else torch.zeros([b,c,d])
             for k in range(0,d):
                 for l in range(0,a):
@@ -389,6 +389,45 @@ class Opt_URT_Anomaly(Exp_Basic):
         print("pred: ", pred.shape)
         print("gt:   ", gt.shape)
 
+        os.makedirs(os.path.join("plots",setting), exist_ok=True)
+        with PdfPages(f'plots/{setting}/confusion_matrix.pdf') as pdf:
+            # Compute the confusion matrix
+            cm = confusion_matrix(gt, pred)
+            # Create a figure for the confusion matrix
+            fig, ax = plt.subplots(figsize=(8, 6))
+            # Display the confusion matrix
+            display = ConfusionMatrixDisplay(confusion_matrix=cm)
+            # Set the plot title using the axes object
+            ax.set_title(f'Confusion Matrix for Anomaly Detection {self.args.data}')
+            # Plot the confusion matrix with customizations
+            display.plot(ax=ax)
+            # Save the current figure to the PDF
+            pdf.savefig(fig)
+            # Optionally close the figure to free memory
+            plt.close(fig)
+
+        with PdfPages(f'plots/{setting}/times_series_plot.pdf') as pdf:
+            fig, (ax1,ax2) = plt.subplots(2,1,figsize=(8,6),sharex=True)
+            ax1.set_title('Ground Truth')
+            ax2.set_title('Prediction')
+            ax1.plot(smooth(train_energy), linewidth=0.3, label="Ground Truth")
+            ax2.plot(smooth(test_energy), linewidth=0.3, label="Prediction")
+
+            ax3 = ax1.twinx()
+            ax4 = ax2.twinx()
+
+            ax3.fill_between(np.arange(gt.shape[0]), gt, color='blue', alpha=0.3, label='True Anomaly')
+            ax4.fill_between(np.arange(pred.shape[0]), pred, color='red', alpha=0.3, label='Predicted Anomaly')
+            
+            ax3.legend(ncol=2, bbox_to_anchor=(0.6, 1.02))
+            ax4.legend(bbox_to_anchor=(1, 1.02))
+
+            ax1.set_yticks([])
+            ax2.set_yticks([])
+            # Save the current figure to the PDF
+            pdf.savefig(fig)
+            # Optionally close the figure to free memory
+            plt.close(fig)
         accuracy = accuracy_score(gt, pred)
         precision, recall, f_score, support = precision_recall_fscore_support(gt, pred, average='binary')
         print("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(

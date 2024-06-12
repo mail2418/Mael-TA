@@ -88,7 +88,10 @@ class OPT_RL_Anomaly():
                                                                                                 self.args.win_size)),
                         series[u].detach()) * temperature
             metric = torch.softmax((-series_loss - prior_loss), dim=-1)
-            cri = metric.detach().cpu().numpy() if self.model.name == "DCDetector" else (metric*loss).detach().cpu().numpy()
+            if self.model.name == "DCDetector":
+                cri = metric.detach().cpu().numpy()
+            else: 
+                cri = (metric*loss).detach().cpu().numpy()
             attens_energy_train.append(cri)
         attens_energy_train = np.concatenate(attens_energy_train, axis=0).reshape(-1)
         train_energy = np.array(attens_energy_train)
@@ -136,7 +139,10 @@ class OPT_RL_Anomaly():
                                                                                                 self.args.win_size)),
                         series[u].detach()) * temperature
             metric = torch.softmax((-series_loss - prior_loss), dim=-1)
-            cri = metric.detach().cpu().numpy() if self.model.name == "DCDetector" else (metric*loss).detach().cpu().numpy()
+            if self.model.name == "DCDetector":
+                cri = metric.detach().cpu().numpy()
+            else: 
+                cri = (metric*loss).detach().cpu().numpy()
             attens_energy_test.append(cri)
         attens_energy_test = np.concatenate(attens_energy_test, axis=0).reshape(-1)
         test_energy = np.array(attens_energy_test)
@@ -201,65 +207,53 @@ class OPT_RL_Anomaly():
                 threshold_energy, _ = self.calculate_test_energy(thre_loader,temperature)
 
                 combined_energy = np.concatenate([train_energy, threshold_energy], axis=0)
-                threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio).astype(int)
+                threshold = np.percentile(combined_energy, 100 - self.args.anomaly_ratio)
                 print(f"Threshold NORMAL LEARNER {model_name}: {threshold}")
 
                 pred = (test_energy > threshold).astype(int)
                 gt = test_labels.astype(int)
                 gt, pred = adjustment(gt, pred)
+
+                print(f"pred: {len(pred)}")
+                print(f"gt: {len(gt)}")
                 accuracy = accuracy_score(gt, pred)
                 precision, recall, f_score, support = precision_recall_fscore_support(gt, pred,
                                                                        average='binary')
                 print("Model Name:{}, Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
                         model_name, accuracy, precision,
                         recall, f_score))
+                
+                print(f"Total number of reported anomalies before RL {model_name}: {sum(pred)}")
+                print(f"Total number of true anomalies {model_name}: {sum(gt)}") 
 
                 list_pred_models.append(test_energy)
                 list_thresholds.append(threshold)
-        for i in range(len(list_pred_models)):
-            print("Total number of reported anomalies before RL: ",sum(list_pred_models[i]))
-            print("Total number of true anomalies: ",sum(test_labels))          
+                
         f_csv = open("training_anomaly_detection_asso_discrep_rl.csv","a")
         csvreader = csv.writer(f_csv)
-        EXP_TIMES=3 # How many runs to average the results
-        # Store the precision, recall, F1-score
-        store_prec=np.zeros(EXP_TIMES)
-        store_rec=np.zeros(EXP_TIMES)
-        store_f1=np.zeros(EXP_TIMES)
+        header = [[setting],["Precision RL","Recall RL","F1-score RL","Reward RL"]]
+        csvreader.writerows(header)
 
-        total_reward = 0
-        for times in trange(EXP_TIMES, desc=f'[REINFORCEMENT LEARNING START]'):
-            if times == 0:
-                header = [[setting],["Epoch RL","Precision RL","Recall RL","F1-score RL","Reward RL"]]
-                csvreader.writerows(header)
-            # Set up the training environment on all the dataset
-            env_off=TrainEnvOffline_dist_conf(list_pred_sc=list_pred_models, list_thresholds=list_thresholds, list_gtruth=test_labels)
-            # Train the model on all the dataset  
-            model = DQN('MlpPolicy', env_off, verbose=0)
-            model.learn(total_timesteps=len(list_pred_models[0])) 
-            prec, rec, f1, _, list_preds, reward =eval_model(model, env_off)  #masuk ke step di env
-            print(f"Times-{times+1} RL: precision: {prec}, recall: {rec}, F1-score: {f1} reward: {reward}")
-            csvreader.writerows([[times+1,prec,rec,f1,reward]])
-            store_prec[times]=prec
-            store_rec[times]=rec
-            store_f1[times]=f1
-            total_reward = total_reward + reward
+        logdir = "logs"
+        path = os.path.join(logdir, setting)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        # Set up the training environment on all the dataset
+        env_off=TrainEnvOffline_dist_conf(list_pred_sc=list_pred_models, list_thresholds=list_thresholds, list_gtruth=test_labels)
+        # Train the model on all the dataset  
+        model = DQN('MlpPolicy', env_off, verbose=1, tensorboard_log=path)
+        model.learn(total_timesteps=len(list_pred_models[0]),progress_bar=True) 
+        acc,prec, rec, f1, _, list_preds, reward =eval_model(model, env_off)  #masuk ke step di env
 
-        # Compute the mean and standard deviation of the results
-        average_prec=np.mean(store_prec)
-        average_rec=np.mean(store_rec)
-        average_f1=np.mean(store_f1)
-
-        std_prec=np.std(store_prec)
-        std_rec=np.std(store_rec)
-        std_f1=np.std(store_f1)
+        print(f"precision: {prec}, recall: {rec}, F1-score: {f1} reward: {reward}")
+        csvreader.writerows([[prec,rec,f1,reward]])
 
         print("Total number of reported anomalies: ",sum(list_preds))
-        print("Total number of true anomalies: ",sum(test_labels))
-        print("Total Rewards of Reinforcement Learning: ",total_reward)
+        print("Total number of true anomalies: ",sum(test_labels)) #di RL ambil 10000 time step aja
 
-        print("Average precision: %.4f, std: %.4f" % (average_prec, std_prec))
-        print("Average recall: %.4f, std: %.4f" % (average_rec, std_rec))
-        print("Average F1-score: %.4f, std: %.4f" % (average_f1, std_f1))
+        print("accuracy: %.4f" % (acc))
+        print("precision: %.4f" % (prec))
+        print("recall: %.4f" % (rec))
+        print("F1-score: %.4f" % (f1))
         return
     

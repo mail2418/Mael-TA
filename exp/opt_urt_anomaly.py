@@ -380,8 +380,10 @@ class Opt_URT_Anomaly(Exp_Basic):
         print("pred:   ", pred.shape)
         print("gt:     ", gt.shape)
 
+        print(f"Prediction anomaly before adjustment {np.sum(pred)}")
         # (4) detection adjustment
         gt, pred = adjustment(gt, pred) #gt == label
+        print(f"Prediction anomaly after adjustment {np.sum(pred)}")
 
         pred = np.array(pred)
         gt = np.array(gt)
@@ -428,6 +430,7 @@ class Opt_URT_Anomaly(Exp_Basic):
             pdf.savefig(fig)
             # Optionally close the figure to free memory
             plt.close(fig)
+
         accuracy = accuracy_score(gt, pred)
         precision, recall, f_score, support = precision_recall_fscore_support(gt, pred, average='binary')
         print("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(

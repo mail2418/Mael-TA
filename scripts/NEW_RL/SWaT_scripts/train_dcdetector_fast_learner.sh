@@ -1,22 +1,23 @@
 export CUDA_VISIBLE_DEVICES=0
 
 py -u run_anomaly.py \
-  --is_training 0 \
-  --root_path ./dataset/SMAP/ \
+  --is_training 1 \
+  --root_path ./dataset/SWaT/ \
   --model_id MaelNetS2_AnomalyTransformer_DCDetector_RL_TA\
+  --model DCDetector \
   --patch_size 5 \
   --train_epochs 3 \
-  --data SMAP \
+  --data SWaT \
   --e_layers 3 \
   --d_layers 1 \
   --anomaly_ratio 0.85 \
   --factor 5 \
   --d_ff 512 \
   --dropout 0.0 \
-  --enc_in 25 \
-  --dec_in 25 \
-  --channel 25 \
-  --c_out 25 \
+  --enc_in 51 \
+  --dec_in 51 \
+  --channel 51 \
+  --c_out 51 \
   --d_model 512 \
   --moving_avg 100 \
   --win_size 100 \

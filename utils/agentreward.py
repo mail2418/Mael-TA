@@ -3,7 +3,6 @@ import numpy as np
 from collections import Counter
 from sktime.performance_metrics.forecasting import \
     mean_absolute_error, mean_absolute_percentage_error
-from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 from utils.tools import adjustment
 import math
 from gym.utils import seeding
@@ -11,8 +10,7 @@ from gym import spaces
 import gym
 import time
 import random
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, precision_recall_fscore_support
 def get_mape_reward(q_mape, mape, R=1):
         q = 0
         while (q < 9) and (mape > q_mape):
@@ -144,19 +142,11 @@ class EnvOffline_dist_conf(gym.Env):
         self.num_models = len(list_pred_sc)
 
         #List of ground truth labels
-        self.gtruth = np.array(list_gtruth).astype(int)
+        self.gtruth = list_gtruth.astype(int)
         
         # Raw scores and thresholds of the testing data
         self.list_pred_sc = list_pred_sc
         self.list_thresholds = list_thresholds
-
-        # Scale the raw scores/thresholds and save each scaler
-        # self.list_scaled_sc = []
-        # self.list_scaled_thresholds = []
-        # for i in range(self.num_models):
-        #     scaler_tmp = StandardScaler()
-        #     self.list_scaled_sc.append(scaler_tmp.fit_transform(self.list_pred_sc[i].reshape(-1,1)))
-        #     self.list_scaled_thresholds.append(scaler_tmp.transform(self.list_thresholds[i].reshape(-1,1)))
 
         # Extract predictions
         self.list_pred = []
@@ -198,7 +188,7 @@ class TrainEnvOffline_dist_conf(EnvOffline_dist_conf):
         super().__init__(list_pred_sc, list_thresholds, list_gtruth)
     
     def reset(self):
-        self.pointer = 0 # Reset the pointer to the beginning of the testing data
+        self.time_step = 0 # Reset the pointer to the beginning of the testing data
         self.time_now = time.time()
         self.done = False
         return self._get_state()
@@ -213,11 +203,8 @@ class TrainEnvOffline_dist_conf(EnvOffline_dist_conf):
         # Get the reward
         reward=self._get_reward(observation)
         # Check whether the episode is over
-        if(self.pointer > 9998):
-            self.done = True
-            return observation, reward, self.done, {}
-        self.pointer = self.pointer + 1
-        self.done = self.pointer >= self.len_data
+        self.time_step = self.time_step + 1
+        self.done = self.time_step >= self.len_data
         return observation, reward, self.done, {}
 
     def _get_state(self,action=None):
@@ -225,15 +212,15 @@ class TrainEnvOffline_dist_conf(EnvOffline_dist_conf):
         '''Return:
             observation: the current state of the environment.'''
 
-        if self.pointer==0: # If the pointer is at the beginning of the testing data
+        if self.time_step==0: # If the pointer is at the beginning of the testing data
             action=random.randint(0,self.num_models-1) # Randomly select a model
 
         # Get the current state
         observation = np.zeros(4) # 4 dims - scaled scores, scaled thresholds, labels, dist_conf
-        observation[0] = self.list_pred_sc[action][self.pointer]
+        observation[0] = self.list_pred_sc[action][self.time_step]
         observation[1] = self.list_thresholds[action]
-        observation[2] = self.list_pred[action][self.pointer]
-        observation[3] = self.dist_conf[self.pointer][action]
+        observation[2] = self.list_pred[action][self.time_step]
+        observation[3] = self.dist_conf[self.time_step][action]
 
         return observation
 
@@ -242,7 +229,7 @@ class TrainEnvOffline_dist_conf(EnvOffline_dist_conf):
             reward: the reward of the action.'''
         reward = 0
         # Get the reward confusion matrix
-        if self.gtruth[self.pointer]==1: # If the ground truth is 1 anomaly
+        if self.gtruth[self.time_step]==1: # If the ground truth is 1 anomaly
             if observation[2]==1: # If the model predicts 1 anomaly correctly - True Positive (TP)
                 reward = reward + 1
             else: # If the model predicts 0 normal incorrectly - False Negative (FN)
@@ -253,11 +240,11 @@ class TrainEnvOffline_dist_conf(EnvOffline_dist_conf):
             else: # If the model predicts 0 normal correctly - True Negative (TN)
                 reward = reward + 0.01
 
-        # Get the reward distance threshold
-        distance = abs(1 - observation[3])
-        reward_distance_conf = 1 - (1 / abs((1 - observation[3]))) if distance > 0 else 1
+        # # Get the reward distance threshold
+        # distance = abs(1 - observation[3])
+        # reward_distance_conf = 1 - (1 / abs((1 - observation[3]))) if distance > 0 else 1
         
-        reward = reward + reward_distance_conf
+        # reward = reward + reward_distance_conf
         return reward
 
 def eval_model(model,env):
@@ -286,9 +273,9 @@ def eval_model(model,env):
         preds.append(observation[2])
         if done:
             break
-
-    prec=precision_score(gtruth[:10000],preds,pos_label=1)
-    rec=recall_score(gtruth[:10000],preds,pos_label=1)
-    f1=f1_score(gtruth[:10000],preds,pos_label=1)
-    conf_matrix=confusion_matrix(gtruth[:10000],preds,labels=[0,1])
-    return prec,rec,f1,conf_matrix, preds, reward
+    accuracy=accuracy_score(gtruth,preds)
+    prec=precision_score(gtruth,preds,pos_label=1)
+    rec=recall_score(gtruth,preds,pos_label=1)
+    f1=f1_score(gtruth,preds,pos_label=1)
+    conf_matrix=confusion_matrix(gtruth,preds,labels=[0,1])
+    return accuracy,prec,rec,f1,conf_matrix, preds, reward

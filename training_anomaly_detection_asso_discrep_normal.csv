@@ -204,3 +204,30 @@ Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
 3,124.56802177429199,222,-46.7677063,-46.7486519,-45.8049552
 
 
+MaelNetS2_AnomalyTransformer_DCDetector_RL_TA_SMD_ftM_dm512_nh8_el3_dl1_df512_fc5_ebtimeF_dtTrue
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+1,144.37301874160767,222,-40.2845023,-47.4075374,-46.4409911
+
+2,121.23775482177734,222,-47.6672073,-48.0004911,-47.0909499
+
+3,123.3587806224823,222,-47.9661085,-48.1372048,-47.2452379
+
+
+MaelNetS2_AnomalyTransformer_DCDetector_RL_TA_SMD_ftM_dm512_nh8_el3_dl1_df512_fc5_ebtimeF_dtTrue
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+1,120.71630001068115,222,-40.2845023,-47.4075374,-46.4409911
+
+2,119.77118587493896,222,-47.6672073,-48.0004911,-47.0909499
+
+3,121.53118014335632,222,-47.9661085,-48.1372048,-47.2452379
+
+
+MaelNetS2_AnomalyTransformer_DCDetector_RL_TA_SMD_ftM_dm512_nh8_el3_dl1_df512_fc5_ebtimeF_dtTrue
+Epoch,Cost Time,Steps,Train Loss,Vali Loss,Test Loss
+1,216.75148391723633,222,0.0,0.0,0.0
+
+2,216.14645147323608,222,0.0,0.0,0.0
+
+3,216.50170969963074,222,0.0,0.0,0.0
+
+

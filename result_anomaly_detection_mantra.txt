@@ -46,3 +46,12 @@ Accuracy : 0.9785, Precision : 0.8990, Recall : 0.9269, F-score : 0.9127
 MaelNetB1_MaelNetS1_SMD_MSE_NO_SL2_MaelNetB1_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
 Accuracy : 0.9852, Precision : 0.8396, Recall : 0.7967, F-score : 0.8176 
 
+MaelNet_MANTRA_TA_MaelNetB1_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_TA_0  
+Accuracy : 0.9875, Precision : 0.8609, Recall : 0.8334, F-score : 0.8470 
+
+MaelNet_MANTRA_TA_MaelNetB1_SMD_ftM_dm256_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_TA_0  
+Accuracy : 0.9877, Precision : 0.8632, Recall : 0.8356, F-score : 0.8492 
+
+MaelNet_MANTRA_TA_MaelNetB1_SMD_ftM_dm128_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_TA_0  
+Accuracy : 0.9868, Precision : 0.8561, Recall : 0.8211, F-score : 0.8382 
+

@@ -1,7 +1,7 @@
   py -u run_mantra.py \
   --is_training 1 \
   --root_path ./dataset/SMD/ \
-  --model_id MaelNetB1_MaelNetS1_SMD_MSE_NO_SL2 \
+  --model_id MaelNet_MANTRA_TA \
   --model MaelNetB1 \
   --loss_type mse \
   --data SMD \
@@ -12,8 +12,9 @@
   --enc_in 38 \
   --dec_in 38 \
   --c_out 38 \
-  --d_model 512 \
+  --d_model 128 \
   --gpu 0 \
+  --des 'TA' \
   --p_hidden_dims 128 128 \
   --p_hidden_layers 2 \
   --itr 1 &

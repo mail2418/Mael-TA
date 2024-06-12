@@ -7,14 +7,14 @@ import numpy as np
 parser = argparse.ArgumentParser(description='FEDFormer for Time Series Anomaly Detection')
 
 # basic config
-parser.add_argument('--is_training', type=int, default=0, help='status')
-parser.add_argument('--model_id', type=str, default='MaelNet_SMD_TCNEmbeddingEnc_TokenEmbedDec', help='model id')
+parser.add_argument('--is_training', type=int, default=1, help='status')
+parser.add_argument('--model_id', type=str, default='MaelNet_SMAP_testdataset', help='model id')
 parser.add_argument('--model', type=str, default='MaelNet',
                     help='model name, options: [MaelNet]')
 
 # # # data loader
-parser.add_argument('--data', type=str, default='SMD', help='dataset type')
-parser.add_argument('--root_path', type=str, default='./dataset/SMD/', help='root path of the data file')
+parser.add_argument('--data', type=str, default='PSM', help='dataset type')
+parser.add_argument('--root_path', type=str, default='./dataset/PSM/', help='root path of the data file')
 parser.add_argument('--win_size', type=int, default=100, help='window size')
 
 parser.add_argument('--features', type=str, default='M',

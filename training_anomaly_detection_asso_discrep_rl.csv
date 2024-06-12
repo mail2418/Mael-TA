@@ -36,3 +36,29 @@ Epoch RL,Precision RL,Recall RL,F1-score RL,Reward RL
 3,0.0,0.0,0.0,0.12413049685616516
 MaelNetS1_AnomalyTransformer_DCDetector_RL_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue
 Epoch RL,Precision RL,Recall RL,F1-score RL,Reward RL
+MaelNetS2_AnomalyTransformer_DCDetector_RL_TA_SMD_ftM_dm512_nh8_el3_dl1_df512_fc5_ebtimeF_dtTrue
+Epoch RL,Precision RL,Recall RL,F1-score RL,Reward RL
+1,0.0,0.0,0.0,0.5099778804530742
+2,0.0,0.0,0.0,0.5099778804530742
+3,0.0,0.0,0.0,0.5099778804530742
+MaelNetS2_AnomalyTransformer_DCDetector_RL_TA_SMD_ftM_dm512_nh8_el3_dl1_df512_fc5_ebtimeF_dtTrue
+Precision RL,Recall RL,F1-score RL,Reward RL
+MaelNetS2_AnomalyTransformer_DCDetector_RL_TA_SMD_ftM_dm512_nh8_el3_dl1_df512_fc5_ebtimeF_dtTrue
+Precision RL,Recall RL,F1-score RL,Reward RL
+MaelNetS2_AnomalyTransformer_DCDetector_RL_TA_SMD_ftM_dm512_nh8_el3_dl1_df512_fc5_ebtimeF_dtTrue
+Precision RL,Recall RL,F1-score RL,Reward RL
+MaelNetS2_AnomalyTransformer_DCDetector_RL_TA_SMD_ftM_dm512_nh8_el3_dl1_df512_fc5_ebtimeF_dtTrue
+Precision RL,Recall RL,F1-score RL,Reward RL
+0.0,0.0,0.0,0.5099778804530742
+MaelNetS2_AnomalyTransformer_DCDetector_RL_TA_SMD_ftM_dm512_nh8_el3_dl1_df512_fc5_ebtimeF_dtTrue
+Precision RL,Recall RL,F1-score RL,Reward RL
+0.8530425998815703,0.8317484037494906,0.8422609323680635,0.5099778804530742
+MaelNetS2_AnomalyTransformer_DCDetector_RL_TA_SMD_ftM_dm512_nh8_el3_dl1_df512_fc5_ebtimeF_dtTrue
+Precision RL,Recall RL,F1-score RL,Reward RL
+0.8533037816872143,0.8368428202689852,0.8449931412894376,0.5099778804530742
+MaelNetS2_AnomalyTransformer_DCDetector_RL_TA_SMD_ftM_dm512_nh8_el3_dl1_df512_fc5_ebtimeF_dtTrue
+Precision RL,Recall RL,F1-score RL,Reward RL
+0.876880633881885,0.9283725037359054,0.9018922084563735,0.01
+MaelNetS2_AnomalyTransformer_DCDetector_RL_TA_SMD_ftM_dm512_nh8_el3_dl1_df512_fc5_ebtimeF_dtTrue
+Precision RL,Recall RL,F1-score RL,Reward RL
+0.8804890705065836,0.9220554272517321,0.9007929924682305,0.01

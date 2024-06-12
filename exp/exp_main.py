@@ -1,6 +1,6 @@
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
-from utils.tools import EarlyStopping, adjust_learning_rate, adjustment, plotter
+from utils.tools import EarlyStopping, adjust_learning_rate, adjustment, plotter, smooth
 from utils.pot import pot_eval
 from utils.diagnosis import ndcg, hit_att
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
@@ -228,11 +228,11 @@ class Exp_Anomaly_Detection(Exp_Basic):
         test_labels = np.array(test_labels)
 
         gt = test_labels.astype(int)
-        print("pred:   ", pred.shape)
-        print("gt:     ", gt.shape)
 
+        print(f"Prediction anomaly before adjustment {np.sum(pred)}")
         # (4) detection adjustment
         gt, pred = adjustment(gt, pred) #gt == label
+        print(f"Prediction anomaly after adjustment {np.sum(pred)}")
 
         pred = np.array(pred)
         gt = np.array(gt)
@@ -261,7 +261,29 @@ class Exp_Anomaly_Detection(Exp_Basic):
             pdf.savefig(fig)
             # Optionally close the figure to free memory
             plt.close(fig)
-        
+
+        with PdfPages(f'plots/{setting}/times_series_plot.pdf') as pdf:
+            fig, (ax1,ax2) = plt.subplots(2,1,figsize=(8,6),sharex=True)
+            ax1.set_title('Ground Truth')
+            ax2.set_title('Prediction')
+            ax1.plot(smooth(train_energy), linewidth=0.3, label="Ground Truth")
+            ax2.plot(smooth(test_energy), linewidth=0.3, label="Prediction")
+
+            ax3 = ax1.twinx()
+            ax4 = ax2.twinx()
+
+            ax3.fill_between(np.arange(gt.shape[0]), gt, color='blue', alpha=0.3, label='True Anomaly')
+            ax4.fill_between(np.arange(pred.shape[0]), pred, color='red', alpha=0.3, label='Predicted Anomaly')
+            
+            ax3.legend(ncol=2, bbox_to_anchor=(0.6, 1.02))
+            ax4.legend(bbox_to_anchor=(1, 1.02))
+
+            ax1.set_yticks([])
+            ax2.set_yticks([])
+            # Save the current figure to the PDF
+            pdf.savefig(fig)
+            # Optionally close the figure to free memory
+            plt.close(fig)
         # result_anomaly_detection.txt
         f = open("result_anomaly_detection.txt", 'a')
         f.write(setting + "  \n")

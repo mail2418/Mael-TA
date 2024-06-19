@@ -2,8 +2,8 @@
 py -u run_anomaly.py \
   --is_training 1 \
   --root_path ./dataset/SWaT/ \
-  --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
-  --model MaelNetS1 \
+  --model_id MaelNetS2_AnomalyTransformer_DCDetector_RL\
+  --model MaelNetS2 \
   --is_slow_learner true \
   --data SWaT \
   --e_layers 2 \
@@ -25,7 +25,7 @@ py -u run_anomaly.py \
 py -u run_anomaly.py \
   --is_training 1 \
   --root_path ./dataset/SWaT/ \
-  --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
+  --model_id MaelNetS2_AnomalyTransformer_DCDetector_RL\
   --model DCDetector \
   --patch_size 5 \
   --train_epochs 3 \
@@ -49,7 +49,7 @@ py -u run_anomaly.py \
 py -u run_anomaly.py \
   --is_training 1 \
   --root_path ./dataset/SWaT/ \
-  --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
+  --model_id MaelNetS2_AnomalyTransformer_DCDetector_RL\
   --model AnomalyTransformer \
   --train_epochs 3 \
   --data SWaT \

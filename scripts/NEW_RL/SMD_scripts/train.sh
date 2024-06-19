@@ -2,7 +2,7 @@
 py -u run_anomaly.py \
   --is_training 1 \
   --root_path ./dataset/SMD/ \
-  --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
+  --model_id MaelNetS2_AnomalyTransformer_DCDetector_RL\
   --model MaelNetS1 \
   --is_slow_learner true \
   --data SMD \
@@ -25,7 +25,7 @@ py -u run_anomaly.py \
 py -u run_anomaly.py \
   --is_training 1 \
   --root_path ./dataset/SMD/ \
-  --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
+  --model_id MaelNetS2_AnomalyTransformer_DCDetector_RL\
   --model DCDetector \
   --patch_size 5 \
   --train_epochs 3 \
@@ -49,7 +49,7 @@ py -u run_anomaly.py \
 py -u run_anomaly.py \
   --is_training 1 \
   --root_path ./dataset/SMD/ \
-  --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
+  --model_id MaelNetS2_AnomalyTransformer_DCDetector_RL\
   --model AnomalyTransformer \
   --train_epochs 3 \
   --data SMD \

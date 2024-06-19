@@ -192,7 +192,7 @@ class OPT_RL_Anomaly():
                 
         f_csv = open("training_anomaly_detection_asso_discrep_rl.csv","a")
         csvreader = csv.writer(f_csv)
-        EXP_TIMES=10 # How many runs to average the results
+        EXP_TIMES=3 # How many runs to average the results
         # Store the precision, recall, F1-score
         store_prec=np.zeros(EXP_TIMES)
         store_rec=np.zeros(EXP_TIMES)

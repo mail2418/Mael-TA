@@ -158,11 +158,11 @@ class EnvOffline_dist_conf(gym.Env):
         #     self.list_scaled_thresholds.append(scaler_tmp.transform(self.list_thresholds[i].reshape(-1,1)))
 
         # Extract predictions
-        self.list_pred = np.zeros(self.num_models)
+        self.list_pred = []
         for i in range(self.num_models):
             pred_tmp = (self.list_pred_sc[i] > self.list_thresholds[i]).astype(int)
             new_gt,new_pred = adjustment(self.gtruth, pred_tmp)
-            self.list_pred[i] = (new_pred)
+            self.list_pred.append(new_pred)
         self.gtruth = new_gt
 
         # Extract distance-to-threshold confidence
@@ -210,6 +210,9 @@ class TrainEnvOffline_dist_conf(EnvOffline_dist_conf):
         observation = self._get_state(action)
         # Get the reward
         reward=self._get_reward(observation)
+        if(self.pointer > 9998):
+            self.done = True
+            return observation, reward, self.done, {}
         # Check whether the episode is over
         self.pointer = self.pointer + 1
         self.done = self.pointer >= self.len_data
@@ -283,10 +286,10 @@ def eval_model(model,env):
         if done:
             break
     
-    prec=precision_score(gtruth,preds,pos_label=1)
-    rec=recall_score(gtruth,preds,pos_label=1)
-    f1=f1_score(gtruth,preds,pos_label=1)
-    conf_matrix=confusion_matrix(gtruth,preds,labels=[0,1])
+    prec=precision_score(gtruth[:10000],preds,pos_label=1)
+    rec=recall_score(gtruth[:10000],preds,pos_label=1)
+    f1=f1_score(gtruth[:10000],preds,pos_label=1)
+    conf_matrix=confusion_matrix(gtruth[:10000],preds,labels=[0,1])
 
     print(f"EVALUATION PRECISION {prec} RECALL {rec} F1 {f1}\n")
     return prec,rec,f1,conf_matrix, preds, reward

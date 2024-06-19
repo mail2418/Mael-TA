@@ -1,7 +1,7 @@
 py -u run_anomaly.py \
   --is_training 0 \
   --root_path ./dataset/SMAP/ \
-  --model_id MaelNetS1_AnomalyTransformer_DCDetector_RL\
+  --model_id MaelNetS2_AnomalyTransformer_DCDetector_RL\
   --data SMD \
   --win_size 100 \
   --channel 25 \

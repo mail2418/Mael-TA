@@ -44,7 +44,6 @@ class DSAttention(nn.Module):
             return (V.contiguous(), None)
 
 class MaelAttention(nn.Module):
-    '''De-stationary Attention'''
     def __init__(self, window_size, mask_flag=True, factor=5, scale=None, attention_dropout=0.1, output_attention=False):
         super(MaelAttention, self).__init__()
         self.scale = scale

@@ -44,11 +44,11 @@ class Model(nn.Module):
         self.dec_in = configs.dec_in
         self.decomp = series_decomp(configs.moving_avg)
         # Embedding
-        self.enc_embedding = DataEmbedding(self.name, configs.enc_in, configs.enc_in, configs.kernel_size, configs.embed, configs.freq,
+        self.enc_embedding = DataEmbedding(self.name, configs.enc_in, configs.d_model, configs.kernel_size, configs.embed, configs.freq,
                                            configs.dropout, configs.n_windows)
         # Decoder Digunakan untuk mengaggregasi informasi dan memperbaiki prediksi dari simpel inisialisasi
-        self.dec_embedding = DataEmbedding(self.name, configs.dec_in, configs.enc_in, configs.kernel_size, configs.embed, configs.freq,
-                                           configs.dropout, configs.n_windows)
+        self.dec_embedding = DataEmbedding(self.name, configs.enc_in, configs.d_model, configs.kernel_size, configs.embed, configs.freq,
+                                           configs.dropout, configs.n_windows, decode=True)
         # Encoder digunakan untuk mengekstrak informasi pada observasi sebelumnya
         self.encoder = Encoder(
             [

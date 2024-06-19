@@ -48,3 +48,39 @@ MaelNetS2_AnomalyTransformer_DCDetector_RL_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_
 FAST LEARNER Epoch: 1, Steps: 1820 | Train Loss: -46.7659179 Vali Loss: -48.0864752 Test Loss: -46.5285833
 FAST LEARNER Epoch: 2, Steps: 1820 | Train Loss: -48.4553838 Vali Loss: -48.6467576 Test Loss: -47.2616412
 FAST LEARNER Epoch: 3, Steps: 1820 | Train Loss: -48.7424089 Vali Loss: -48.7292361 Test Loss: -47.4715108
+MaelNetS1_AnomalyTransformer_DCDetector_RL_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue  
+FAST LEARNER Epoch: 1, Steps: 222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000
+FAST LEARNER Epoch: 2, Steps: 222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000
+FAST LEARNER Epoch: 3, Steps: 222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000
+MaelNetS1_AnomalyTransformer_DCDetector_RL_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue  
+FAST LEARNER Epoch: 1, Steps: 222 | Train Loss: -39.7362401 Vali Loss: -45.4895837 Test Loss: -44.4544039
+FAST LEARNER Epoch: 2, Steps: 222 | Train Loss: -46.4701408 Vali Loss: -47.1386825 Test Loss: -46.2131154
+FAST LEARNER Epoch: 3, Steps: 222 | Train Loss: -47.3045458 Vali Loss: -47.3853731 Test Loss: -46.4825209
+MaelNetS1_AnomalyTransformer_DCDetector_RL2_SMAP_ftM_dm256_nh8_el3_dl1_df2048_fc5_ebtimeF_dtTrue  
+FAST LEARNER Epoch: 1, Steps: 4222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000
+FAST LEARNER Epoch: 2, Steps: 4222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000
+FAST LEARNER Epoch: 3, Steps: 4222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000
+MaelNetS1_AnomalyTransformer_DCDetector_RL2_SMAP_ftM_dm256_nh8_el3_dl1_df2048_fc5_ebtimeF_dtTrue  
+FAST LEARNER Epoch: 1, Steps: 4222 | Train Loss: -47.1264638 Vali Loss: -48.0603082 Test Loss: -47.7481413
+FAST LEARNER Epoch: 2, Steps: 4222 | Train Loss: -48.3908145 Vali Loss: -48.3115803 Test Loss: -48.0859752
+FAST LEARNER Epoch: 3, Steps: 4222 | Train Loss: -48.5320819 Vali Loss: -48.3568120 Test Loss: -48.1634310
+MaelNetS1_AnomalyTransformer_DCDetector_RL2_SMD_ftM_dm256_nh8_el3_dl1_df2048_fc5_ebtimeF_dtTrue  
+FAST LEARNER Epoch: 1, Steps: 222 | Train Loss: -35.9359627 Vali Loss: -43.6837626 Test Loss: -42.6013912
+FAST LEARNER Epoch: 2, Steps: 222 | Train Loss: -45.2797733 Vali Loss: -46.1863968 Test Loss: -45.2513741
+FAST LEARNER Epoch: 3, Steps: 222 | Train Loss: -46.7677063 Vali Loss: -46.7486519 Test Loss: -45.8049552
+MaelNetS2_AnomalyTransformer_DCDetector_RL2_SMD_ftM_dm256_nh8_el3_dl1_df2048_fc5_ebtimeF_dtTrue  
+FAST LEARNER Epoch: 1, Steps: 222 | Train Loss: -35.9359627 Vali Loss: -43.6837626 Test Loss: -42.6013912
+FAST LEARNER Epoch: 2, Steps: 222 | Train Loss: -45.2797733 Vali Loss: -46.1863968 Test Loss: -45.2513741
+FAST LEARNER Epoch: 3, Steps: 222 | Train Loss: -46.7677063 Vali Loss: -46.7486519 Test Loss: -45.8049552
+MaelNetS2_AnomalyTransformer_DCDetector_RL_TA_SMD_ftM_dm512_nh8_el3_dl1_df512_fc5_ebtimeF_dtTrue  
+FAST LEARNER Epoch: 1, Steps: 222 | Train Loss: -40.2845023 Vali Loss: -47.4075374 Test Loss: -46.4409911
+FAST LEARNER Epoch: 2, Steps: 222 | Train Loss: -47.6672073 Vali Loss: -48.0004911 Test Loss: -47.0909499
+FAST LEARNER Epoch: 3, Steps: 222 | Train Loss: -47.9661085 Vali Loss: -48.1372048 Test Loss: -47.2452379
+MaelNetS2_AnomalyTransformer_DCDetector_RL_TA_SMD_ftM_dm512_nh8_el3_dl1_df512_fc5_ebtimeF_dtTrue  
+FAST LEARNER Epoch: 1, Steps: 222 | Train Loss: -40.2845023 Vali Loss: -47.4075374 Test Loss: -46.4409911
+FAST LEARNER Epoch: 2, Steps: 222 | Train Loss: -47.6672073 Vali Loss: -48.0004911 Test Loss: -47.0909499
+FAST LEARNER Epoch: 3, Steps: 222 | Train Loss: -47.9661085 Vali Loss: -48.1372048 Test Loss: -47.2452379
+MaelNetS2_AnomalyTransformer_DCDetector_RL_TA_SMD_ftM_dm512_nh8_el3_dl1_df512_fc5_ebtimeF_dtTrue  
+FAST LEARNER Epoch: 1, Steps: 222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000
+FAST LEARNER Epoch: 2, Steps: 222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000
+FAST LEARNER Epoch: 3, Steps: 222 | Train Loss: 0.0000000 Vali Loss: 0.0000000 Test Loss: 0.0000000

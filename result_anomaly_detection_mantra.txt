@@ -19,3 +19,39 @@ Accuracy : 0.9859, Precision : 0.8545, Recall : 0.7969, F-score : 0.8247
 NSTransformerB1_NSTransformerS1_SMAP_MSE_NO_SL_NSTransformerB1_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_Exp_h256_l2_0  
 Accuracy : 0.9441, Precision : 0.9210, Recall : 0.6160, F-score : 0.7382 
 
+MaelNetB1_MaelNetS1_SMD_MSE_NO_SL2_MaelNetB1_SMD_ftM_dm38_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9861, Precision : 0.8441, Recall : 0.8171, F-score : 0.8303 
+
+MaelNetB1_MaelNetS1_SMAP_MSE_NO_SL2_MaelNetB1_SMAP_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9364, Precision : 0.9219, Recall : 0.5492, F-score : 0.6883 
+
+MaelNetB1_MaelNetS1_SMD_MSE_NO_SL2_MaelNetB1_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9875, Precision : 0.8609, Recall : 0.8334, F-score : 0.8470 
+
+MaelNetB1_MaelNetS1_MSL_MSE_NO_SL2_MaelNetB1_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9495, Precision : 0.8687, Recall : 0.6136, F-score : 0.7192 
+
+MaelNetB1_MaelNetS1_MSL_MSE_NO_SL2_MaelNetB1_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9496, Precision : 0.8693, Recall : 0.6150, F-score : 0.7204 
+
+MaelNetB1_MaelNetS1_MSL_MSE_NO_SL2_MaelNetB1_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_1  
+Accuracy : 0.9519, Precision : 0.8726, Recall : 0.6373, F-score : 0.7366 
+
+MaelNetB1_MaelNetS1_MSL_MSE_NO_SL2_MaelNetB1_MSL_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_2  
+Accuracy : 0.9496, Precision : 0.8662, Recall : 0.6170, F-score : 0.7207 
+
+MaelNetB1_MaelNetS1_SWaT_MSE_NO_SL2_MaelNetB1_SWaT_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9785, Precision : 0.8990, Recall : 0.9269, F-score : 0.9127 
+
+MaelNetB1_MaelNetS1_SMD_MSE_NO_SL2_MaelNetB1_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc3_ebtimeF_dtTrue_test_0  
+Accuracy : 0.9852, Precision : 0.8396, Recall : 0.7967, F-score : 0.8176 
+
+MaelNet_MANTRA_TA_MaelNetB1_SMD_ftM_dm512_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_TA_0  
+Accuracy : 0.9875, Precision : 0.8609, Recall : 0.8334, F-score : 0.8470 
+
+MaelNet_MANTRA_TA_MaelNetB1_SMD_ftM_dm256_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_TA_0  
+Accuracy : 0.9877, Precision : 0.8632, Recall : 0.8356, F-score : 0.8492 
+
+MaelNet_MANTRA_TA_MaelNetB1_SMD_ftM_dm128_nh8_el2_dl1_df2048_fc5_ebtimeF_dtTrue_TA_0  
+Accuracy : 0.9868, Precision : 0.8561, Recall : 0.8211, F-score : 0.8382 
+

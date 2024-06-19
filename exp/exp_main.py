@@ -1,13 +1,14 @@
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
-from utils.tools import EarlyStopping, adjust_learning_rate, adjustment
+from utils.tools import EarlyStopping, adjust_learning_rate, adjustment, plotter, smooth
 from utils.pot import pot_eval
 from utils.diagnosis import ndcg, hit_att
-from sklearn.metrics import precision_recall_fscore_support
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_recall_fscore_support, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+from matplotlib.backends.backend_pdf import PdfPages
 import torch.multiprocessing
 from tqdm import tqdm
 from pprint import pprint
+import matplotlib.pyplot as plt
 
 torch.multiprocessing.set_sharing_strategy('file_system')
 import torch
@@ -131,7 +132,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
             f.write("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)
             vali_loss = self.vali(vali_data, vali_loader, criterion)
-            test_loss = self.vali(test_data, test_loader, criterion)
+            test_loss = self.vali(test_data, test_loader, criterion) #tambahin plotter nanti
 
             data_for_csv = [[epoch + 1, time.time() - epoch_time, train_steps, round(train_loss,7), round(vali_loss,7), round(test_loss,7)],[]]
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
@@ -145,15 +146,16 @@ class Exp_Anomaly_Detection(Exp_Basic):
                 print("Early stopping")
                 break
             adjust_learning_rate(model_optim, epoch + 1, self.args)
-
         best_model_path = path + '/' + 'checkpoint.pth'
         self.model.load_state_dict(torch.load(best_model_path)) # load_state_dict
         csvreader.writerow([])
         return self.model
 
     def test(self, setting, test=1):
-        _, test_loader = self._get_data(flag='test')
+        test_data, test_loader = self._get_data(flag='test')
         _, train_loader = self._get_data(flag='train')
+
+        test_dataset = test_data[test]
 
         if test:
             print('loading model')
@@ -187,6 +189,8 @@ class Exp_Anomaly_Detection(Exp_Basic):
         # (2) find the threshold TEST SET
         attens_energy = []
         test_labels = []
+        # score_plots = []
+        # y_pred = []
         for i, (batch_x, batch_y) in enumerate(test_loader):
             batch_x = batch_x.float().to(self.device)
             # reconstruction
@@ -196,10 +200,19 @@ class Exp_Anomaly_Detection(Exp_Basic):
                 outputs = self.model(batch_x.permute(0,2,1)) 
             # criterion
             lossT = self.anomaly_criterion(batch_x, outputs)
+            # variables for plotting
+            # score_plot = torch.mean(lossT, dim=0).detach().cpu().numpy()
+            # y_pred.append(torch.mean(outputs, dim=0).detach().cpu().numpy())
+            # score_plots.append(score_plot)
+
             score = torch.mean(lossT, dim=-1) #anomaly score
             score = score.detach().cpu().numpy()
             attens_energy.append(score)
             test_labels.append(batch_y)
+        # Plotting
+        
+        # test0 = torch.roll(test_data,0,1) if self.model.name == "KBJNet" else test_data
+        # plotter(setting, test0,test_energy,score,test_labels)
 
         attens_energy = np.concatenate(attens_energy, axis=0).reshape(-1)
         test_energy = np.array(attens_energy)
@@ -215,11 +228,11 @@ class Exp_Anomaly_Detection(Exp_Basic):
         test_labels = np.array(test_labels)
 
         gt = test_labels.astype(int)
-        print("pred:   ", pred.shape)
-        print("gt:     ", gt.shape)
 
+        print(f"Prediction anomaly before adjustment {np.sum(pred)}")
         # (4) detection adjustment
         gt, pred = adjustment(gt, pred) #gt == label
+        print(f"Prediction anomaly after adjustment {np.sum(pred)}")
 
         pred = np.array(pred)
         gt = np.array(gt)
@@ -231,7 +244,46 @@ class Exp_Anomaly_Detection(Exp_Basic):
         print("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
             accuracy, precision,
             recall, f_score))
+        
+        os.makedirs(os.path.join("plots",setting), exist_ok=True)
+        with PdfPages(f'plots/{setting}/confusion_matrix.pdf') as pdf:
+            # Compute the confusion matrix
+            cm = confusion_matrix(gt, pred)
+            # Create a figure for the confusion matrix
+            fig, ax = plt.subplots(figsize=(8, 6))
+            # Display the confusion matrix
+            display = ConfusionMatrixDisplay(confusion_matrix=cm)
+            # Set the plot title using the axes object
+            ax.set_title(f'Confusion Matrix for Anomaly Detection {self.args.data}')
+            # Plot the confusion matrix with customizations
+            display.plot(ax=ax)
+            # Save the current figure to the PDF
+            pdf.savefig(fig)
+            # Optionally close the figure to free memory
+            plt.close(fig)
 
+        with PdfPages(f'plots/{setting}/times_series_plot.pdf') as pdf:
+            fig, (ax1,ax2) = plt.subplots(2,1,figsize=(8,6),sharex=True)
+            ax1.set_title('Ground Truth')
+            ax2.set_title('Prediction')
+            ax1.plot(smooth(train_energy), linewidth=0.3, label="Ground Truth")
+            ax2.plot(smooth(test_energy), linewidth=0.3, label="Prediction")
+
+            ax3 = ax1.twinx()
+            ax4 = ax2.twinx()
+
+            ax3.fill_between(np.arange(gt.shape[0]), gt, color='blue', alpha=0.3, label='True Anomaly')
+            ax4.fill_between(np.arange(pred.shape[0]), pred, color='red', alpha=0.3, label='Predicted Anomaly')
+            
+            ax3.legend(ncol=2, bbox_to_anchor=(0.6, 1.02))
+            ax4.legend(bbox_to_anchor=(1, 1.02))
+
+            ax1.set_yticks([])
+            ax2.set_yticks([])
+            # Save the current figure to the PDF
+            pdf.savefig(fig)
+            # Optionally close the figure to free memory
+            plt.close(fig)
         # result_anomaly_detection.txt
         f = open("result_anomaly_detection.txt", 'a')
         f.write(setting + "  \n")

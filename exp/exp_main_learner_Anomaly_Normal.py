@@ -38,41 +38,38 @@ class Exp_Anomaly_Detection_Normal(Exp_Basic):
         loss_1 = []
         loss_2 = []
         # Anomaly Transformer doesnt use NO GRAD in vali
-        with torch.no_grad():
-            for i, (batch_x, _) in enumerate(vali_loader):
-                batch_x = batch_x.float().to(self.device)
-                if model_name == "DCDetector":
-                    series, prior= self.model(batch_x)
-                else:
-                    outputs, series, prior= self.model(batch_x)
-                series_loss = 0.0
-                prior_loss = 0.0
-                for u in range(len(prior)):
-                    series_loss += (torch.mean(my_kl_loss(series[u], (
-                            prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                self.args.win_size)).detach())) + torch.mean(
-                        my_kl_loss(
+        for i, (batch_x, _) in enumerate(vali_loader):
+            batch_x = batch_x.float().to(self.device)
+            if model_name == "DCDetector":
+                series, prior= self.model(batch_x)
+            else:
+                outputs, series, prior= self.model(batch_x)
+            series_loss = 0.0
+            prior_loss = 0.0
+            for u in range(len(prior)):
+                series_loss += (torch.mean(my_kl_loss(series[u], (
+                        prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
+                                                                                            self.args.win_size)).detach())) + torch.mean(
+                    my_kl_loss(
+                        (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
+                                                                                                self.args.win_size)).detach(),
+                        series[u])))
+                prior_loss += (torch.mean(
+                    my_kl_loss((prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
+                                                                                                    self.args.win_size)),
+                            series[u].detach())) + torch.mean(
+                    my_kl_loss(series[u].detach(),
                             (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                    self.args.win_size)).detach(),
-                            series[u])))
-                    prior_loss += (torch.mean(
-                        my_kl_loss((prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                        self.args.win_size)),
-                                series[u].detach())) + torch.mean(
-                        my_kl_loss(series[u].detach(),
-                                (prior[u] / torch.unsqueeze(torch.sum(prior[u], dim=-1), dim=-1).repeat(1, 1, 1,
-                                                                                                       self.args.win_size)))))
-                series_loss = series_loss / len(prior)
-                prior_loss = prior_loss / len(prior)
+                                                                                                    self.args.win_size)))))
+            series_loss = series_loss / len(prior)
+            prior_loss = prior_loss / len(prior)
 
-                if model_name == "DCDetector":
-                    loss_1.append((prior_loss - series_loss).item())
-                    continue
-
-                rec_loss = criterion(outputs, batch_x)
-                loss_1.append((rec_loss - self.args.k * series_loss).item())
-                loss_2.append((rec_loss + self.args.k * prior_loss).item())
-        self.model.train()
+            if model_name == "DCDetector":
+                loss_1.append((prior_loss - series_loss).item())
+                continue
+            rec_loss = criterion(outputs, batch_x)
+            loss_1.append((rec_loss - self.args.k * series_loss).item())
+            loss_2.append((rec_loss + self.args.k * prior_loss).item())
         if model_name == "DCDetector":
             return np.average(loss_1)
         else:
@@ -133,8 +130,9 @@ class Exp_Anomaly_Detection_Normal(Exp_Basic):
                 prior_loss = prior_loss / len(prior)
 
                 if(self.model.name == "DCDetector"):
-                    loss = prior_loss - series_loss 
+                    loss = prior_loss - series_loss #loss 0 
                     if (i + 1) % 100 == 0:
+                        print("\titers FAST LEARNER {0}: {1}, epoch: {2} | loss phase: {3:.7f}".format(self.model.name,i + 1, epoch + 1, loss.item()))
                         speed = (time.time() - time_now) / iter_count
                         left_time = speed * ((self.args.train_epochs - epoch) * train_steps - i)
                         print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
@@ -152,7 +150,7 @@ class Exp_Anomaly_Detection_Normal(Exp_Basic):
                 loss2 = rec_loss + self.args.k * prior_loss # maximise phase
 
                 if (i + 1) % 100 == 0:
-                    print("\titers FAST LEARNER: {0}, epoch: {1} | loss minimise phase: {2:.7f} | loss maximise phase: {2:.7f}".format(i + 1, epoch + 1, loss1.item(), loss2.item()))
+                    print("\titers FAST LEARNER {0}: {1}, epoch: {2} | loss minimise phase: {3:.7f} | loss maximise phase: {4:.7f}".format(self.model.name,i + 1, epoch + 1, loss1.item(), loss2.item()))
                     speed = (time.time() - time_now) / iter_count
                     left_time = speed * ((self.args.train_epochs - epoch) * train_steps - i)
                     print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
@@ -163,30 +161,30 @@ class Exp_Anomaly_Detection_Normal(Exp_Basic):
                 loss2.backward()
                 model_optim.step()
 
-            train_slow_loss = np.average(train_loss)
+            train_normal_loss = np.average(train_loss)
             if self.model.name == "DCDetector":
-                vali_slow_loss1 = self.vali(vali_loader, criterion, self.model.name)
-                test_slow_loss1 = self.vali(test_loader, criterion, self.model.name)
+                vali_normal_loss1 = self.vali(vali_loader, criterion, self.model.name)
+                test_normal_loss1 = self.vali(test_loader, criterion, self.model.name)
             else:
-                vali_slow_loss1, vali_slow_loss2 = self.vali(vali_loader, criterion, self.model.name)
-                test_slow_loss1, test_slow_loss2 = self.vali(test_loader, criterion, self.model.name)
+                vali_normal_loss1, vali_normal_loss2 = self.vali(vali_loader, criterion, self.model.name)
+                test_normal_loss1, test_normal_loss2 = self.vali(test_loader, criterion, self.model.name)
 
             if epoch == 0:
                 f.write(setting + "  \n")
                 header = [[setting],["Epoch","Cost Time", "Steps", "Train Loss", "Vali Loss", "Test Loss"]]
                 csvreader.writerows(header)
-            data_for_csv = [[epoch + 1, time.time() - epoch_time, train_steps, round(train_slow_loss,7), round(vali_slow_loss1,7), round(test_slow_loss1,7)],[]]
+            data_for_csv = [[epoch + 1, time.time() - epoch_time, train_steps, round(train_normal_loss,7), round(vali_normal_loss1,7), round(test_normal_loss1,7)],[]]
             print("FAST LEARNER Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
-                epoch + 1, train_steps, train_slow_loss, vali_slow_loss1, test_slow_loss1))
+                epoch + 1, train_steps, train_normal_loss, vali_normal_loss1, test_normal_loss1))
             f.write("FAST LEARNER Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
-                epoch + 1, train_steps, train_slow_loss, vali_slow_loss1, test_slow_loss1))
+                epoch + 1, train_steps, train_normal_loss, vali_normal_loss1, test_normal_loss1))
             f.write("\n")
             csvreader.writerows(data_for_csv)
             # Saving Model
             if self.model.name == "DCDetector":
-                early_stopping(vali_slow_loss1, 0, self.model, path)
+                early_stopping(vali_normal_loss1, 0, self.model, path)
             else:
-                early_stopping(vali_slow_loss1, vali_slow_loss2, self.model, path)
+                early_stopping(vali_normal_loss1, vali_normal_loss2, self.model, path)
             if early_stopping.early_stop:
                 print("Early stopping")
                 break

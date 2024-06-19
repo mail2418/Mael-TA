@@ -8,13 +8,13 @@ parser = argparse.ArgumentParser(description='FEDFormer for Time Series Anomaly 
 
 # basic config
 parser.add_argument('--is_training', type=int, default=1, help='status')
-parser.add_argument('--model_id', type=str, default='MaelNet_testing_NEW_EMBEDDING', help='model id')
+parser.add_argument('--model_id', type=str, default='MaelNet_SMAP_testdataset', help='model id')
 parser.add_argument('--model', type=str, default='MaelNet',
                     help='model name, options: [MaelNet]')
 
 # # # data loader
-parser.add_argument('--data', type=str, default='SMD', help='dataset type')
-parser.add_argument('--root_path', type=str, default='./dataset/SMD/', help='root path of the data file')
+parser.add_argument('--data', type=str, default='PSM', help='dataset type')
+parser.add_argument('--root_path', type=str, default='./dataset/PSM/', help='root path of the data file')
 parser.add_argument('--win_size', type=int, default=100, help='window size')
 
 parser.add_argument('--features', type=str, default='M',
@@ -25,7 +25,7 @@ parser.add_argument('--freq', type=str, default='h',
                         help='freq for time features encoding, options:[s:secondly, t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly], you can also use more detailed freq like 15min or 3h')
 
 # anomaly task
-parser.add_argument('--anomaly_ratio', type=float, default=1, help="Anomaly ratio for threshold")
+parser.add_argument('--anomaly_ratio', type=float, default=0.6, help="Anomaly ratio for threshold")
 
 #KBJNet & DCDetector
 parser.add_argument('--n_windows', type=int, default=100, help="Sliding Windows KBJNet")
@@ -67,7 +67,7 @@ parser.add_argument('--e_layers', type=int, default=2, help='num of encoder laye
 parser.add_argument('--d_layers', type=int, default=1, help='num of decoder layers')
 parser.add_argument('--d_ff', type=int, default=2048, help='dimension of fcn')
 parser.add_argument('--moving_avg', type=int, default=100, help='window size of moving average')
-parser.add_argument('--factor', type=int, default=1, help='attn factor')
+parser.add_argument('--factor', type=int, default=5, help='attn factor')
 parser.add_argument('--distil', action='store_false',
                     help='whether to use distilling in encoder, using this argument means not using distilling',
                     default=True)
@@ -87,7 +87,7 @@ parser.add_argument('--train_epochs', type=int, default=10, help='train epochs')
 parser.add_argument('--batch_size', type=int, default=32, help='batch size of train input data')
 parser.add_argument('--patience', type=int, default=3, help='early stopping patience') # Apabila Counter >= patience, akan dilakukan early stop
 parser.add_argument('--learning_rate', type=float, default=0.0001, help='optimizer learning rate')
-parser.add_argument('--des', type=str, default='test', help='exp description')
+parser.add_argument('--des', type=str, default='Exp_h256_l2', help='exp description')
 parser.add_argument('--loss', type=str, default='mse', help='loss function')
 parser.add_argument('--lradj', type=str, default='type1', help='adjust learning rate')
 parser.add_argument('--use_amp', action='store_true', help='use automatic mixed precision training', default=False)

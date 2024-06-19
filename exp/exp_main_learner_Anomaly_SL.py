@@ -132,7 +132,7 @@ class Exp_Anomaly_Detection_SL(Exp_Basic):
                 loss2 = rec_loss + self.args.k * prior_loss # maximise phase
 
                 if (i + 1) % 100 == 0:
-                    print("\titers SLOW LEARNER: {0}, epoch: {1} | loss minimise phase: {2:.7f} | loss maximise phase: {2:.7f}".format(i + 1, epoch + 1, loss1.item(), loss2.item()))
+                    print("\titers SLOW LEARNER: {0}, epoch: {1} | loss minimise phase: {2:.7f} | loss maximise phase: {3:.7f}".format(i + 1, epoch + 1, loss1.item(), loss2.item()))
                     speed = (time.time() - time_now) / iter_count
                     left_time = speed * ((self.args.train_epochs - epoch) * train_steps - i)
                     print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))

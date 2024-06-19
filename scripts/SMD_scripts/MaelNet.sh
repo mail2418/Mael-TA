@@ -1,7 +1,7 @@
 py -u run.py \
   --is_training 1 \
   --root_path ./dataset/SMD/ \
-  --model_id MaelNet_SMD_TCNEmbeddingEnc_TokenEmbedDec \
+  --model_id MaelNet_SMD_TA\
   --model MaelNet \
   --data SMD \
   --e_layers 2 \
@@ -11,10 +11,10 @@ py -u run.py \
   --enc_in 38 \
   --dec_in 38 \
   --c_out 38 \
-  --d_model 512 \
+  --d_model 128 \
   --moving_avg 100 \
   --gpu 0 \
-  --des 'Exp_h256_l2' \
+  --des 'TA' \
   --p_hidden_dims 128 128 \
   --p_hidden_layers 2 \
   --itr 1 &

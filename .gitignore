@@ -139,3 +139,6 @@ dmypy.json
 
 #playground
 playground.py
+
+# Pltos
+/plots

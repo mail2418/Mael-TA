@@ -1,6 +1,6 @@
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
-from utils.tools import EarlyStopping, adjust_learning_rate, adjustment
+from utils.tools import EarlyStopping, adjust_learning_rate, adjustment, plotter
 from utils.slowloss import ssl_loss_v2
 from utils.metrics import NegativeCorr
 from sklearn.metrics import precision_recall_fscore_support
@@ -216,7 +216,7 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
         return
     
     def test(self, setting, test=1):
-        _, test_loader = self._get_data(flag='test')
+        test_data, test_loader = self._get_data(flag='test')
         _, train_loader = self._get_data(flag='train')
 
         if test:
@@ -289,7 +289,10 @@ class Exp_Anomaly_Detection_MANTRA(Exp_Basic):
         gt = np.array(gt)
         print("pred: ", pred.shape)
         print("gt:   ", gt.shape)
-
+        # Plotting
+        
+        test0 = torch.roll(test_data,0,1) if self.model.name == "KBJNet" else test_data
+        plotter(setting, test0,test_energy,score,test_labels)
         accuracy = accuracy_score(gt, pred)
         precision, recall, f_score, support = precision_recall_fscore_support(gt, pred, average='binary')
         print("Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(

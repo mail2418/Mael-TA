@@ -6,12 +6,12 @@
 pip install -r requirements.txt
 ```
 
-## TRAIN MODEL MANTRA
+## TRAIN MODEL REINFORCEMENT LEARNING MAELNET
 ```bash 
 bash scripts/NEW_RL/[dataset]_scripts/train_[model].sh
 ```
 
-## TEST MODEL MANTRA WITH RL
+## TEST MODEL REINFORCEMENT LEARNING MAELNET
 ```bash 
 bash scripts/NEW_RL/[dataset]_scripts/test.sh
 ```
